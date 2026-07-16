@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Hisaab — Dashboard mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment-50:#FDFCF9; --parchment-100:#FAF9F6; --parchment-200:#F0EDE6; --parchment-300:#E0DCD2;
+    --ink-900:#1A1A18; --ink-700:#3D3D38; --ink-500:#6B6960; --ink-300:#9B9890; --ink-100:#D4D2CB;
+    --teal-700:#114A44; --teal-600:#16615A; --teal-500:#1E7F75; --teal-400:#4BA096; --teal-100:#D6E9E5; --teal-50:#EFF6F4;
+    --moss-500:#6E9B61; --rose-500:#B85C72; --amber-500:#C98F3E;
+    --shadow-sm:0 1px 3px 0 rgba(35,25,15,.08),0 1px 2px -1px rgba(35,25,15,.04);
+    --shadow:0 4px 6px -1px rgba(35,25,15,.08),0 2px 4px -2px rgba(35,25,15,.04);
+    --shadow-lg:0 10px 15px -3px rgba(35,25,15,.08),0 4px 6px -4px rgba(35,25,15,.04);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--parchment-200);font-family:"Plus Jakarta Sans",system-ui,sans-serif;color:var(--ink-900);
+    -webkit-font-smoothing:antialiased;display:flex;justify-content:center;padding:24px 12px;min-height:100vh}
+  .phone{width:390px;max-width:100%;background:var(--parchment-100);border-radius:28px;box-shadow:var(--shadow-lg);
+    overflow:hidden;position:relative;padding-bottom:84px}
+  .serif{font-family:"DM Serif Display",Georgia,serif}
+  .nums{font-variant-numeric:tabular-nums}
+  .scroll{padding:22px 18px 8px}
+  /* sync dot */
+  .syncdot{position:absolute;top:14px;right:16px;width:10px;height:10px;border-radius:50%;background:var(--teal-500);
+    box-shadow:0 0 0 4px var(--teal-50)}
+  /* header */
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-300);font-weight:600}
+  h1.page{font-size:26px;line-height:1.1;margin-top:2px;color:var(--ink-900)}
+  .sub{font-size:13px;color:var(--ink-500);margin-top:2px}
+  /* safe to spend hero */
+  .hero{margin-top:18px;background:linear-gradient(155deg,var(--teal-600),var(--teal-500));border-radius:16px;
+    padding:20px 20px 18px;color:#F3FBF9;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;
+    background:rgba(255,255,255,.06)}
+  .hero .label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8;font-weight:600}
+  .hero .amt{font-size:46px;line-height:1;margin-top:6px}
+  .hero .paise{font-size:22px;opacity:.7}
+  .hero .perday{margin-top:10px;font-size:13px;opacity:.9}
+  .hero .bar{margin-top:14px;height:6px;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden}
+  .hero .bar > span{display:block;height:100%;width:41%;background:#F3FBF9;border-radius:99px}
+  .hero .split{margin-top:10px;display:flex;gap:16px;font-size:11.5px;opacity:.88}
+  .hero .split b{display:block;font-size:14px;font-weight:600;opacity:1;margin-top:1px}
+  /* section head */
+  .sec{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 10px}
+  .sec h2{font-size:18px;color:var(--ink-900)}
+  .sec a{font-size:12px;color:var(--teal-600);text-decoration:none;font-weight:600}
+  /* card */
+  .card{background:var(--parchment-50);border:1px solid var(--parchment-200);border-radius:12px;box-shadow:var(--shadow-sm)}
+  /* goals */
+  .goal{display:flex;align-items:center;gap:14px;padding:14px 16px}
+  .goal + .goal{border-top:1px solid var(--parchment-200)}
+  .ring{--p:64;width:46px;height:46px;border-radius:50%;flex:none;
+    background:conic-gradient(var(--teal-500) calc(var(--p)*1%), var(--parchment-300) 0);
+    display:grid;place-items:center}
+  .ring::before{content:"";width:34px;height:34px;border-radius:50%;background:var(--parchment-50)}
+  .ring span{position:absolute;font-size:11px;font-weight:600;color:var(--teal-600)}
+  .goal .body{flex:1;min-width:0}
+  .goal .name{font-size:14.5px;font-weight:600;color:var(--ink-900)}
+  .goal .meta{font-size:12px;color:var(--ink-500);margin-top:2px}
+  .goal .amt{text-align:right;font-size:14px;font-weight:600;color:var(--ink-900)}
+  .goal .amt small{display:block;font-weight:400;color:var(--ink-300);font-size:11px;margin-top:2px}
+  .ontrack{color:var(--moss-500)}
+  .behind{color:var(--amber-500)}
+  /* spending breakdown */
+  .break{padding:16px}
+  .donut-wrap{display:flex;align-items:center;gap:18px}
+  .donut{width:112px;height:112px;border-radius:50%;flex:none;position:relative;
+    background:conic-gradient(
+      #B15E43 0 31%, #1E7F75 31% 52%, #3E7CA1 52% 68%,
+      #C98F3E 68% 80%, #8A5A82 80% 90%, #6B6960 90% 100%);
+    box-shadow:var(--shadow-sm)}
+  .donut::before{content:"";position:absolute;inset:22px;border-radius:50%;background:var(--parchment-50)}
+  .donut .center{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+  .donut .center small{font-size:10px;color:var(--ink-300);letter-spacing:.08em;text-transform:uppercase}
+  .donut .center b{font-size:17px;color:var(--ink-900)}
+  .legend{flex:1;display:flex;flex-direction:column;gap:8px}
+  .leg{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-700)}
+  .leg .sw{width:10px;height:10px;border-radius:3px;flex:none}
+  .leg .v{margin-left:auto;font-weight:600;color:var(--ink-900)}
+  /* recent */
+  .txn{display:flex;align-items:center;gap:13px;padding:12px 16px}
+  .txn + .txn{border-top:1px solid var(--parchment-200)}
+  .ic{width:38px;height:38px;border-radius:10px;flex:none;display:grid;place-items:center;font-size:17px}
+  .txn .t{flex:1;min-width:0}
+  .txn .m{font-size:14px;font-weight:600;color:var(--ink-900)}
+  .txn .c{font-size:11.5px;color:var(--ink-500);margin-top:1px}
+  .txn .val{font-size:14px;font-weight:600}
+  .out{color:var(--ink-900)}
+  .in{color:var(--moss-500)}
+  /* bottom nav */
+  .nav{position:absolute;left:0;right:0;bottom:0;height:70px;background:var(--parchment-50);
+    border-top:1px solid var(--parchment-200);display:flex;align-items:center;justify-content:space-around;
+    box-shadow:0 -2px 10px rgba(26,26,24,.05);padding:0 8px}
+  .nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--ink-300);
+    text-decoration:none;font-weight:600;flex:1}
+  .nav a.active{color:var(--teal-600)}
+  .nav .fab{width:44px;height:44px;border-radius:14px;background:var(--teal-500);color:#fff;display:grid;
+    place-items:center;font-size:24px;box-shadow:var(--shadow);margin-top:-14px}
+  .dot{width:22px;height:22px;display:grid;place-items:center;font-size:19px}
+</style>
+</head>
+<body>
+  <div class="phone">
+    <div class="syncdot" title="Synced"></div>
+    <div class="scroll">
+      <div class="kicker">Thursday, 16 July</div>
+      <h1 class="page serif">Hisaab</h1>
+      <div class="sub">July at a glance</div>
+
+      <!-- SAFE TO SPEND HERO -->
+      <div class="hero">
+        <div class="label">Safe to spend</div>
+        <div class="amt serif nums">₹18,420<span class="paise">.00</span></div>
+        <div class="perday nums">₹1,180 a day for the 15 days left</div>
+        <div class="bar"><span></span></div>
+        <div class="split">
+          <div>Income<b class="nums">₹72,000</b></div>
+          <div>Spent<b class="nums">₹41,180</b></div>
+          <div>Bills to come<b class="nums">₹7,400</b></div>
+          <div>Goals set aside<b class="nums">₹5,000</b></div>
+        </div>
+      </div>
+
+      <!-- GOALS -->
+      <div class="sec"><h2 class="serif">Goals</h2><a href="#">All goals →</a></div>
+      <div class="card">
+        <div class="goal">
+          <div class="ring" style="--p:40;position:relative"><span>40%</span></div>
+          <div class="body">
+            <div class="name">Leather bag for Noor</div>
+            <div class="meta ontrack nums">On track · about Sept</div>
+          </div>
+          <div class="amt nums">₹20,000<small>of ₹50,000</small></div>
+        </div>
+        <div class="goal">
+          <div class="ring" style="--p:72;position:relative"><span>72%</span></div>
+          <div class="body">
+            <div class="name">Chennai–Delhi ride</div>
+            <div class="meta behind nums">Behind · needs ₹6,500/mo</div>
+          </div>
+          <div class="amt nums">₹32,400<small>of ₹45,000</small></div>
+        </div>
+      </div>
+
+      <!-- SPENDING BREAKDOWN -->
+      <div class="sec"><h2 class="serif">Where it went</h2><a href="#">Insights →</a></div>
+      <div class="card break">
+        <div class="donut-wrap">
+          <div class="donut"><div class="center"><small>Spent</small><b class="nums">₹41,180</b></div></div>
+          <div class="legend">
+            <div class="leg"><span class="sw" style="background:#B15E43"></span>Food &amp; dining<span class="v nums">₹12,800</span></div>
+            <div class="leg"><span class="sw" style="background:#1E7F75"></span>Travel<span class="v nums">₹8,600</span></div>
+            <div class="leg"><span class="sw" style="background:#3E7CA1"></span>Transport<span class="v nums">₹6,500</span></div>
+            <div class="leg"><span class="sw" style="background:#C98F3E"></span>Subscriptions<span class="v nums">₹4,900</span></div>
+            <div class="leg"><span class="sw" style="background:#8A5A82"></span>Shopping<span class="v nums">₹4,180</span></div>
+            <div class="leg"><span class="sw" style="background:#6B6960"></span>Other<span class="v nums">₹4,200</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECENT -->
+      <div class="sec"><h2 class="serif">Recent</h2><a href="#">All →</a></div>
+      <div class="card">
+        <div class="txn">
+          <div class="ic" style="background:#F3E7E0;color:#B15E43">☕</div>
+          <div class="t"><div class="m">Blue Tokai</div><div class="c">Food &amp; dining · HDFC</div></div>
+          <div class="val out nums">−₹420</div>
+        </div>
+        <div class="txn">
+          <div class="ic" style="background:#E8F0E6;color:#6E9B61">💼</div>
+          <div class="t"><div class="m">Salary</div><div class="c">Income · HDFC</div></div>
+          <div class="val in nums">+₹72,000</div>
+        </div>
+        <div class="txn">
+          <div class="ic" style="background:#DCEAF2;color:#3E7CA1">🚕</div>
+          <div class="t"><div class="m">Uber</div><div class="c">Transport · Amazon Pay</div></div>
+          <div class="val out nums">−₹340</div>
+        </div>
+        <div class="txn">
+          <div class="ic" style="background:#F5E9D6;color:#C98F3E">🎬</div>
+          <div class="t"><div class="m">Netflix</div><div class="c">Subscriptions · recurring</div></div>
+          <div class="val out nums">−₹649</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="nav">
+      <a class="active"><span class="dot">⌂</span>Home</a>
+      <a><span class="dot">≣</span>Ledger</a>
+      <a><span class="fab">+</span></a>
+      <a><span class="dot">◎</span>Goals</a>
+      <a><span class="dot">▧</span>Insights</a>
+    </div>
+  </div>
+</body>
+</html>
