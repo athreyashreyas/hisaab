@@ -1,0 +1,157 @@
+/**
+ * Domain read hooks. All reads go through Dexie live queries so screens update
+ * the instant a write lands. Deleted (tombstoned) rows are filtered out here so
+ * callers never have to remember to.
+ */
+import { db } from '../lib/db';
+import { useLiveQuery } from './useLiveQuery';
+import { monthBounds } from '../lib/calculations';
+import type { Account, Category, Transaction, Goal, RecurringRule, ID } from '../types';
+
+const live = <T>(t: T[] | undefined): T[] => t ?? [];
+
+export function useAccounts(includeArchived = false): Account[] {
+  return live(
+    useLiveQuery(async () => {
+      const all = await db.accounts.toArray();
+      return all
+        .filter((a) => !a.deleted_at && (includeArchived || !a.archived))
+        .sort((a, b) => a.updated_at - b.updated_at);
+    }, [includeArchived])
+  );
+}
+
+export function useCategories(): Category[] {
+  return live(
+    useLiveQuery(async () => {
+      const all = await db.categories.toArray();
+      return all.filter((c) => !c.deleted_at).sort((a, b) => a.order - b.order);
+    })
+  );
+}
+
+export function useCategoryMap(): Map<ID, Category> {
+  const cats = useCategories();
+  return new Map(cats.map((c) => [c.id, c]));
+}
+
+export function useAccountMap(): Map<ID, Account> {
+  const accounts = useAccounts(true);
+  return new Map(accounts.map((a) => [a.id, a]));
+}
+
+/** All non-deleted transactions, newest first. */
+export function useTransactions(): Transaction[] {
+  return live(
+    useLiveQuery(async () => {
+      const all = await db.transactions.toArray();
+      return all.filter((t) => !t.deleted_at).sort((a, b) => b.date - a.date || b.updated_at - a.updated_at);
+    })
+  );
+}
+
+/** Transactions within a month (defaults to the current month). */
+export function useMonthTransactions(ref = new Date()): Transaction[] {
+  const key = `${ref.getFullYear()}-${ref.getMonth()}`;
+  return live(
+    useLiveQuery(async () => {
+      const { start, end } = monthBounds(ref);
+      const all = await db.transactions.where('date').between(start, end, true, false).toArray();
+      return all.filter((t) => !t.deleted_at).sort((a, b) => b.date - a.date);
+    }, [key])
+  );
+}
+
+export function useGoals(includeArchived = false): Goal[] {
+  return live(
+    useLiveQuery(async () => {
+      const all = await db.goals.toArray();
+      return all
+        .filter((g) => !g.deleted_at && (includeArchived || !g.archived))
+        .sort((a, b) => a.updated_at - b.updated_at);
+    }, [includeArchived])
+  );
+}
+
+export function useGoal(id: ID | undefined): Goal | undefined {
+  return useLiveQuery(async () => (id ? db.goals.get(id) : undefined), [id]);
+}
+
+export function useContributions(goalId: ID | undefined) {
+  return live(
+    useLiveQuery(async () => {
+      if (!goalId) return [];
+      const all = await db.goal_contributions.where('goal_id').equals(goalId).toArray();
+      return all.filter((c) => !c.deleted_at).sort((a, b) => b.date - a.date);
+    }, [goalId])
+  );
+}
+
+export function useAllContributions() {
+  return live(
+    useLiveQuery(async () => {
+      const all = await db.goal_contributions.toArray();
+      return all.filter((c) => !c.deleted_at);
+    })
+  );
+}
+
+/**
+ * Recent contribution run-rate per goal (paise/month) over the trailing ~3
+ * months, used to drive goalProjection ETAs. Falls back to 0 with no history.
+ */
+export function monthlyRate(contribs: { goal_id: ID; amount: number; date: number }[]): Map<ID, number> {
+  const since = Date.now() - 1000 * 60 * 60 * 24 * 92;
+  const byGoal = new Map<ID, number>();
+  for (const c of contribs) {
+    if (c.date < since || c.amount <= 0) continue;
+    byGoal.set(c.goal_id, (byGoal.get(c.goal_id) ?? 0) + c.amount);
+  }
+  const rate = new Map<ID, number>();
+  for (const [goal, total] of byGoal) rate.set(goal, Math.round(total / 3));
+  return rate;
+}
+
+export function useRecurringRules(): RecurringRule[] {
+  return live(
+    useLiveQuery(async () => {
+      const all = await db.recurring_rules.toArray();
+      return all.filter((r) => !r.deleted_at).sort((a, b) => a.next_due - b.next_due);
+    })
+  );
+}
+
+// --- balances -------------------------------------------------------------
+
+export interface AccountBalance {
+  account: Account;
+  balance: number; // paise
+}
+
+/**
+ * Running balance per account = opening balance + income − expense, with
+ * transfers moving paise between the from/to accounts. Computed locally over all
+ * transactions (cheap; the whole ledger is on-device).
+ */
+export function useAccountBalances(): AccountBalance[] {
+  const accounts = useAccounts(true);
+  const txns = useTransactions();
+
+  const byAccount = new Map<ID, number>();
+  for (const a of accounts) byAccount.set(a.id, a.opening_balance);
+
+  for (const t of txns) {
+    if (t.type === 'income') {
+      byAccount.set(t.account_id, (byAccount.get(t.account_id) ?? 0) + t.amount);
+    } else if (t.type === 'expense') {
+      byAccount.set(t.account_id, (byAccount.get(t.account_id) ?? 0) - t.amount);
+    } else if (t.type === 'transfer') {
+      byAccount.set(t.account_id, (byAccount.get(t.account_id) ?? 0) - t.amount);
+      if (t.to_account_id) {
+        byAccount.set(t.to_account_id, (byAccount.get(t.to_account_id) ?? 0) + t.amount);
+      }
+    }
+  }
+
+  return accounts.map((account) => ({ account, balance: byAccount.get(account.id) ?? 0 }));
+}
