@@ -1,12 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
-import { useUIStore } from '../../stores/uiStore';
 import { SyncIndicator } from '../ui/SyncIndicator';
 import { cn } from '../../lib/cn';
 
 /**
  * Shared page header: an uppercase kicker, a serif title, optional subtitle, and
- * the tappable sync dot (which opens the changelog). An optional back button for
+ * the tappable sync dot (which opens the sync panel). An optional back button for
  * detail screens; optional trailing slot for page actions.
  */
 export function PageHeader({
@@ -25,7 +24,6 @@ export function PageHeader({
   className?: string;
 }) {
   const navigate = useNavigate();
-  const openChangelog = useUIStore((s) => s.openChangelog);
 
   return (
     <header className={cn('mb-1 flex items-start justify-between gap-3', className)}>
@@ -51,7 +49,7 @@ export function PageHeader({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {trailing}
-        <SyncIndicator onClick={openChangelog} />
+        <SyncIndicator />
       </div>
     </header>
   );

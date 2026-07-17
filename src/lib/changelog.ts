@@ -1,3 +1,5 @@
+import type { GuideArtKind } from './guide';
+
 export interface Release {
   version: string;
   date: string; // 'YYYY-MM-DD'
@@ -8,6 +10,9 @@ export interface Release {
    *  written for how the app navigates today. Shown under an open release in
    *  the guide's "What's new" pane. */
   howTo?: string[];
+  /** Optional illustration for the release, drawn by GuideArt. Give the big
+   *  releases one so What's new shows the thing, not just words about it. */
+  art?: GuideArtKind;
 }
 
 /**
@@ -16,6 +21,25 @@ export interface Release {
  * source of truth for APP_VERSION, exactly as in Attend and Harmony.
  */
 export const CHANGELOG: Release[] = [
+  {
+    version: '0.4.0',
+    date: '2026-07-17',
+    major: true,
+    title: 'A steadier frame, and a Sync that means it',
+    notes: [
+      'Nothing slides under the clock any more. Every screen now scrolls inside its own region, so the top of the app stays put and your entries stay clear of the status bar and the home indicator.',
+      'Settings has moved into the bar at the bottom, where it is always a tap away, and it carries the guide and What\'s new with it. The teal + is now a floating button at the bottom right, so adding a spend is still the easiest thing in the app.',
+      'The guide has illustrations now. Each section shows the real surface it is describing, from the safe-to-spend card to the goal ring to what your data actually looks like once it leaves your phone.',
+      'Tap the sync dot and Sync now does what it says: it sends up what you have added, pulls in anything new, and looks for a newer version of Hisaab. If one is waiting, it lands right then, with no need to delete and re-add your home-screen icon.',
+      'Sheets close the way you expect. Swipe down on the handle of the add sheet, or any sheet, and it goes away. They also lift above the keyboard now, so the field you are typing in stays where you can see it.',
+    ],
+    howTo: [
+      'Tap Settings at the right of the bottom bar for the guide, What\'s new, and everything else.',
+      'Tap the teal + at the bottom right to add a spend, then swipe the sheet down to put it away.',
+      'Tap the dot at the top right, then Sync now, to back up and pick up a new version in one go.',
+    ],
+    art: 'sync',
+  },
   {
     version: '0.3.0',
     date: '2026-07-17',
@@ -32,6 +56,7 @@ export const CHANGELOG: Release[] = [
       'Save your recovery phrase when you set up, or make a new one in Settings, Security.',
       'To reset, tap Forgot password on the sign-in screen and follow the email.',
     ],
+    art: 'security',
   },
   {
     version: '0.2.0',

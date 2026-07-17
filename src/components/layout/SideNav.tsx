@@ -10,7 +10,7 @@ export function SideNav() {
   const openAdd = useUIStore((s) => s.openAdd);
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-r border-parchment-200 bg-parchment-50 px-3 pt-safe md:flex">
+    <aside className="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-parchment-200 bg-parchment-50 px-3 pb-safe pl-safe pt-safe md:flex">
       <div className="flex items-center gap-2 px-3 py-5">
         <div className="grid h-9 w-9 place-items-center rounded-card bg-teal-500 font-serif text-lg text-white">
           ₹
@@ -26,10 +26,14 @@ export function SideNav() {
         Add transaction
       </button>
 
+      {/* Settings is the last nav item, but on the rail it belongs at the
+          bottom rather than in the main run — so it's rendered separately. */}
       <nav className="flex flex-col gap-0.5">
-        {navItems.map((item) => (
-          <RailLink key={item.to} {...item} />
-        ))}
+        {navItems
+          .filter((item) => item.to !== settingsItem.to)
+          .map((item) => (
+            <RailLink key={item.to} {...item} />
+          ))}
       </nav>
 
       <div className="mt-auto pb-4">

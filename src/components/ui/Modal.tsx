@@ -41,9 +41,16 @@ export function Modal({
             role="dialog"
             aria-modal="true"
             className={cn(
-              'relative z-10 w-full max-w-md max-h-[85vh] overflow-y-auto scroll-ios rounded-sheet bg-parchment-100 shadow-xl',
+              'relative z-10 w-full max-w-md overflow-y-auto scroll-ios rounded-sheet bg-parchment-100 shadow-xl',
               className
             )}
+            // Lift above the on-screen keyboard and cap to the room left, so a
+            // modal with fields in it can never be pushed under the status bar.
+            style={{
+              marginBottom: 'var(--keyboard-height, 0px)',
+              maxHeight: 'calc(100% - var(--keyboard-height, 0px))',
+              transition: 'margin-bottom 0.2s ease, max-height 0.2s ease',
+            }}
             variants={modalVariants}
             initial="initial"
             animate="animate"

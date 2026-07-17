@@ -4,15 +4,30 @@
  * pane at the top of the guide reads the latest release from changelog.ts, so
  * that part updates itself; these sections are the lasting how-to.
  *
- * Each section names one lucide icon as its illustration (Hisaab keeps the art
- * simple and on-brand rather than bespoke drawings).
+ * Each section carries a small illustration (`art`, drawn by GuideArt) so the
+ * guide shows rather than only tells, plus a lucide icon used as its compact
+ * marker beside the title.
  */
+
+/** The illustrations GuideArt knows how to draw. One per guide section. */
+export type GuideArtKind =
+  | 'logo'
+  | 'safeToSpend'
+  | 'adding'
+  | 'ledger'
+  | 'accounts'
+  | 'goals'
+  | 'insights'
+  | 'security'
+  | 'sync';
+
 export interface GuideSection {
   id: string;
   title: string;
   body: string[];
   steps?: string[];
   icon: string; // lucide-react icon name
+  art: GuideArtKind;
 }
 
 export const GUIDE: GuideSection[] = [
@@ -24,6 +39,7 @@ export const GUIDE: GuideSection[] = [
       'Everything lives on your device first, so it is fast and works offline. The cloud copy is sealed before it leaves your phone, so no one but you can read it.',
     ],
     icon: 'notebook-pen',
+    art: 'logo',
   },
   {
     id: 'safe-to-spend',
@@ -37,19 +53,22 @@ export const GUIDE: GuideSection[] = [
       'The four-up split shows income, spent, bills to come, and goals set aside.',
     ],
     icon: 'wallet',
+    art: 'safeToSpend',
   },
   {
     id: 'adding',
     title: 'Adding an entry',
     body: [
-      'Tap the teal + in the middle of the bar to add anything. The amount pad leads, with the big serif figure growing as you type. Then pick expense, income, or transfer, choose an account and category, and save.',
+      'Tap the teal + at the bottom right to add anything. The amount pad leads, with the big serif figure growing as you type. Then pick expense, income, or transfer, choose an account and category, and save.',
       'Type a merchant and Hisaab pre-picks a likely category for you. "Save & add another" keeps the sheet open for quick multi-entry.',
     ],
     steps: [
-      'Tap + → type the amount → pick the type and account → Save.',
+      'Tap + at the bottom right, type the amount, pick the type and account, then Save.',
+      'Swipe the sheet down, or tap outside it, to put it away without saving.',
       'Enter a merchant like "Blue Tokai" and the category is guessed for you.',
     ],
     icon: 'plus',
+    art: 'adding',
   },
   {
     id: 'ledger',
@@ -59,6 +78,7 @@ export const GUIDE: GuideSection[] = [
       'Tap any row to edit it; the same sheet handles changes and deletes.',
     ],
     icon: 'list',
+    art: 'ledger',
   },
   {
     id: 'accounts',
@@ -72,6 +92,7 @@ export const GUIDE: GuideSection[] = [
       'Use the Transfer type when moving money between your own accounts.',
     ],
     icon: 'landmark',
+    art: 'accounts',
   },
   {
     id: 'goals',
@@ -85,6 +106,7 @@ export const GUIDE: GuideSection[] = [
       'This month\'s contributions feed the "goals set aside" in safe-to-spend.',
     ],
     icon: 'target',
+    art: 'goals',
   },
   {
     id: 'insights',
@@ -98,31 +120,36 @@ export const GUIDE: GuideSection[] = [
       'Hisaab spots regular bills and offers them as recurring rules to confirm.',
     ],
     icon: 'pie-chart',
+    art: 'insights',
   },
   {
     id: 'security',
     title: 'Truly end to end',
     body: [
-      'Your ledger is encrypted with a key derived from a passphrase only you know. The backup to your account is sealed before it ever leaves your phone; the server holds ciphertext and timestamps, nothing readable.',
-      'Because the server cannot decrypt, we cannot reset your passphrase. That is what the one-time Recovery Key is for, so keep it somewhere safe and offline.',
+      'Your ledger is encrypted with a key derived from your password, which only you know. The backup to your account is sealed before it ever leaves your phone, so the server holds ciphertext and timestamps, nothing readable.',
+      'Your login is derived separately from the key to your data, so we can check who you are but can never read what you saved. Because we cannot decrypt, we cannot simply reset your password for you. That is what your twelve-word recovery phrase is for, so keep it somewhere safe and offline.',
     ],
     steps: [
-      'Change your passphrase any time in Settings → Vault; your data is not re-encrypted, only the key is re-wrapped.',
-      'Export an encrypted backup, or a plain CSV, from Settings → Data.',
+      'Change your password any time in Settings, Security. Your data is not re-encrypted, only the key is re-wrapped, so it is instant.',
+      'Forgot it? Tap Forgot password on the sign-in screen, follow the email, then set a new one with your recovery phrase.',
+      'Export an encrypted backup, or a plain CSV, from Settings, Data.',
     ],
     icon: 'shield-check',
+    art: 'security',
   },
   {
     id: 'sync',
     title: 'Across your devices',
     body: [
       'Sign in for backup and your ledger stays in step across devices, encrypted the whole way. It works offline too and catches up when you reconnect.',
-      'The dot at the top right shows where things stand. Tap it any time to see what has changed.',
+      'The dot at the top right shows where things stand. Tap it to see what is happening and to sync right now, without closing and reopening the app. Syncing also looks for a new version of Hisaab and brings it in if there is one.',
     ],
     steps: [
-      'Grey means on this device only; amber means the vault is locked.',
-      'A pulsing teal dot means backing up; steady teal means all backed up.',
+      'Grey means on this device only, and amber means your ledger is locked.',
+      'A pulsing teal dot means backing up, and steady teal means all backed up.',
+      'Tap the dot, then Sync now, whenever you want to be sure you are current.',
     ],
     icon: 'refresh-cw',
+    art: 'sync',
   },
 ];

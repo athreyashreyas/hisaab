@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronDown } from 'lucide-react';
 import { APP_VERSION, CHANGELOG } from '../lib/changelog';
 import { GUIDE, type GuideSection } from '../lib/guide';
 import { ReleaseRow } from '../components/guide/ReleaseRow';
+import { GuideArt } from '../components/guide/GuideArt';
 import { Icon } from '../components/ui/Icon';
 import { cn } from '../lib/cn';
 
@@ -136,6 +137,12 @@ function Section({ section }: { section: GuideSection }) {
         </span>
         <h2 className="font-serif text-2xl text-ink-900">{section.title}</h2>
       </div>
+
+      {/* The illustration leads, so you see the surface before reading about it. */}
+      <div className="mt-5 flex justify-center rounded-card bg-parchment-200/50 px-4 py-6">
+        <GuideArt kind={section.art} />
+      </div>
+
       <div className="mt-4 space-y-3">
         {section.body.map((p, i) => (
           <p key={i} className="text-sm leading-relaxed text-ink-700">

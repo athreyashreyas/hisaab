@@ -33,9 +33,31 @@
     overflow: hidden;
   }
 
+  /* Momentum scrolling, applied to the single inner scroller per screen. The
+     top safe-area inset must live OUTSIDE this element (see AppShell), so
+     content scrolls under nothing: the scroller starts below the status bar. */
   .scroll-ios {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    /* No horizontal rubber-banding, so a stray sideways drag can't wobble the
+       view mid-scroll. */
+    overscroll-behavior-x: none;
+  }
+
+  /* App feel: text shouldn't select or pop the iOS long-press callout when you
+     tap or drag a card, the way a web page would. Real text entry opts back in. */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   input[type='number']::-webkit-outer-spin-button,

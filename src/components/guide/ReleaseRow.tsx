@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Release } from '../../lib/changelog';
+import { GuideArt } from './GuideArt';
 
 /**
  * One expandable release in the guide's "What's new" pane. Tapping the row
@@ -59,6 +60,12 @@ export function ReleaseRow({ release, defaultOpen }: { release: Release; default
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
+            {release.art && (
+              <div className="mx-3.5 mb-4 flex justify-center rounded-card bg-parchment-50/70 px-4 py-5">
+                <GuideArt kind={release.art} />
+              </div>
+            )}
+
             <div className="px-3.5">
               <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-300">Release notes</p>
               <ul className="mt-2 space-y-2">
