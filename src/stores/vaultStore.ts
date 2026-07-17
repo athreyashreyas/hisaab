@@ -26,6 +26,24 @@ import { clearLocalDb } from '../lib/db';
 
 const VAULT_KEY = 'hisaab.vault';
 const RECOVERY_WRAP_KEY = 'hisaab.vault.recovery';
+const ONBOARDED_KEY = 'hisaab.onboardedAt';
+
+function loadOnboardedAt(): number | null {
+  try {
+    const raw = localStorage.getItem(ONBOARDED_KEY);
+    return raw ? Number(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveOnboardedAt(ts: number) {
+  try {
+    localStorage.setItem(ONBOARDED_KEY, String(ts));
+  } catch {
+    // ignore
+  }
+}
 
 function loadWrapped(): WrappedVaultKey | null {
   try {
@@ -45,6 +63,8 @@ export type VaultStatus = 'checking' | 'needs-setup' | 'locked' | 'unlocked';
 interface VaultState {
   status: VaultStatus;
   wrapped: WrappedVaultKey | null;
+  /** When the account completed the guided first-run. null = has not onboarded. */
+  onboardedAt: number | null;
   /** Held transiently right after setup so the Recovery Key screen can show it once. */
   pendingRecoveryKey: string | null;
   init: () => void;
@@ -53,17 +73,27 @@ interface VaultState {
   changePassphrase: (current: string, next: string) => Promise<void>;
   regenerateRecoveryKey: () => Promise<string>;
   clearPendingRecoveryKey: () => void;
+  markOnboarded: () => void;
   lock: () => void;
 }
 
 export const useVaultStore = create<VaultState>((set, get) => ({
   status: 'checking',
   wrapped: null,
+  onboardedAt: null,
   pendingRecoveryKey: null,
 
   init() {
     const wrapped = loadWrapped();
-    set({ wrapped, status: wrapped ? 'locked' : 'needs-setup' });
+    let onboardedAt = loadOnboardedAt();
+    // Backfill: a device that already has a vault (a user from before guided
+    // onboarding existed) is treated as onboarded, so it never sees the first-run
+    // journey. Only a truly fresh device (no vault, no marker) is onboarded.
+    if (!onboardedAt && wrapped) {
+      onboardedAt = Date.now();
+      saveOnboardedAt(onboardedAt);
+    }
+    set({ wrapped, onboardedAt, status: wrapped ? 'locked' : 'needs-setup' });
   },
 
   async setup(passphrase) {
@@ -114,6 +144,12 @@ export const useVaultStore = create<VaultState>((set, get) => ({
 
   clearPendingRecoveryKey() {
     set({ pendingRecoveryKey: null });
+  },
+
+  markOnboarded() {
+    const ts = Date.now();
+    saveOnboardedAt(ts);
+    set({ onboardedAt: ts });
   },
 
   lock() {

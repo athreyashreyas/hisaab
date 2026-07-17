@@ -9,6 +9,7 @@ import { useAuthStore } from './stores/authStore';
 import { useSyncQueue } from './hooks/useSyncQueue';
 import { SetupPage } from './pages/SetupPage';
 import { UnlockPage } from './pages/UnlockPage';
+import { OnboardingFlow } from './pages/onboarding/OnboardingFlow';
 
 /**
  * Boot + vault gate. The router (and thus the whole app) only mounts once the
@@ -17,6 +18,7 @@ import { UnlockPage } from './pages/UnlockPage';
  */
 export default function App() {
   const vaultStatus = useVaultStore((s) => s.status);
+  const onboardedAt = useVaultStore((s) => s.onboardedAt);
   const initVault = useVaultStore((s) => s.init);
   const initAuth = useAuthStore((s) => s.init);
 
@@ -27,14 +29,23 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MotionConfig reducedMotion="user">
-        {vaultStatus === 'checking' && <BootSplash />}
-        {vaultStatus === 'needs-setup' && <SetupPage />}
-        {vaultStatus === 'locked' && <UnlockPage />}
-        {vaultStatus === 'unlocked' && <UnlockedApp />}
-      </MotionConfig>
+      <MotionConfig reducedMotion="user">{renderGate()}</MotionConfig>
     </QueryClientProvider>
   );
+
+  function renderGate() {
+    if (vaultStatus === 'checking') return <BootSplash />;
+    // A fresh account (no vault, no onboarding marker) is walked through the
+    // guided first-run, which itself mints the vault partway through. The gate
+    // stays on onboarding until it finishes (onboardedAt is set), even though
+    // the vault becomes unlocked mid-flow.
+    if (onboardedAt === null) return <OnboardingFlow />;
+    if (vaultStatus === 'locked') return <UnlockPage />;
+    if (vaultStatus === 'unlocked') return <UnlockedApp />;
+    // Onboarded but somehow without a vault (rare, e.g. storage cleared): fall
+    // back to the standalone setup screen.
+    return <SetupPage />;
+  }
 }
 
 /** Everything behind the vault: sync wiring + the routed shell. */

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight, Wallet, Shapes, KeyRound, Download, Upload, FileText,
-  Lock, LogOut, LogIn, RefreshCw, Info,
+  Lock, LogOut, LogIn, RefreshCw, Info, BookOpen,
 } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
@@ -12,7 +12,6 @@ import { Modal } from '../components/ui/Modal';
 import { Icon } from '../components/ui/Icon';
 import { useVaultStore } from '../stores/vaultStore';
 import { useAuthStore } from '../stores/authStore';
-import { useUIStore } from '../stores/uiStore';
 import { isCloudConfigured } from '../lib/supabase';
 import { APP_VERSION } from '../lib/changelog';
 import {
@@ -24,7 +23,6 @@ import {
 export function SettingsPage() {
   const navigate = useNavigate();
   const lock = useVaultStore((s) => s.lock);
-  const openChangelog = useUIStore((s) => s.openChangelog);
   const { user, signOut } = useAuthStore();
 
   const [changePass, setChangePass] = useState(false);
@@ -103,7 +101,8 @@ export function SettingsPage() {
       </SettingsGroup>
 
       <SettingsGroup title="About">
-        <Row icon={<Info size={18} />} label="Version & what's new" sub={`v${APP_VERSION}`} onClick={openChangelog} chevron />
+        <Row icon={<BookOpen size={18} />} label="How Hisaab works" onClick={() => navigate('/guide?pane=guide')} chevron />
+        <Row icon={<Info size={18} />} label="What's new" sub={`v${APP_VERSION}`} onClick={() => navigate('/guide?pane=new')} chevron />
       </SettingsGroup>
 
       <p className="mt-6 px-2 text-center text-xs leading-relaxed text-ink-300">
