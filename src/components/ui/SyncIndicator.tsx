@@ -26,9 +26,9 @@ const dotRing: Record<SyncStatus, string> = {
 export const SYNC_LABEL: Record<SyncStatus, string> = {
   idle: 'All changes backed up',
   syncing: 'Backing up…',
-  offline: 'Offline — will back up when reconnected',
+  offline: 'Offline, will back up when reconnected',
   error: 'Backup ran into a problem',
-  locked: 'Vault locked — backup paused',
+  locked: 'Vault locked, backup paused',
   local: 'On this device only',
 };
 

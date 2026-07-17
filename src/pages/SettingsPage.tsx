@@ -107,7 +107,7 @@ export function SettingsPage() {
 
       <p className="mt-6 px-2 text-center text-xs leading-relaxed text-ink-300">
         Hisaab keeps your ledger on this device and backs it up end-to-end encrypted.
-        We can't read it, and we can't reset your passphrase — keep your Recovery Key safe.
+        We can't read it, and we can't reset your passphrase, so keep your Recovery Key safe.
       </p>
 
       <ChangePassphraseModal open={changePass} onClose={() => setChangePass(false)} onDone={() => flash('Passphrase changed.')} />
@@ -190,7 +190,7 @@ function ChangePassphraseModal({ open, onClose, onDone }: { open: boolean; onClo
     <Modal open={open} onClose={onClose} title="Change passphrase">
       <div className="space-y-4 px-5 py-4">
         <p className="text-sm text-ink-500">
-          Your data isn't re-encrypted — only the key wrapping changes, so this is instant.
+          Your data isn't re-encrypted. Only the key wrapping changes, so this is instant.
         </p>
         <Input type="password" label="Current passphrase" value={current} onChange={(e) => setCurrent(e.target.value)} error={error ?? undefined} />
         <Input type="password" label="New passphrase" value={next} onChange={(e) => setNext(e.target.value)} hint="At least 8 characters." />
@@ -251,8 +251,8 @@ function SignInModal({ open, onClose }: { open: boolean; onClose: () => void }) 
     <Modal open={open} onClose={onClose} title={mode === 'in' ? 'Sign in' : 'Create account'}>
       <div className="space-y-4 px-5 py-4">
         <p className="text-sm text-ink-500">
-          Signing in only enables the encrypted backup. Your passphrase still decrypts your data — the
-          server can't read it.
+          Signing in only enables the encrypted backup. Your passphrase still decrypts your data, and
+          the server can't read it.
         </p>
         <Input type="email" label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <Input type="password" label="Password" value={password} onChange={(e) => setPassword(e.target.value)} error={error ?? undefined} />

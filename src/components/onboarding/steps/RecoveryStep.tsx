@@ -45,7 +45,7 @@ export function RecoveryStep({
     >
       <StepHeading eyebrow="Recovery" title="Your Recovery Key">
         Write this down and keep it somewhere safe and offline. It's the only way back into your
-        cloud backup if you ever forget your passphrase — we can't recover it for you.
+        cloud backup if you ever forget your passphrase, and we have no way to recover it for you.
       </StepHeading>
 
       <div className="my-5 rounded-card border border-teal-100 bg-teal-50 p-4">
@@ -54,7 +54,7 @@ export function RecoveryStep({
           <span className="text-[11px] font-semibold uppercase tracking-wide">Recovery Key</span>
         </div>
         <div className="mt-2 text-center font-mono text-lg font-semibold tracking-wide text-teal-700">
-          {recoveryKey ?? '—'}
+          {recoveryKey ?? '···'}
         </div>
       </div>
 

@@ -198,7 +198,7 @@ export function InsightsPage() {
           {suggestions.length > 0 && (
             <Card className="overflow-hidden">
               <div className="border-b border-parchment-200 bg-teal-50 px-4 py-2 text-[12px] font-semibold text-teal-700">
-                Detected — confirm to track
+                Detected, confirm to track
               </div>
               <div className="divide-y divide-parchment-200">
                 {suggestions.map((d) => (
@@ -262,7 +262,7 @@ export function InsightsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13.5px] font-semibold text-ink-900">{r.merchant}</div>
                     <div className="text-[11.5px] text-ink-500">
-                      Next {format(r.next_due, 'd MMM')} · {accountMap.get(r.account_id)?.name ?? '—'}
+                      Next {format(r.next_due, 'd MMM')} · {accountMap.get(r.account_id)?.name ?? '-'}
                     </div>
                   </div>
                   <div className="text-right">

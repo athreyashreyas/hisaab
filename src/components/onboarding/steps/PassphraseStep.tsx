@@ -53,7 +53,7 @@ export function PassphraseStep({
     >
       <StepHeading eyebrow="Your vault" title="Choose a passphrase">
         This locks your ledger. It encrypts everything before it's backed up, so only you can read
-        it — pick something memorable, because we can't reset it.
+        it. Pick something memorable, because we can't reset it.
       </StepHeading>
 
       <div className="mt-6 space-y-4">

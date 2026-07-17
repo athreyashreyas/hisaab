@@ -31,8 +31,8 @@ export function TxnRow({
   const iconName = isTransfer ? undefined : isIncome ? 'briefcase' : category?.icon ?? 'circle-dashed';
 
   const context = isTransfer
-    ? `${account?.name ?? '—'} → ${toAccount?.name ?? '—'}`
-    : `${isIncome ? 'Income' : category?.name ?? 'Uncategorised'} · ${account?.name ?? '—'}`;
+    ? `${account?.name ?? '-'} → ${toAccount?.name ?? '-'}`
+    : `${isIncome ? 'Income' : category?.name ?? 'Uncategorised'} · ${account?.name ?? '-'}`;
 
   const title = txn.merchant || (isTransfer ? 'Transfer' : isIncome ? 'Income' : 'Expense');
 

@@ -61,7 +61,7 @@ export function SetupPage() {
           </div>
           <p className="text-sm leading-relaxed text-ink-500">
             Write this down and keep it somewhere safe and offline. It's the only way back into your
-            cloud backup if you ever forget your passphrase — we can't recover it for you.
+            cloud backup if you ever forget your passphrase, and we have no way to recover it for you.
           </p>
 
           <div className="my-4 rounded-card border border-teal-100 bg-teal-50 p-4">
@@ -102,7 +102,7 @@ export function SetupPage() {
           <h2 className="font-serif text-xl">Set up your vault</h2>
         </div>
         <p className="mb-4 text-sm leading-relaxed text-ink-500">
-          Choose a passphrase to lock your ledger. It encrypts everything before it's backed up —
+          Choose a passphrase to lock your ledger. It encrypts everything before it's backed up, so
           only you can read it.
         </p>
         <form onSubmit={submit} className="space-y-4">

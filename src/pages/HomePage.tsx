@@ -75,7 +75,7 @@ export function HomePage() {
           <EmptyState
             icon="notebook-pen"
             title="Start your reckoning"
-            body="Add your first expense or income and Hisaab does the rest — safe-to-spend, goals, and where it all went."
+            body="Add your first expense or income and Hisaab does the rest: safe-to-spend, goals, and where it all went."
             action={<Button onClick={openAdd}>Add your first entry</Button>}
           />
         </Card>

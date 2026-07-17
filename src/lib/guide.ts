@@ -21,7 +21,7 @@ export const GUIDE: GuideSection[] = [
     title: 'The idea',
     body: [
       'Hisaab keeps an honest reckoning of where your money goes. You log expenses and income in a couple of taps, bucket them across accounts and categories, and read one clear number: what is genuinely safe to spend.',
-      'Everything lives on your device first, so it is fast and works offline. The cloud copy is sealed before it leaves your phone — no one but you can read it.',
+      'Everything lives on your device first, so it is fast and works offline. The cloud copy is sealed before it leaves your phone, so no one but you can read it.',
     ],
     icon: 'notebook-pen',
   },
@@ -29,7 +29,7 @@ export const GUIDE: GuideSection[] = [
     id: 'safe-to-spend',
     title: 'Safe to spend',
     body: [
-      'The teal card at the top of Home is the heart of Hisaab. It takes your income for the month, subtracts what you have spent, the bills still to come, and what you have set aside for goals — and shows what is truly free.',
+      'The teal card at the top of Home is the heart of Hisaab. It takes your income for the month, subtracts what you have spent, the bills still to come, and what you have set aside for goals, then shows what is truly free.',
       'It also breaks that into a per-day allowance for the days left, so a big number never tempts you into a lean second half of the month.',
     ],
     steps: [
@@ -42,7 +42,7 @@ export const GUIDE: GuideSection[] = [
     id: 'adding',
     title: 'Adding an entry',
     body: [
-      'Tap the teal + in the middle of the bar to add anything. The amount pad leads — the big serif figure grows as you type — then pick expense, income, or transfer, choose an account and category, and save.',
+      'Tap the teal + in the middle of the bar to add anything. The amount pad leads, with the big serif figure growing as you type. Then pick expense, income, or transfer, choose an account and category, and save.',
       'Type a merchant and Hisaab pre-picks a likely category for you. "Save & add another" keeps the sheet open for quick multi-entry.',
     ],
     steps: [
@@ -77,7 +77,7 @@ export const GUIDE: GuideSection[] = [
     id: 'goals',
     title: 'Goals',
     body: [
-      'Set something worth saving for — a trip, a gift, a rainy-day fund. Each goal shows a progress ring and an honest guess of when you will get there at your recent pace.',
+      'Set something worth saving for, like a trip, a gift, or a rainy-day fund. Each goal shows a progress ring and an honest guess of when you will get there at your recent pace.',
       'Give a goal a target date and Hisaab tells you whether you are on track and how much a month it needs if you are behind.',
     ],
     steps: [
@@ -91,7 +91,7 @@ export const GUIDE: GuideSection[] = [
     title: 'Insights',
     body: [
       'Insights turns your entries into a calm picture: spending over time as day, week, or month; a category breakdown with how each moved against last month; and per-category budget pacing.',
-      'Pacing reads spent-against-time, not just spent-against-total — so 90% of a budget on the 18th shows as "ahead of pace", a nudge rather than an alarm.',
+      'Pacing reads spent-against-time, not just spent-against-total, so 90% of a budget on the 18th shows as "ahead of pace", a nudge rather than an alarm.',
     ],
     steps: [
       'Set a monthly budget on a category in Settings → Categories to see its pacing.',
@@ -104,7 +104,7 @@ export const GUIDE: GuideSection[] = [
     title: 'Truly end to end',
     body: [
       'Your ledger is encrypted with a key derived from a passphrase only you know. The backup to your account is sealed before it ever leaves your phone; the server holds ciphertext and timestamps, nothing readable.',
-      'Because the server cannot decrypt, we cannot reset your passphrase. That is what the one-time Recovery Key is for — keep it somewhere safe and offline.',
+      'Because the server cannot decrypt, we cannot reset your passphrase. That is what the one-time Recovery Key is for, so keep it somewhere safe and offline.',
     ],
     steps: [
       'Change your passphrase any time in Settings → Vault; your data is not re-encrypted, only the key is re-wrapped.',

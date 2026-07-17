@@ -86,8 +86,9 @@ export function BackupStep({
         footer={<PrimaryButton onClick={onNext}>Continue setup</PrimaryButton>}
       >
         <StepHeading eyebrow="Almost there" title="Check your email">
-          We sent a confirmation link to {email}. Confirm it whenever you like — your backup switches
-          on then. You can keep setting up now; everything works on this device meanwhile.
+          We sent a confirmation link to {email}. Confirm it whenever you like, and your backup
+          switches on then. You can keep setting up now, everything works on this device in the
+          meantime.
         </StepHeading>
       </OnboardingScaffold>
     );
@@ -119,7 +120,7 @@ export function BackupStep({
     >
       <StepHeading eyebrow="Backup" title="Back up across your devices?">
         Create an account to keep an encrypted backup and sync between your phone and laptop. It's
-        optional — Hisaab works fully offline without it, and you can turn it on later.
+        optional. Hisaab works fully offline without it, and you can turn it on later.
       </StepHeading>
 
       <div className="mt-6 space-y-4">
@@ -143,7 +144,7 @@ export function BackupStep({
       </div>
 
       <p className="mt-4 text-xs leading-relaxed text-ink-300">
-        This sign-in only names your backup. It never sees your passphrase or your data — the server
+        This sign-in only names your backup. It never sees your passphrase or your data. The server
         holds sealed, unreadable blobs.
       </p>
     </OnboardingScaffold>

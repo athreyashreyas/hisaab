@@ -22,8 +22,8 @@ export const CHANGELOG: Release[] = [
     major: true,
     title: 'A friendly welcome, and a guide',
     notes: [
-      'A gentle guided setup for new accounts: back up across your devices, lock your vault, save your Recovery Key, and add the accounts you keep — one calm step at a time.',
-      'A new guide with two sides: What\'s new, and a walk-through of everything — safe-to-spend, adding entries, the ledger, accounts, goals, insights, and how your data stays encrypted.',
+      'A gentle guided setup for new accounts: back up across your devices, lock your vault, save your Recovery Key, and add the accounts you keep, one calm step at a time.',
+      'A new guide with two sides: What\'s new, and a walk-through of everything, from safe-to-spend and adding entries to the ledger, accounts, goals, insights, and how your data stays encrypted.',
       'It greets you with the full guide once, right after you set up, so your first moments have a friendly hand to hold. Open it any time from Settings.',
       'What\'s new now greets you just once per update, then steps aside.',
     ],

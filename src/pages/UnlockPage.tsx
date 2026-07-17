@@ -55,7 +55,7 @@ export function UnlockPage() {
         </form>
       </Card>
       <p className="mt-4 px-2 text-center text-xs leading-relaxed text-ink-300">
-        Your passphrase never leaves this device. It derives the key that decrypts your ledger —
+        Your passphrase never leaves this device. It derives the key that decrypts your ledger, and
         we can't reset it, so keep your Recovery Key safe.
       </p>
     </VaultShell>

@@ -97,7 +97,7 @@ export function LedgerPage() {
 }
 
 function DayTotal({ net }: { net: number }) {
-  if (net === 0) return <span>—</span>;
+  if (net === 0) return <span>-</span>;
   return (
     <Money
       paise={Math.abs(net)}
