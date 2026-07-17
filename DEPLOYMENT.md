@@ -22,7 +22,21 @@ The server never sees plaintext. It stores only ciphertext blobs and the
    verification click. Leave it on for a real launch.
 
 The schema creates two owner-only tables: `vault_keys` and `records`. That's all
-the backup needs.
+the backup needs. Later migrations (e.g. `0002_recovery_wrap.sql`) add columns —
+apply each new file the same way.
+
+### Password reset (required for the reset flow)
+
+Hisaab uses one email + password: it signs you in and unlocks your data. A reset
+is done by email link, then finished in-app with your recovery phrase. For the
+email link to return to the app, add your site to Supabase:
+
+- **Authentication → URL Configuration:**
+  - **Site URL:** `https://hisaab-rakho.vercel.app` (your production URL)
+  - **Redirect URLs:** add `https://hisaab-rakho.vercel.app` (and
+    `http://localhost:5173` for local dev)
+
+Without this, the reset email link is rejected as an untrusted redirect.
 
 ## 2. Vercel (hosting + CI)
 

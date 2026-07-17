@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { db } from '../lib/db';
 import { liveQuery } from 'dexie';
 import { syncNow, refreshSyncBadge } from '../lib/sync';
-import { useAuthStore } from '../stores/authStore';
+import { useAccountStore } from '../stores/accountStore';
 import { useNetwork } from './useNetwork';
 
 /**
@@ -12,7 +12,7 @@ import { useNetwork } from './useNetwork';
  */
 export function useSyncQueue() {
   const online = useNetwork();
-  const user = useAuthStore((s) => s.user);
+  const user = useAccountStore((s) => s.user);
 
   // Flush shortly after the queue changes (batches rapid multi-entry).
   useEffect(() => {

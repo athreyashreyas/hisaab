@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight, Wallet, Shapes, KeyRound, Download, Upload, FileText,
-  Lock, LogOut, LogIn, RefreshCw, Info, BookOpen,
+  Lock, LogOut, RefreshCw, Info, BookOpen, Copy, Check,
 } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
@@ -10,8 +10,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Icon } from '../components/ui/Icon';
-import { useVaultStore } from '../stores/vaultStore';
-import { useAuthStore } from '../stores/authStore';
+import { useAccountStore } from '../stores/accountStore';
 import { isCloudConfigured } from '../lib/supabase';
 import { APP_VERSION } from '../lib/changelog';
 import {
@@ -22,16 +21,16 @@ import {
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const lock = useVaultStore((s) => s.lock);
-  const { user, signOut } = useAuthStore();
+  const lock = useAccountStore((s) => s.lock);
+  const signOut = useAccountStore((s) => s.signOut);
+  const regenerate = useAccountStore((s) => s.regenerateRecoveryPhrase);
+  const email = useAccountStore((s) => s.email);
+  const user = useAccountStore((s) => s.user);
 
   const [changePass, setChangePass] = useState(false);
-  const [recoveryKey, setRecoveryKey] = useState<string | null>(null);
-  const [signIn, setSignIn] = useState(false);
+  const [recoveryPhrase, setRecoveryPhrase] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const regenerate = useVaultStore((s) => s.regenerateRecoveryKey);
 
   function flash(msg: string) {
     setToast(msg);
@@ -60,12 +59,13 @@ export function SettingsPage() {
         <Row icon={<Shapes size={18} />} label="Categories & budgets" onClick={() => navigate('/settings/categories')} chevron />
       </SettingsGroup>
 
-      <SettingsGroup title="Vault & security">
-        <Row icon={<KeyRound size={18} />} label="Change passphrase" onClick={() => setChangePass(true)} chevron />
+      <SettingsGroup title="Security">
+        <Row icon={<KeyRound size={18} />} label="Change password" onClick={() => setChangePass(true)} chevron />
         <Row
           icon={<RefreshCw size={18} />}
-          label="Regenerate Recovery Key"
-          onClick={async () => setRecoveryKey(await regenerate())}
+          label="New recovery phrase"
+          sub="Replaces your old one"
+          onClick={async () => setRecoveryPhrase(await regenerate())}
           chevron
         />
         <Row icon={<Lock size={18} />} label="Lock now" onClick={lock} />
@@ -86,17 +86,19 @@ export function SettingsPage() {
       </SettingsGroup>
 
       <SettingsGroup title="Account">
-        {isCloudConfigured() ? (
-          user ? (
-            <>
-              <Row icon={<Icon name="cloud" size={18} />} label={user.email ?? 'Signed in'} sub="Encrypted backup on" />
-              <Row icon={<LogOut size={18} />} label="Sign out" onClick={() => void signOut()} />
-            </>
-          ) : (
-            <Row icon={<LogIn size={18} />} label="Sign in for encrypted backup" onClick={() => setSignIn(true)} chevron />
-          )
-        ) : (
-          <Row icon={<Icon name="cloud-off" size={18} />} label="Cloud backup not configured" sub="Hisaab is running on this device only" />
+        <Row
+          icon={<Icon name={isCloudConfigured() ? 'cloud' : 'cloud-off'} size={18} />}
+          label={email ?? 'This device'}
+          sub={
+            isCloudConfigured()
+              ? user
+                ? 'Encrypted backup on'
+                : 'Backup resumes when you reconnect'
+              : 'On this device only'
+          }
+        />
+        {isCloudConfigured() && (
+          <Row icon={<LogOut size={18} />} label="Sign out" onClick={() => void signOut()} />
         )}
       </SettingsGroup>
 
@@ -107,12 +109,11 @@ export function SettingsPage() {
 
       <p className="mt-6 px-2 text-center text-xs leading-relaxed text-ink-300">
         Hisaab keeps your ledger on this device and backs it up end-to-end encrypted.
-        We can't read it, and we can't reset your passphrase, so keep your Recovery Key safe.
+        We can't read it, and we can't reset your password, so keep your recovery phrase safe.
       </p>
 
-      <ChangePassphraseModal open={changePass} onClose={() => setChangePass(false)} onDone={() => flash('Passphrase changed.')} />
-      <RecoveryKeyModal recoveryKey={recoveryKey} onClose={() => setRecoveryKey(null)} />
-      <SignInModal open={signIn} onClose={() => setSignIn(false)} />
+      <ChangePasswordModal open={changePass} onClose={() => setChangePass(false)} onDone={() => flash('Password changed.')} />
+      <RecoveryPhraseModal phrase={recoveryPhrase} onClose={() => setRecoveryPhrase(null)} />
 
       {toast && (
         <div className="fixed inset-x-0 bottom-24 z-[60] mx-auto w-fit rounded-full bg-ink-900 px-4 py-2 text-sm font-medium text-parchment-50 shadow-lg md:bottom-8">
@@ -158,8 +159,8 @@ function Row({
   );
 }
 
-function ChangePassphraseModal({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
-  const change = useVaultStore((s) => s.changePassphrase);
+function ChangePasswordModal({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
+  const change = useAccountStore((s) => s.changePassword);
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -179,92 +180,75 @@ function ChangePassphraseModal({ open, onClose, onDone }: { open: boolean; onClo
       setConfirm('');
       onDone();
       onClose();
-    } catch {
-      setError('Current passphrase is incorrect.');
+    } catch (err) {
+      setError(err instanceof Error && err.name === 'WrongPassphraseError' ? 'Current password is incorrect.' : 'Current password is incorrect.');
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Change passphrase">
+    <Modal open={open} onClose={onClose} title="Change password">
       <div className="space-y-4 px-5 py-4">
         <p className="text-sm text-ink-500">
-          Your data isn't re-encrypted. Only the key wrapping changes, so this is instant.
+          Your data isn't re-encrypted. Only the key wrapping changes, so this is instant. Your
+          recovery phrase stays the same.
         </p>
-        <Input type="password" label="Current passphrase" value={current} onChange={(e) => setCurrent(e.target.value)} error={error ?? undefined} />
-        <Input type="password" label="New passphrase" value={next} onChange={(e) => setNext(e.target.value)} hint="At least 8 characters." />
+        <Input type="password" label="Current password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} error={error ?? undefined} />
+        <Input type="password" label="New password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} hint="At least 8 characters." />
         <Input
           type="password"
-          label="Confirm new passphrase"
+          label="Confirm new password"
+          autoComplete="new-password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           error={confirm && confirm !== next ? "Those don't match." : undefined}
         />
         <Button block disabled={!canSave} onClick={submit}>
-          {busy ? 'Updating…' : 'Change passphrase'}
+          {busy ? 'Updating…' : 'Change password'}
         </Button>
       </div>
     </Modal>
   );
 }
 
-function RecoveryKeyModal({ recoveryKey, onClose }: { recoveryKey: string | null; onClose: () => void }) {
-  return (
-    <Modal open={recoveryKey !== null} onClose={onClose} title="New Recovery Key">
-      <div className="space-y-4 px-5 py-4">
-        <p className="text-sm text-ink-500">
-          Your old Recovery Key no longer works. Store this new one somewhere safe and offline.
-        </p>
-        <div className="rounded-card border border-teal-100 bg-teal-50 p-4 text-center font-mono text-lg font-semibold tracking-wide text-teal-700">
-          {recoveryKey}
-        </div>
-        <Button block onClick={onClose}>I've saved it</Button>
-      </div>
-    </Modal>
-  );
-}
+function RecoveryPhraseModal({ phrase, onClose }: { phrase: string | null; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const words = (phrase ?? '').split(' ').filter(Boolean);
 
-function SignInModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { signInWithEmail, signUpWithEmail } = useAuthStore();
-  const [mode, setMode] = useState<'in' | 'up'>('in');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function submit() {
-    setBusy(true);
-    setError(null);
+  async function copy() {
+    if (!phrase) return;
     try {
-      if (mode === 'in') await signInWithEmail(email, password);
-      else await signUpWithEmail(email, password);
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not sign in.');
-    } finally {
-      setBusy(false);
+      await navigator.clipboard.writeText(phrase);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* on screen to copy by hand */
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={mode === 'in' ? 'Sign in' : 'Create account'}>
+    <Modal open={phrase !== null} onClose={onClose} title="New recovery phrase">
       <div className="space-y-4 px-5 py-4">
         <p className="text-sm text-ink-500">
-          Signing in only enables the encrypted backup. Your passphrase still decrypts your data, and
-          the server can't read it.
+          Your old recovery phrase no longer works. Write these twelve words down and keep them
+          somewhere safe and offline.
         </p>
-        <Input type="email" label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Input type="password" label="Password" value={password} onChange={(e) => setPassword(e.target.value)} error={error ?? undefined} />
-        <Button block disabled={busy || !email || !password} onClick={submit}>
-          {busy ? 'Please wait…' : mode === 'in' ? 'Sign in' : 'Create account'}
+        <div className="rounded-card border border-teal-100 bg-teal-50 p-4">
+          <ol className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+            {words.map((w, i) => (
+              <li key={i} className="flex items-baseline gap-2 font-mono text-sm text-teal-800">
+                <span className="w-5 shrink-0 text-right text-[11px] tabular-nums text-teal-400">{i + 1}</span>
+                <span className="font-semibold">{w}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <Button variant="secondary" block onClick={copy}>
+          {copied ? <Check size={17} /> : <Copy size={17} />}
+          {copied ? 'Copied' : 'Copy phrase'}
         </Button>
-        <button
-          onClick={() => setMode(mode === 'in' ? 'up' : 'in')}
-          className="w-full text-center text-sm font-semibold text-teal-600"
-        >
-          {mode === 'in' ? 'New here? Create an account' : 'Already have an account? Sign in'}
-        </button>
+        <Button block onClick={onClose}>I've saved it</Button>
       </div>
     </Modal>
   );

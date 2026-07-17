@@ -12,12 +12,17 @@
  * either is false the queue simply accumulates and flushes once conditions hold.
  */
 import { db } from './db';
-import { sealRecord, openRecord, keyring, type Envelope, type WrappedVaultKey } from './crypto';
+import { sealRecord, openRecord, keyring, type Envelope } from './crypto';
 import { supabase, isCloudConfigured } from './supabase';
 import { useSyncStore } from '../stores/syncStore';
-import { useAuthStore } from '../stores/authStore';
-import { currentWrappedKey } from '../stores/vaultStore';
+import { useAccountStore } from '../stores/accountStore';
+import { currentWrappedKey, currentRecoveryWrap } from './vaultStorage';
+import { pushVaultKeys } from './vaultCloud';
 import type { SyncTable, SyncMeta } from '../types';
+
+function currentUser() {
+  return useAccountStore.getState().user;
+}
 
 const CURSOR_KEY = 'hisaab.sync.cursor';
 
@@ -57,7 +62,7 @@ export function canSync(): boolean {
   return (
     isCloudConfigured() &&
     keyring.isUnlocked() &&
-    Boolean(useAuthStore.getState().user) &&
+    Boolean(currentUser()) &&
     navigator.onLine
   );
 }
@@ -65,43 +70,22 @@ export function canSync(): boolean {
 // --- vault key backup -----------------------------------------------------
 
 /**
- * Ensure the wrapped DEK + salt live in the cloud (RLS: owner-only) so a new
- * device can fetch them and unlock with the passphrase. Contains no secrets in
- * the clear — the wrapped DEK is useless without the passphrase.
+ * Ensure both wrapped DEKs (password wrap + recovery-phrase wrap) live in the
+ * cloud (RLS: owner-only) so a new device can unlock with the password and a
+ * reset can restore with the recovery phrase. Neither is usable by the server.
  */
 export async function pushVaultKey(): Promise<void> {
-  if (!supabase) return;
-  const user = useAuthStore.getState().user;
+  const user = currentUser();
   const wrapped = currentWrappedKey();
   if (!user || !wrapped) return;
-  await supabase.from('vault_keys').upsert({
-    user_id: user.id,
-    salt: wrapped.salt,
-    wrapped_dek: wrapped.wrappedDek,
-    kdf: wrapped.kdf,
-    updated_at: new Date().toISOString(),
-  });
-}
-
-/** Fetch the wrapped key for this account (new-device unlock). */
-export async function fetchVaultKey(): Promise<WrappedVaultKey | null> {
-  if (!supabase) return null;
-  const user = useAuthStore.getState().user;
-  if (!user) return null;
-  const { data } = await supabase
-    .from('vault_keys')
-    .select('salt, wrapped_dek, kdf')
-    .eq('user_id', user.id)
-    .maybeSingle();
-  if (!data) return null;
-  return { salt: data.salt, wrappedDek: data.wrapped_dek, kdf: data.kdf, version: 1 };
+  await pushVaultKeys(user.id, wrapped, currentRecoveryWrap());
 }
 
 // --- push -----------------------------------------------------------------
 
 async function push(): Promise<void> {
   if (!supabase) return;
-  const user = useAuthStore.getState().user;
+  const user = currentUser();
   if (!user) return;
   const dek = keyring.get();
 
@@ -219,7 +203,7 @@ export async function syncNow(): Promise<void> {
     setStatus({ status: 'locked', pending: await pendingCount() });
     return;
   }
-  if (!useAuthStore.getState().user) {
+  if (!currentUser()) {
     setStatus({ status: 'idle', pending: await pendingCount() });
     return;
   }

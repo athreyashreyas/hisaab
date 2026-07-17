@@ -17,6 +17,23 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.3.0',
+    date: '2026-07-17',
+    major: true,
+    title: 'One password, and a recovery phrase',
+    notes: [
+      'Signing in is simpler now: one email and one password. That single password logs you in and unlocks your ledger, so there is no separate vault passphrase to remember.',
+      'It stays end to end encrypted. Your login is derived separately from the key to your data, so the server can check who you are but can never read what you saved.',
+      'A twelve-word recovery phrase replaces the old recovery key. Keep it safe and offline: if you ever forget your password, it is what lets you reset it without losing a thing.',
+      'Forgot your password? Reset it by email and set a new one with your recovery phrase, on any device.',
+    ],
+    howTo: [
+      'Sign in with your email and password, the same one everywhere.',
+      'Save your recovery phrase when you set up, or make a new one in Settings, Security.',
+      'To reset, tap Forgot password on the sign-in screen and follow the email.',
+    ],
+  },
+  {
     version: '0.2.0',
     date: '2026-07-17',
     major: true,

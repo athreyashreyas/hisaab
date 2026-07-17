@@ -4,28 +4,28 @@ import { MotionConfig } from 'framer-motion';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { router } from './router';
-import { useVaultStore } from './stores/vaultStore';
-import { useAuthStore } from './stores/authStore';
+import { useAccountStore } from './stores/accountStore';
 import { useSyncQueue } from './hooks/useSyncQueue';
-import { SetupPage } from './pages/SetupPage';
-import { UnlockPage } from './pages/UnlockPage';
 import { OnboardingFlow } from './pages/onboarding/OnboardingFlow';
+import { UnlockScreen } from './pages/auth/UnlockScreen';
+import { SignInScreen } from './pages/auth/SignInScreen';
+import { ResetPasswordScreen } from './pages/auth/ResetPasswordScreen';
 
 /**
- * Boot + vault gate. The router (and thus the whole app) only mounts once the
- * vault is unlocked; before that we show Setup (first run) or Unlock (returning).
- * MotionConfig honours the OS reduced-motion setting across every animation.
+ * Boot + account gate. One email + password is the whole identity: it signs you
+ * in and unlocks your encrypted ledger. The router (the app proper) mounts only
+ * once the vault is unlocked. MotionConfig honours the OS reduced-motion setting.
+ *
+ * Gate order matters: a password-reset session ('recovery') wins over everything
+ * so a reset link always reaches the reset screen.
  */
 export default function App() {
-  const vaultStatus = useVaultStore((s) => s.status);
-  const onboardedAt = useVaultStore((s) => s.onboardedAt);
-  const initVault = useVaultStore((s) => s.init);
-  const initAuth = useAuthStore((s) => s.init);
+  const status = useAccountStore((s) => s.status);
+  const init = useAccountStore((s) => s.init);
 
   useEffect(() => {
-    initVault();
-    void initAuth();
-  }, [initVault, initAuth]);
+    init();
+  }, [init]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -34,17 +34,22 @@ export default function App() {
   );
 
   function renderGate() {
-    if (vaultStatus === 'checking') return <BootSplash />;
-    // A fresh account (no vault, no onboarding marker) is walked through the
-    // guided first-run, which itself mints the vault partway through. The gate
-    // stays on onboarding until it finishes (onboardedAt is set), even though
-    // the vault becomes unlocked mid-flow.
-    if (onboardedAt === null) return <OnboardingFlow />;
-    if (vaultStatus === 'locked') return <UnlockPage />;
-    if (vaultStatus === 'unlocked') return <UnlockedApp />;
-    // Onboarded but somehow without a vault (rare, e.g. storage cleared): fall
-    // back to the standalone setup screen.
-    return <SetupPage />;
+    switch (status) {
+      case 'checking':
+        return <BootSplash />;
+      case 'recovery':
+        return <ResetPasswordScreen />;
+      case 'onboarding':
+        return <OnboardingFlow />;
+      case 'signed-out':
+        return <SignInScreen />;
+      case 'locked':
+        return <UnlockScreen />;
+      case 'unlocked':
+        return <UnlockedApp />;
+      default:
+        return <BootSplash />;
+    }
   }
 }
 

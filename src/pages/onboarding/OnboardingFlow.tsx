@@ -1,82 +1,49 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useVaultStore } from '../../stores/vaultStore';
-import { keyring } from '../../lib/crypto';
-import { isCloudConfigured } from '../../lib/supabase';
+import { useAccountStore } from '../../stores/accountStore';
 import { createAccount } from '../../lib/repo';
 import { APP_VERSION } from '../../lib/changelog';
 import { setSeenVersionLocal } from '../../lib/whatsNew';
 import { PENDING_GUIDE_KEY } from '../../lib/guideRoute';
 import { WelcomeStep } from '../../components/onboarding/steps/WelcomeStep';
-import { BackupStep } from '../../components/onboarding/steps/BackupStep';
-import { PassphraseStep } from '../../components/onboarding/steps/PassphraseStep';
+import { CreateAccountStep } from '../../components/onboarding/steps/CreateAccountStep';
 import { RecoveryStep } from '../../components/onboarding/steps/RecoveryStep';
 import { AccountsStep, type DraftAccount } from '../../components/onboarding/steps/AccountsStep';
 import { ReadyStep } from '../../components/onboarding/steps/ReadyStep';
+import { ForgotPasswordScreen } from '../auth/ForgotPasswordScreen';
 
 /**
- * Hisaab's guided first-run, in the spirit of Harmony's onboarding. A fresh
- * account is walked, one calm step at a time, through: what Hisaab is → optional
- * email backup → choosing a passphrase (which mints the vault) → saving the
- * Recovery Key → adding the accounts they keep → done. On finish it marks the
- * account onboarded, remembers this version as seen (so What's-new doesn't greet
- * someone who just saw the full guide), and lands them on the guide.
+ * Guided first-run for a fresh account: what Hisaab is → create your account
+ * (email + one password) → save your recovery phrase → add the accounts you keep
+ * → done. A returning user on a new device can sign in from the account step,
+ * which skips straight into the app with their ledger restored.
  *
- * Reload-safety: if the vault was already created in a prior, interrupted run
- * but the keyring is locked (a refresh cleared the in-memory key), we don't
- * re-run setup — we mark onboarded and let the normal gate show Unlock.
+ * register() mints the vault mid-flow (status becomes unlocked), but the gate
+ * keys on onboardedAt, so we stay here until finish().
  */
-type Step = 'welcome' | 'backup' | 'passphrase' | 'recovery' | 'accounts' | 'ready';
+type Step = 'welcome' | 'account' | 'recovery' | 'accounts' | 'ready';
 
 export function OnboardingFlow() {
-  const setup = useVaultStore((s) => s.setup);
-  const wrapped = useVaultStore((s) => s.wrapped);
-  const pendingRecoveryKey = useVaultStore((s) => s.pendingRecoveryKey);
-  const clearPendingRecoveryKey = useVaultStore((s) => s.clearPendingRecoveryKey);
-  const markOnboarded = useVaultStore((s) => s.markOnboarded);
+  const pendingRecoveryPhrase = useAccountStore((s) => s.pendingRecoveryPhrase);
+  const clearPendingRecoveryPhrase = useAccountStore((s) => s.clearPendingRecoveryPhrase);
+  const markOnboarded = useAccountStore((s) => s.markOnboarded);
 
-  // The visible step order, omitting the backup step when there is no cloud.
-  const steps = useMemo<Step[]>(
-    () =>
-      (isCloudConfigured()
-        ? ['welcome', 'backup', 'passphrase', 'recovery', 'accounts', 'ready']
-        : ['welcome', 'passphrase', 'recovery', 'accounts', 'ready']),
-    []
-  );
-
+  const steps = useMemo<Step[]>(() => ['welcome', 'account', 'recovery', 'accounts', 'ready'], []);
   const [step, setStep] = useState<Step>('welcome');
   const [direction, setDirection] = useState(1);
-  const bailed = useRef(false);
-
-  // Reload guard: a vault already exists but we're locked → finish onboarding
-  // silently and hand off to the Unlock screen rather than re-minting a vault.
-  useEffect(() => {
-    if (bailed.current) return;
-    if (wrapped && !keyring.isUnlocked()) {
-      bailed.current = true;
-      setSeenVersionLocal(APP_VERSION);
-      markOnboarded();
-    }
-  }, [wrapped, markOnboarded]);
+  const [forgotEmail, setForgotEmail] = useState<string | null>(null);
 
   const index = steps.indexOf(step);
   function go(to: Step) {
     setDirection(steps.indexOf(to) >= index ? 1 : -1);
     setStep(to);
   }
-  const next = () => go(steps[Math.min(index + 1, steps.length - 1)]);
-  const back = () => go(steps[Math.max(index - 1, 0)]);
-
-  async function createVaultWith(passphrase: string) {
-    await setup(passphrase); // mints vault, seeds defaults (incl. Cash), unlocks
-    next(); // → recovery
-  }
 
   async function createAccountsAnd(drafts: DraftAccount[]) {
     for (const d of drafts) {
       await createAccount({ name: d.name, kind: d.kind, opening_balance: 0, color: d.color });
     }
-    next(); // → ready
+    go('ready');
   }
 
   function finish() {
@@ -87,6 +54,10 @@ export function OnboardingFlow() {
       // ignore
     }
     markOnboarded(); // flips the gate → the app mounts
+  }
+
+  if (forgotEmail !== null) {
+    return <ForgotPasswordScreen initialEmail={forgotEmail} onBack={() => setForgotEmail(null)} />;
   }
 
   const common = { stepIndex: index, totalSteps: steps.length };
@@ -100,23 +71,28 @@ export function OnboardingFlow() {
         transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
         className="h-full"
       >
-        {step === 'welcome' && <WelcomeStep {...common} onNext={next} />}
-        {step === 'backup' && <BackupStep {...common} onBack={back} onNext={next} />}
-        {step === 'passphrase' && (
-          <PassphraseStep {...common} onBack={back} onCreate={createVaultWith} />
+        {step === 'welcome' && <WelcomeStep {...common} onNext={() => go('account')} />}
+        {step === 'account' && (
+          <CreateAccountStep
+            {...common}
+            onBack={() => go('welcome')}
+            onRegistered={() => go('recovery')}
+            onSignedIn={finish} // existing account restored → straight into the app
+            onForgot={(email) => setForgotEmail(email)}
+          />
         )}
         {step === 'recovery' && (
           <RecoveryStep
             {...common}
-            recoveryKey={pendingRecoveryKey}
+            recoveryPhrase={pendingRecoveryPhrase}
             onNext={() => {
-              clearPendingRecoveryKey();
-              next();
+              clearPendingRecoveryPhrase();
+              go('accounts');
             }}
           />
         )}
         {step === 'accounts' && (
-          <AccountsStep {...common} onBack={back} onContinue={createAccountsAnd} />
+          <AccountsStep {...common} onBack={() => go('recovery')} onContinue={createAccountsAnd} />
         )}
         {step === 'ready' && <ReadyStep {...common} onFinish={finish} />}
       </motion.div>

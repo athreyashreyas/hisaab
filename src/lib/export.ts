@@ -6,7 +6,7 @@
  */
 import { db } from './db';
 import { sealRecord, openRecord, keyring, exportVault, type Envelope, type VaultBackup } from './crypto';
-import { currentWrappedKey } from '../stores/vaultStore';
+import { currentWrappedKey } from './vaultStorage';
 import { formatINR } from './calculations';
 import type { Account, Category, Transaction } from '../types';
 
