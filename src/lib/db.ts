@@ -6,6 +6,7 @@ import type {
   Goal,
   GoalContribution,
   RecurringRule,
+  Prefs,
   SyncQueueItem,
 } from '../types';
 
@@ -22,6 +23,7 @@ class HisaabDB extends Dexie {
   goals!: EntityTable<Goal, 'id'>;
   goal_contributions!: EntityTable<GoalContribution, 'id'>;
   recurring_rules!: EntityTable<RecurringRule, 'id'>;
+  prefs!: EntityTable<Prefs, 'id'>;
   sync_queue!: EntityTable<SyncQueueItem, 'id'>;
 
   constructor() {
@@ -36,6 +38,13 @@ class HisaabDB extends Dexie {
       goal_contributions: 'id, goal_id, date, deleted_at, synced_at',
       recurring_rules: 'id, next_due, confirmed, active, deleted_at, synced_at',
       sync_queue: '++id, table_name, operation, record_id, created_at, retry_count',
+    });
+
+    // v2 adds the singleton prefs row (account-level settings that sync
+    // encrypted, like the last "What's new" version seen). Dexie carries the
+    // existing tables forward untouched; nothing needs migrating.
+    this.version(2).stores({
+      prefs: 'id, deleted_at, synced_at',
     });
   }
 }
@@ -53,6 +62,7 @@ export async function clearLocalDb(): Promise<void> {
       db.goals,
       db.goal_contributions,
       db.recurring_rules,
+      db.prefs,
       db.sync_queue,
     ],
     async () => {
@@ -63,6 +73,7 @@ export async function clearLocalDb(): Promise<void> {
         db.goals.clear(),
         db.goal_contributions.clear(),
         db.recurring_rules.clear(),
+        db.prefs.clear(),
         db.sync_queue.clear(),
       ]);
     }

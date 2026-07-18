@@ -22,6 +22,25 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.5.0',
+    date: '2026-07-18',
+    major: true,
+    title: 'The colour of money',
+    notes: [
+      'Amounts now carry the colour of the note you would reach for to pay them. A ₹47 coffee reads in ₹50 blue, a ₹1,800 dinner in ₹2,000 magenta. It is the palette of the Indian rupee, brought quietly into your ledger.',
+      'You will see it in the amount pad as you type, the figure easing from one note to the next, and as a slim stripe down the left of each entry, so a glance tells you the shape of your spending before you read a number.',
+      'Categories share the same banknote palette, tuned to stay clear and legible for colour-blind readers too, so the whole app speaks one language of colour.',
+      'What is new now greets you once per account, not once per device. Read it on your phone and your laptop will not show it again, and it stays end to end encrypted like everything else.',
+      'Fixed a crop at the top of the sign-in and setup screens in landscape, and tidied the edges so nothing hides behind the notch when you turn your phone sideways.',
+    ],
+    howTo: [
+      'Open the amount pad and watch the figure take on its note colour as the amount grows.',
+      'Glance down the ledger: the left stripe on each entry is the note that would cover it.',
+      'Read the full story in Settings, How Hisaab works, under "The colour of money".',
+    ],
+    art: 'denominations',
+  },
+  {
     version: '0.4.0',
     date: '2026-07-17',
     major: true,

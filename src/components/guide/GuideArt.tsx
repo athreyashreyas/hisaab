@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import type { GuideArtKind } from '../../lib/guide';
+import { DENOMINATIONS } from '../../lib/denominations';
 
 /**
  * The guide's small illustrations, so each section shows what it's describing
@@ -112,6 +113,38 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
         </div>
       );
 
+    // The banknote palette: each note's colour, and an amount wearing one.
+    case 'denominations':
+      return (
+        <div className="w-full max-w-[250px]">
+          <div className="flex items-baseline justify-center gap-1">
+            <span className="font-serif text-2xl" style={{ color: '#1F7BA8', opacity: 0.7 }}>
+              ₹
+            </span>
+            <span className="font-serif tabular-nums text-4xl" style={{ color: '#1F7BA8' }}>
+              47
+            </span>
+          </div>
+          <p className="mb-4 mt-1 text-center text-[10px] text-ink-300">reads in ₹50 blue</p>
+          <div className="flex gap-1.5">
+            {DENOMINATIONS.map((d, i) => (
+              <motion.span
+                key={d.value}
+                className="flex-1"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 + i * 0.06 }}
+              >
+                <span className="block h-8 rounded-[4px]" style={{ backgroundColor: d.color }} />
+                <span className="mt-1 block text-center text-[8px] tabular-nums text-ink-300">
+                  {d.value >= 1000 ? `${d.value / 1000}k` : d.value}
+                </span>
+              </motion.span>
+            ))}
+          </div>
+        </div>
+      );
+
     // A day in the ledger: grouped under its date, with a running day total.
     case 'ledger':
       return (
@@ -121,11 +154,17 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
             <Rupee className="text-[11px] text-ink-500">640</Rupee>
           </div>
           {[
-            ['Blue Tokai', 'Cafe', '420', ROSE],
-            ['Auto', 'Transport', '220', ROSE],
-            ['Refund', 'Income', '1,200', MOSS],
-          ].map(([name, cat, amt, color]) => (
-            <div key={name} className="flex items-center gap-2.5 rounded-card bg-parchment-50 px-3 py-2 shadow-sm">
+            // name, category, amount, category tint, banknote-stripe colour
+            ['Blue Tokai', 'Cafe', '420', ROSE, '#6B6E68'], // ₹420 → ₹500 grey
+            ['Auto', 'Transport', '220', '#1F7BA8', '#6B6E68'], // ₹220 → ₹500 grey
+            ['Refund', 'Income', '1,200', MOSS, '#C43E82'], // ₹1,200 → ₹2,000 magenta
+          ].map(([name, cat, amt, color, note]) => (
+            <div key={name} className="relative flex items-center gap-2.5 rounded-card bg-parchment-50 py-2 pl-3.5 pr-3 shadow-sm">
+              <span
+                aria-hidden="true"
+                className="absolute inset-y-1.5 left-1 w-0.5 rounded-full"
+                style={{ backgroundColor: note }}
+              />
               <span className="h-6 w-6 shrink-0 rounded-full" style={{ backgroundColor: `${color}26` }} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[11px] font-semibold text-ink-900">{name}</span>

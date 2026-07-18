@@ -17,7 +17,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="bottom-nav flex shrink-0 items-stretch justify-around border-t border-parchment-200 bg-parchment-50 px-1 pl-safe pr-safe shadow-[0_-2px_10px_rgba(26,26,24,0.05)] md:hidden"
+      className="bottom-nav flex shrink-0 items-stretch justify-around border-t border-parchment-200 bg-parchment-50 pl-[max(0.25rem,var(--safe-left))] pr-[max(0.25rem,var(--safe-right))] shadow-[0_-2px_10px_rgba(26,26,24,0.05)] md:hidden"
     >
       {navItems.map((item) => (
         <NavItemLink key={item.to} to={item.to} label={item.label} icon={item.icon} />

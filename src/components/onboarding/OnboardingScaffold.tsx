@@ -25,7 +25,7 @@ export function OnboardingScaffold({
 }) {
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-parchment-100">
-      <header className="relative z-10 flex items-center justify-between px-5 pt-safe">
+      <header className="relative z-10 flex items-center justify-between pl-[max(1.25rem,var(--safe-left))] pr-[max(1.25rem,var(--safe-right))] pt-safe">
         <div className="flex h-12 items-center">
           {onBack ? (
             <button
@@ -43,14 +43,14 @@ export function OnboardingScaffold({
       </header>
 
       <main
-        className="scroll-ios relative z-10 min-h-0 flex-1 overflow-y-auto px-5"
+        className="scroll-ios relative z-10 min-h-0 flex-1 overflow-y-auto pl-[max(1.25rem,var(--safe-left))] pr-[max(1.25rem,var(--safe-right))]"
         style={{ paddingBottom: 'var(--keyboard-height, 0px)' }}
       >
         <div className="mx-auto w-full max-w-md">{children}</div>
       </main>
 
       {footer && (
-        <footer className="relative z-10 px-5 pb-safe pt-4">
+        <footer className="relative z-10 pb-safe pl-[max(1.25rem,var(--safe-left))] pr-[max(1.25rem,var(--safe-right))] pt-4">
           <div className="mx-auto w-full max-w-md pb-4">{footer}</div>
         </footer>
       )}

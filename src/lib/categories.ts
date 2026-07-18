@@ -1,32 +1,39 @@
 /**
  * Category palette + seed data.
  *
- * The palette is tuned to sit on parchment the way Attend's class colours do:
- * muted, slightly earthy, none of them fighting Hisaab's teal brand. Each is
- * distinct enough to tell apart in a 10-slice pie at small size.
+ * The palette is drawn from India's banknotes — the modern Mahatma Gandhi (New)
+ * series — so category colours share the same money DNA as the amount tints (see
+ * lib/denominations). Tuned a touch to sit on parchment without shouting, and
+ * none of them fighting Hisaab's teal brand.
+ *
+ * The first six are a validated, colour-blind-safe categorical set (checked with
+ * the data-viz palette validator: lightness band, chroma floor, CVD separation,
+ * and contrast on parchment all pass). Those six carry the common categories, so
+ * the pie stays legible for everyone; the remaining swatches are for user choice.
+ * `grey` is the reserved neutral for "Other" / uncategorised, never counted as a
+ * categorical hue.
  */
 
 export const CATEGORY_PALETTE: Record<string, string> = {
-  clay: '#B15E43',
-  saffron: '#C98F3E',
-  olive: '#8A8A4B',
-  fern: '#5F8A5A',
-  teal: '#1E7F75',
-  cerulean: '#3E7CA1',
-  indigo: '#5B6BA1',
-  plum: '#8A5A82',
-  rose: '#B85C72',
-  slate: '#6B6960',
+  amber: '#C06E1C', // ₹200 bright yellow
+  blue: '#1F7BA8', // ₹50 fluorescent blue
+  magenta: '#C43E82', // ₹2,000 magenta
+  lime: '#77871A', // ₹20 greenish-yellow
+  lavender: '#8158C8', // ₹100 lavender
+  green: '#3E7D3A', // note green
+  chocolate: '#8A5A3B', // ₹10 chocolate
+  teal: '#1E7F75', // brand
+  grey: '#6B6E68', // ₹500 stone grey — neutral / Other
 };
 
 /** Accent colours for accounts (kept separate so accounts read as chips, not categories). */
 export const ACCENT_PALETTE: string[] = [
-  '#1E7F75', // teal
-  '#3E7CA1', // cerulean
-  '#8A5A82', // plum
-  '#C98F3E', // saffron
-  '#5F8A5A', // fern
-  '#6B6960', // slate
+  '#1E7F75', // teal (brand)
+  '#1F7BA8', // ₹50 blue
+  '#8158C8', // ₹100 lavender
+  '#C06E1C', // ₹200 amber
+  '#3E7D3A', // green
+  '#6B6E68', // ₹500 grey
 ];
 
 export interface SeedCategory {
@@ -39,18 +46,21 @@ export interface SeedCategory {
  * Sensible India-first defaults. Users edit freely; these just make the empty
  * app usable on day one. Icons are lucide-react names.
  */
+// The six most common categories take the validated CVD-safe hues (amber, blue,
+// magenta, lime, lavender, green), so the everyday pie is legible for everyone.
+// The long tail takes the extension swatches; "Other" takes the grey neutral.
 export const DEFAULT_CATEGORIES: SeedCategory[] = [
-  { name: 'Food & dining', icon: 'utensils', color: CATEGORY_PALETTE.clay },
-  { name: 'Groceries', icon: 'shopping-basket', color: CATEGORY_PALETTE.fern },
-  { name: 'Transport', icon: 'bus', color: CATEGORY_PALETTE.cerulean },
-  { name: 'Rent & bills', icon: 'receipt', color: CATEGORY_PALETTE.slate },
-  { name: 'Shopping', icon: 'shopping-bag', color: CATEGORY_PALETTE.plum },
-  { name: 'Health', icon: 'heart-pulse', color: CATEGORY_PALETTE.rose },
-  { name: 'Entertainment', icon: 'clapperboard', color: CATEGORY_PALETTE.indigo },
+  { name: 'Food & dining', icon: 'utensils', color: CATEGORY_PALETTE.amber },
+  { name: 'Groceries', icon: 'shopping-basket', color: CATEGORY_PALETTE.lime },
+  { name: 'Transport', icon: 'bus', color: CATEGORY_PALETTE.blue },
+  { name: 'Rent & bills', icon: 'receipt', color: CATEGORY_PALETTE.grey },
+  { name: 'Shopping', icon: 'shopping-bag', color: CATEGORY_PALETTE.magenta },
+  { name: 'Health', icon: 'heart-pulse', color: CATEGORY_PALETTE.green },
+  { name: 'Entertainment', icon: 'clapperboard', color: CATEGORY_PALETTE.lavender },
   { name: 'Travel', icon: 'plane', color: CATEGORY_PALETTE.teal },
-  { name: 'Subscriptions', icon: 'repeat', color: CATEGORY_PALETTE.saffron },
-  { name: 'Gifts', icon: 'gift', color: CATEGORY_PALETTE.olive },
-  { name: 'Other', icon: 'circle-dashed', color: CATEGORY_PALETTE.slate },
+  { name: 'Subscriptions', icon: 'repeat', color: CATEGORY_PALETTE.chocolate },
+  { name: 'Gifts', icon: 'gift', color: CATEGORY_PALETTE.magenta },
+  { name: 'Other', icon: 'circle-dashed', color: CATEGORY_PALETTE.grey },
 ];
 
 /**

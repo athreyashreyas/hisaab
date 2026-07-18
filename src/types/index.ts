@@ -122,6 +122,23 @@ export interface RecurringRule extends SyncMeta {
   active: boolean;
 }
 
+// --- prefs ----------------------------------------------------------------
+
+/**
+ * Account-level preferences that ride the normal encrypted sync path, so they
+ * follow you across devices without the server learning anything. A singleton:
+ * exactly one row, at PREFS_ID.
+ *
+ * It syncs as a `records` row like everything else, which is why this is a
+ * proper table rather than a plaintext column somewhere — the server holds
+ * ciphertext and timestamps, and prefs are no exception.
+ */
+export interface Prefs extends SyncMeta {
+  id: ID;
+  /** Newest app version whose "What's new" this account has already seen. */
+  last_seen_version: string | null;
+}
+
 // --- sync queue -----------------------------------------------------------
 
 export type SyncTable =
@@ -130,7 +147,8 @@ export type SyncTable =
   | 'transactions'
   | 'goals'
   | 'goal_contributions'
-  | 'recurring_rules';
+  | 'recurring_rules'
+  | 'prefs';
 
 export type SyncOp = 'upsert' | 'delete';
 

@@ -72,7 +72,7 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('circle-dashed');
-  const [color, setColor] = useState(CATEGORY_PALETTE.slate);
+  const [color, setColor] = useState(CATEGORY_PALETTE.grey);
   const [budget, setBudget] = useState('');
 
   useEffect(() => {
@@ -85,7 +85,7 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
     } else {
       setName('');
       setIcon('circle-dashed');
-      setColor(CATEGORY_PALETTE.slate);
+      setColor(CATEGORY_PALETTE.grey);
       setBudget('');
     }
   }, [open, existing]);

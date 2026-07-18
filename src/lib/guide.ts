@@ -14,6 +14,7 @@ export type GuideArtKind =
   | 'logo'
   | 'safeToSpend'
   | 'adding'
+  | 'denominations'
   | 'ledger'
   | 'accounts'
   | 'goals'
@@ -69,6 +70,20 @@ export const GUIDE: GuideSection[] = [
     ],
     icon: 'plus',
     art: 'adding',
+  },
+  {
+    id: 'denominations',
+    title: 'The colour of money',
+    body: [
+      'Every amount carries the colour of the note you would reach for to pay it. A ₹47 coffee reads in ₹50 blue, a ₹1,800 dinner in ₹2,000 magenta. It is the palette of the Indian rupee, brought into your ledger.',
+      'You will see it as you type in the amount pad, and as a slim stripe down the left of each entry, so a glance at the ledger tells you the shape of your spending before you have read a single number.',
+    ],
+    steps: [
+      'The note colour follows the amount, easing from one note to the next as it grows.',
+      'Categories draw from the same banknote palette, so the whole app shares one language of colour.',
+    ],
+    icon: 'banknote',
+    art: 'denominations',
   },
   {
     id: 'ledger',

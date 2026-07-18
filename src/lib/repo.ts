@@ -18,6 +18,8 @@ import type {
   Goal,
   GoalContribution,
   RecurringRule,
+  Prefs,
+  SyncMeta,
   SyncTable,
   SyncOp,
   ID,
@@ -289,4 +291,38 @@ export async function restoreDefaultCategories(): Promise<void> {
     if (names.has(c.name)) continue;
     await createCategory({ ...c, order: order++ });
   }
+}
+
+// --- prefs ----------------------------------------------------------------
+
+/**
+ * The singleton prefs row. `records.id` is a uuid column, so this has to be a
+ * real UUID rather than a slug like "prefs" — it's a fixed one, so every device
+ * writes and reads the same row and last-write-wins does the rest.
+ */
+export const PREFS_ID: ID = '00000000-0000-4000-8000-000000000001';
+
+/** Read account prefs, or null if this device has never seen or pulled them. */
+export async function getPrefs(): Promise<Prefs | null> {
+  const row = await db.prefs.get(PREFS_ID);
+  return row && !row.deleted_at ? row : null;
+}
+
+/**
+ * Patch account prefs, creating the row on first write. Goes through the normal
+ * queue, so it syncs encrypted like any other record.
+ */
+export async function updatePrefs(patch: Partial<Omit<Prefs, 'id' | keyof SyncMeta>>): Promise<void> {
+  const existing = await db.prefs.get(PREFS_ID);
+  const row: Prefs = {
+    last_seen_version: null,
+    ...existing,
+    ...patch,
+    id: PREFS_ID,
+    updated_at: now(),
+    deleted_at: null,
+    synced_at: existing?.synced_at ?? null,
+  };
+  await db.prefs.put(row);
+  await enqueue('prefs', 'upsert', PREFS_ID);
 }

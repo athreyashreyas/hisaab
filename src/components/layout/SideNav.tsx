@@ -10,7 +10,7 @@ export function SideNav() {
   const openAdd = useUIStore((s) => s.openAdd);
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-parchment-200 bg-parchment-50 px-3 pb-safe pl-safe pt-safe md:flex">
+    <aside className="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-parchment-200 bg-parchment-50 pb-safe pl-[max(0.75rem,var(--safe-left))] pr-3 pt-safe md:flex">
       <div className="flex items-center gap-2 px-3 py-5">
         <div className="grid h-9 w-9 place-items-center rounded-card bg-teal-500 font-serif text-lg text-white">
           ₹

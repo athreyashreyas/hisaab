@@ -34,6 +34,11 @@ const TABLES: SyncTable[] = [
   'goals',
   'goal_contributions',
   'recurring_rules',
+  // Account prefs (e.g. the last "What's new" version seen) ride the same
+  // encrypted path as everything else, so they follow you across devices
+  // without the server learning a thing. `records.table_name` is free-form
+  // text, so a new logical table needs no schema migration.
+  'prefs',
 ];
 
 type AnyRow = SyncMeta & { id: string };

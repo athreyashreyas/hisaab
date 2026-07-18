@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useAccountStore } from '../../stores/accountStore';
 import { createAccount } from '../../lib/repo';
 import { APP_VERSION } from '../../lib/changelog';
-import { setSeenVersionLocal } from '../../lib/whatsNew';
+import { setSeenVersionLocal, setSeenVersionSynced } from '../../lib/whatsNew';
 import { PENDING_GUIDE_KEY } from '../../lib/guideRoute';
 import { WelcomeStep } from '../../components/onboarding/steps/WelcomeStep';
 import { CreateAccountStep } from '../../components/onboarding/steps/CreateAccountStep';
@@ -47,7 +47,11 @@ export function OnboardingFlow() {
   }
 
   function finish() {
+    // Someone who just finished setup has been walked through the app already,
+    // so mark this version seen on both markers: What's new should never greet
+    // them the moment they land, on this device or the next one they sign in on.
     setSeenVersionLocal(APP_VERSION);
+    void setSeenVersionSynced(APP_VERSION);
     try {
       localStorage.setItem(PENDING_GUIDE_KEY, '1'); // land on the guide once the app mounts
     } catch {

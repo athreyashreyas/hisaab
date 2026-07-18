@@ -2,12 +2,14 @@ import { Icon } from '../ui/Icon';
 import { Money } from '../ui/Money';
 import { ArrowLeftRight } from 'lucide-react';
 import type { Account, Category, Transaction } from '../../types';
+import { denominationColor } from '../../lib/denominations';
 import { cn } from '../../lib/cn';
 
 /**
- * One ledger line: a category-tinted icon tile, merchant + context, and the
- * amount. Income shows in moss with a leading +, expense in ink with −, transfers
- * in cerulean. Used in the ledger list and the Home "Recent" card.
+ * One ledger line: a slim banknote stripe down the left edge (the note that
+ * would cover the amount), a category-tinted icon tile, merchant + context, and
+ * the amount. Income shows in moss with a leading +, expense in ink with −,
+ * transfers in cerulean. Used in the ledger list and the Home "Recent" card.
  */
 export function TxnRow({
   txn,
@@ -36,14 +38,23 @@ export function TxnRow({
 
   const title = txn.merchant || (isTransfer ? 'Transfer' : isIncome ? 'Income' : 'Expense');
 
+  // The banknote that would cover this amount — the row's edge stripe.
+  const noteColor = denominationColor(txn.amount);
+
   return (
     <button
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-parchment-100',
+        'relative flex w-full items-center gap-3 py-3 pl-5 pr-4 text-left transition-colors hover:bg-parchment-100',
         className
       )}
     >
+      {/* Banknote stripe: which note this spend is, at a glance down the list. */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-2 left-1.5 w-1 rounded-full"
+        style={{ backgroundColor: noteColor }}
+      />
       <span
         className="grid shrink-0 place-items-center rounded-[10px]"
         style={{ backgroundColor: `${tint}20`, color: tint, height: 38, width: 38 }}

@@ -33,7 +33,9 @@ export function GuidePage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-parchment-100">
-      <header className="flex items-center justify-between px-4 pt-safe">
+      {/* pl/pr-safe matter in landscape, where the notch sits on a side edge
+          rather than the top and would otherwise cover the back button. */}
+      <header className="flex items-center justify-between pl-[max(1rem,var(--safe-left))] pr-[max(1rem,var(--safe-right))] pt-safe">
         <div className="flex h-14 items-center">
           <button
             onClick={done}
@@ -46,7 +48,7 @@ export function GuidePage() {
         <span className="text-xs tabular-nums text-ink-300">Hisaab {APP_VERSION}</span>
       </header>
 
-      <div className="scroll-ios min-h-0 flex-1 overflow-y-auto pb-safe">
+      <div className="scroll-ios min-h-0 flex-1 overflow-y-auto pb-safe pl-safe pr-safe">
         <main className="mx-auto w-full max-w-md px-5 pb-12">
           <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-ink-300">
             How Hisaab works
