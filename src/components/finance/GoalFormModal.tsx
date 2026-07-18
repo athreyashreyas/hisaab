@@ -66,7 +66,7 @@ export function GoalFormModal({
   return (
     <Modal open={open} onClose={onClose} title={goal ? 'Edit goal' : 'New goal'}>
       <div className="space-y-4 px-5 py-4">
-        <Input label="Name" placeholder="Leather bag for Noor" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input label="Name" placeholder="Kerala trip, new phone…" value={name} onChange={(e) => setName(e.target.value)} />
         <Input
           label="Target amount"
           inputMode="numeric"

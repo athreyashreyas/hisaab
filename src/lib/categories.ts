@@ -59,6 +59,7 @@ export const DEFAULT_CATEGORIES: SeedCategory[] = [
   { name: 'Entertainment', icon: 'clapperboard', color: CATEGORY_PALETTE.lavender },
   { name: 'Travel', icon: 'plane', color: CATEGORY_PALETTE.teal },
   { name: 'Subscriptions', icon: 'repeat', color: CATEGORY_PALETTE.chocolate },
+  { name: 'Education & learning', icon: 'graduation-cap', color: CATEGORY_PALETTE.teal },
   { name: 'Gifts', icon: 'gift', color: CATEGORY_PALETTE.magenta },
   { name: 'Other', icon: 'circle-dashed', color: CATEGORY_PALETTE.grey },
 ];
@@ -70,7 +71,7 @@ export const DEFAULT_CATEGORIES: SeedCategory[] = [
  * per merchant beats any static list once there's data).
  */
 export const MERCHANT_RULES: { pattern: RegExp; category: string }[] = [
-  { pattern: /swiggy|zomato|blue tokai|starbucks|cafe|restaurant|dominos|kfc/i, category: 'Food & dining' },
+  { pattern: /swiggy|zomato|third wave coffee|starbucks|cafe|restaurant|dominos|kfc/i, category: 'Food & dining' },
   { pattern: /bigbasket|blinkit|zepto|dmart|grofers|reliance fresh/i, category: 'Groceries' },
   { pattern: /uber|ola|rapido|irctc|metro|petrol|hpcl|iocl|bpcl|fuel/i, category: 'Transport' },
   { pattern: /electricity|water|gas|broadband|airtel|jio|vi |bescom|rent/i, category: 'Rent & bills' },
@@ -78,6 +79,7 @@ export const MERCHANT_RULES: { pattern: RegExp; category: string }[] = [
   { pattern: /pharmacy|apollo|1mg|pharmeasy|hospital|clinic|practo/i, category: 'Health' },
   { pattern: /netflix|spotify|prime video|hotstar|youtube premium|bookmyshow/i, category: 'Subscriptions' },
   { pattern: /makemytrip|goibibo|indigo|vistara|oyo|airbnb|cleartrip/i, category: 'Travel' },
+  { pattern: /udemy|coursera|byju|unacademy|upgrad|vedantu|tuition|school|college|course|bookstore/i, category: 'Education & learning' },
 ];
 
 /** Best-effort category name for a merchant string, or null if no rule matches. */

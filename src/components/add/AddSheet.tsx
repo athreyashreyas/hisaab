@@ -164,7 +164,7 @@ export function AddSheet() {
 
         <Input
           label="Merchant"
-          placeholder={type === 'income' ? 'Salary, refund…' : 'Blue Tokai, Uber…'}
+          placeholder={type === 'income' ? 'Salary, refund…' : 'Third Wave Coffee, Uber…'}
           value={merchant}
           onChange={(e) => setMerchant(e.target.value)}
         />

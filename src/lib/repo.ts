@@ -17,6 +17,7 @@ import type {
   Transaction,
   Goal,
   GoalContribution,
+  Investment,
   RecurringRule,
   Prefs,
   SyncMeta,
@@ -169,19 +170,38 @@ export async function updateGoal(id: ID, patch: Partial<Goal>): Promise<void> {
   await enqueue('goals', 'upsert', id);
 }
 
+/**
+ * Delete a goal and everything hanging off it in one transaction: the goal row
+ * and all of its contributions are tombstoned together. Without the cascade the
+ * contributions would linger and keep counting toward "goals set aside" and the
+ * earmark on account balances, so a deleted goal would silently stay in the
+ * corpus. Deletes are tombstones so the removal propagates across devices.
+ */
 export async function deleteGoal(id: ID): Promise<void> {
-  await db.goals.update(id, { deleted_at: now(), updated_at: now(), synced_at: null });
-  await enqueue('goals', 'delete', id);
+  await db.transaction('rw', db.goals, db.goal_contributions, db.sync_queue, async () => {
+    const stamp = { deleted_at: now(), updated_at: now(), synced_at: null };
+    await db.goals.update(id, stamp);
+    await enqueue('goals', 'delete', id);
+
+    const contribs = await db.goal_contributions.where('goal_id').equals(id).toArray();
+    for (const c of contribs) {
+      if (c.deleted_at) continue;
+      await db.goal_contributions.update(c.id, stamp);
+      await enqueue('goal_contributions', 'delete', c.id);
+    }
+  });
 }
 
 /**
  * Record a contribution (or withdrawal, if negative) against a goal and keep the
  * goal's cached `saved` total in step — both in one transaction so they never
- * drift.
+ * drift. `accountId` earmarks the money out of that account's balance (or returns
+ * it, on a withdrawal); pass null to leave balances untouched.
  */
 export async function addContribution(
   goalId: ID,
   amount: number,
+  accountId: ID | null = null,
   note = '',
   date = midnight()
 ): Promise<GoalContribution> {
@@ -189,6 +209,7 @@ export async function addContribution(
     id: newId(),
     goal_id: goalId,
     amount,
+    account_id: accountId,
     note,
     date,
     ...freshMeta(),
@@ -207,6 +228,67 @@ export async function addContribution(
     await enqueue('goals', 'upsert', goalId);
   });
   return contribution;
+}
+
+/** Remove a single contribution and unwind its effect on the goal's saved total. */
+export async function deleteContribution(id: ID): Promise<void> {
+  await db.transaction('rw', db.goals, db.goal_contributions, db.sync_queue, async () => {
+    const c = await db.goal_contributions.get(id);
+    if (!c || c.deleted_at) return;
+    await db.goal_contributions.update(id, { deleted_at: now(), updated_at: now(), synced_at: null });
+    await enqueue('goal_contributions', 'delete', id);
+
+    const goal = await db.goals.get(c.goal_id);
+    if (goal && !goal.deleted_at) {
+      await db.goals.update(goal.id, {
+        saved: Math.max(0, goal.saved - c.amount),
+        updated_at: now(),
+        synced_at: null,
+      });
+      await enqueue('goals', 'upsert', goal.id);
+    }
+  });
+}
+
+// --- investments ----------------------------------------------------------
+
+export type NewInvestment = Pick<Investment, 'name' | 'kind' | 'invested' | 'current_value' | 'color'> &
+  Partial<Pick<Investment, 'interest_rate' | 'maturity_date' | 'account_id' | 'note'>>;
+
+export async function createInvestment(input: NewInvestment): Promise<Investment> {
+  const investment: Investment = {
+    id: newId(),
+    interest_rate: null,
+    maturity_date: null,
+    account_id: null,
+    note: '',
+    valued_at: now(),
+    archived: false,
+    ...input,
+    ...freshMeta(),
+  };
+  await db.investments.put(investment);
+  await enqueue('investments', 'upsert', investment.id);
+  return investment;
+}
+
+export async function updateInvestment(id: ID, patch: Partial<Investment>): Promise<void> {
+  // Any change to current_value refreshes the "as of" stamp unless the caller set one.
+  const bumped =
+    patch.current_value !== undefined && patch.valued_at === undefined
+      ? { ...patch, valued_at: now() }
+      : patch;
+  await db.investments.update(id, { ...bumped, updated_at: now(), synced_at: null });
+  await enqueue('investments', 'upsert', id);
+}
+
+export async function deleteInvestment(id: ID): Promise<void> {
+  await db.investments.update(id, { deleted_at: now(), updated_at: now(), synced_at: null });
+  await enqueue('investments', 'delete', id);
+}
+
+export async function archiveInvestment(id: ID, archived = true): Promise<void> {
+  await updateInvestment(id, { archived });
 }
 
 // --- recurring rules ------------------------------------------------------

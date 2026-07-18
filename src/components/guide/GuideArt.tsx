@@ -155,7 +155,7 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
           </div>
           {[
             // name, category, amount, category tint, banknote-stripe colour
-            ['Blue Tokai', 'Cafe', '420', ROSE, '#6B6E68'], // ₹420 → ₹500 grey
+            ['Third Wave Coffee', 'Cafe', '420', ROSE, '#6B6E68'], // ₹420 → ₹500 grey
             ['Auto', 'Transport', '220', '#1F7BA8', '#6B6E68'], // ₹220 → ₹500 grey
             ['Refund', 'Income', '1,200', MOSS, '#C43E82'], // ₹1,200 → ₹2,000 magenta
           ].map(([name, cat, amt, color, note]) => (
@@ -253,6 +253,38 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
       );
     }
 
+    // The portfolio: current value, and a couple of holdings with their gain.
+    case 'investments':
+      return (
+        <div className="w-full max-w-[240px] space-y-2">
+          <div className="rounded-card p-4 text-white shadow" style={{ backgroundColor: TEAL }}>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/60">Current value</p>
+            <Rupee className="mt-0.5 block text-[26px] leading-none">2,84,600</Rupee>
+            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-white/85">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M7 17 17 7" /><path d="M8 7h9v9" />
+              </svg>
+              <Rupee>34,600</Rupee> <span className="text-white/60">(+13.8%)</span>
+            </p>
+          </div>
+          {[
+            ['Reliance', 'Stock', '+18%', MOSS],
+            ['HDFC FD', '7.1% p.a.', '+7%', TEAL_400],
+          ].map(([name, kind, ret, color]) => (
+            <div key={name} className="flex items-center gap-2.5 rounded-card bg-parchment-50 px-3 py-2 shadow-sm">
+              <span className="h-6 w-6 shrink-0 rounded-[8px]" style={{ backgroundColor: `${color}26` }} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-semibold text-ink-900">{name}</span>
+                <span className="block text-[9px] text-ink-300">{kind}</span>
+              </span>
+              <span className="text-[11px] font-semibold tabular-nums" style={{ color: MOSS }}>
+                {ret}
+              </span>
+            </div>
+          ))}
+        </div>
+      );
+
     // Insights: the trend line over time, plus category pacing bars.
     case 'insights':
       return (
@@ -315,7 +347,7 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
           <div className="rounded-card bg-parchment-50 px-3 py-2 shadow-sm">
             <p className="text-[9px] font-semibold uppercase tracking-wide text-ink-300">On your phone</p>
             <p className="mt-1 flex items-baseline justify-between text-[11px] font-semibold text-ink-900">
-              <span>Blue Tokai</span>
+              <span>Third Wave Coffee</span>
               <Rupee>420</Rupee>
             </p>
           </div>

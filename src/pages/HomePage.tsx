@@ -16,14 +16,19 @@ import {
   useCategoryMap,
   useAccountMap,
   useAllContributions,
+  useInvestments,
+  portfolioSummary,
   monthlyRate,
 } from '../hooks/useData';
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Money } from '../components/ui/Money';
 import { useUIStore } from '../stores/uiStore';
 import {
   safeToSpend,
   categoryBreakdown,
   monthBounds,
 } from '../lib/calculations';
+import { cn } from '../lib/cn';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -37,11 +42,20 @@ export function HomePage() {
   const categoryMap = useCategoryMap();
   const accountMap = useAccountMap();
   const contributions = useAllContributions();
+  const investments = useInvestments();
+  const portfolio = portfolioSummary(investments);
 
   const { start, end } = monthBounds(now);
-  const goalSetAside = contributions
-    .filter((c) => c.date >= start && c.date < end && c.amount > 0)
-    .reduce((s, c) => s + c.amount, 0);
+  // Net money moved into goals this month (adds minus withdrawals), counting only
+  // goals that still exist — so withdrawing it back, or deleting the goal, frees
+  // it from safe-to-spend instead of leaving it stuck in the corpus.
+  const liveGoalIds = new Set(goals.map((g) => g.id));
+  const goalSetAside = Math.max(
+    0,
+    contributions
+      .filter((c) => c.date >= start && c.date < end && liveGoalIds.has(c.goal_id))
+      .reduce((s, c) => s + c.amount, 0)
+  );
 
   const sts = safeToSpend(monthTxns, recurring, goalSetAside, now);
 
@@ -100,6 +114,44 @@ export function HomePage() {
                 onClick={() => navigate(`/goals/${g.id}`)}
               />
             ))}
+          </Card>
+        </>
+      )}
+
+      {investments.length > 0 && (
+        <>
+          <SectionHeader
+            title="Investments"
+            action={
+              <button onClick={() => navigate('/invest')} className="text-xs font-semibold text-teal-600">
+                Portfolio →
+              </button>
+            }
+          />
+          <Card
+            as="button"
+            onClick={() => navigate('/invest')}
+            className="flex w-full items-center gap-4 p-4 text-left hover:bg-parchment-100"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="text-[12px] font-semibold uppercase tracking-wide text-ink-300">
+                Current value
+              </div>
+              <Money paise={portfolio.current} className="mt-0.5 block text-[22px] text-ink-900" />
+            </div>
+            <div
+              className={cn(
+                'flex shrink-0 items-center gap-1 text-[14px] font-semibold tabular-nums',
+                portfolio.gain >= 0 ? 'text-moss-600' : 'text-rose-600'
+              )}
+            >
+              {portfolio.gain >= 0 ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+              <Money paise={Math.abs(portfolio.gain)} sign={portfolio.gain >= 0 ? '+' : '-'} />
+              <span className="opacity-80">
+                ({portfolio.returnPct >= 0 ? '+' : ''}
+                {(portfolio.returnPct * 100).toFixed(1)}%)
+              </span>
+            </div>
           </Card>
         </>
       )}

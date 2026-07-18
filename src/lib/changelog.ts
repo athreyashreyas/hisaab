@@ -22,6 +22,25 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.6.0',
+    date: '2026-07-18',
+    major: true,
+    title: 'Investments, and money that adds up',
+    notes: [
+      'A new Investments tab holds your whole portfolio in one place: stocks, mutual funds, fixed deposits, and anything else. Add what you put in and the value today, and Hisaab shows what each holding has earned and how the portfolio is doing overall. FDs can carry their interest rate and maturity date.',
+      'Because Hisaab never phones home, there is no live price feed, and that is the point. You update a value when you like, and it stays end to end encrypted like everything else.',
+      'Saving toward a goal now comes from a real account. Pick which account the money is set aside from, and two accounts can each fund a slice of the same goal. That money is earmarked out of the account balance, so nothing is counted twice as both in the bank and saved.',
+      'Fixed a bug where money added to a goal stayed in your set-aside total even after you took it back out or deleted the goal. Deleting a goal now clears its contributions too, and withdrawals free the money properly.',
+      'Added an Education & learning category, and long category names no longer get clipped with a trailing dot-dot-dot.',
+    ],
+    howTo: [
+      'Tap Invest in the bottom bar, then Add, to log a stock, mutual fund, or FD.',
+      'Open a holding any time to update its current value and watch the return move.',
+      'In a goal, tap Add money and choose which account it comes from.',
+    ],
+    art: 'investments',
+  },
+  {
     version: '0.5.0',
     date: '2026-07-18',
     major: true,

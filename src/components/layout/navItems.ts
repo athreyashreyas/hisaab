@@ -16,6 +16,7 @@ export const navItems: NavItem[] = [
   { to: '/', label: 'Home', icon: 'house' },
   { to: '/ledger', label: 'Ledger', icon: 'list' },
   { to: '/goals', label: 'Goals', icon: 'target' },
+  { to: '/invest', label: 'Invest', icon: 'trending-up' },
   { to: '/insights', label: 'Insights', icon: 'pie-chart' },
   { to: '/settings', label: 'Settings', icon: 'settings' },
 ];

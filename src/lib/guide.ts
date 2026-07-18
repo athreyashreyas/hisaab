@@ -18,6 +18,7 @@ export type GuideArtKind =
   | 'ledger'
   | 'accounts'
   | 'goals'
+  | 'investments'
   | 'insights'
   | 'security'
   | 'sync';
@@ -66,7 +67,7 @@ export const GUIDE: GuideSection[] = [
     steps: [
       'Tap + at the bottom right, type the amount, pick the type and account, then Save.',
       'Swipe the sheet down, or tap outside it, to put it away without saving.',
-      'Enter a merchant like "Blue Tokai" and the category is guessed for you.',
+      'Enter a merchant like "Third Wave Coffee" and the category is guessed for you.',
     ],
     icon: 'plus',
     art: 'adding',
@@ -118,10 +119,25 @@ export const GUIDE: GuideSection[] = [
     ],
     steps: [
       'Open Goals → New to create one, then Add money as you save.',
+      'Choose which account each contribution comes from; two accounts can fund one goal.',
       'This month\'s contributions feed the "goals set aside" in safe-to-spend.',
     ],
     icon: 'target',
     art: 'goals',
+  },
+  {
+    id: 'investments',
+    title: 'Investments',
+    body: [
+      'The Invest tab keeps your portfolio in one place: stocks, mutual funds, fixed deposits, and anything else. Enter what you put in and the value today, and Hisaab shows the gain on each holding and across the whole portfolio.',
+      'Hisaab makes no outbound calls, so there is no live price feed. You update a value whenever you like, and it stays sealed like the rest of your data. Fixed deposits can carry an interest rate and maturity date.',
+    ],
+    steps: [
+      'Tap Invest → Add to log a holding and pick its type.',
+      'Open any holding to update its current value as it moves.',
+    ],
+    icon: 'trending-up',
+    art: 'investments',
   },
   {
     id: 'insights',

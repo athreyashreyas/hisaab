@@ -5,6 +5,7 @@ import type {
   Transaction,
   Goal,
   GoalContribution,
+  Investment,
   RecurringRule,
   Prefs,
   SyncQueueItem,
@@ -22,6 +23,7 @@ class HisaabDB extends Dexie {
   transactions!: EntityTable<Transaction, 'id'>;
   goals!: EntityTable<Goal, 'id'>;
   goal_contributions!: EntityTable<GoalContribution, 'id'>;
+  investments!: EntityTable<Investment, 'id'>;
   recurring_rules!: EntityTable<RecurringRule, 'id'>;
   prefs!: EntityTable<Prefs, 'id'>;
   sync_queue!: EntityTable<SyncQueueItem, 'id'>;
@@ -46,6 +48,14 @@ class HisaabDB extends Dexie {
     this.version(2).stores({
       prefs: 'id, deleted_at, synced_at',
     });
+
+    // v3 adds the investments portfolio (stocks, mutual funds, FDs, other) and
+    // an account_id on goal contributions so a contribution earmarks money out of
+    // a specific account. account_id isn't queried on its own, so the existing
+    // goal_contributions index carries forward untouched.
+    this.version(3).stores({
+      investments: 'id, kind, account_id, archived, deleted_at, synced_at',
+    });
   }
 }
 
@@ -61,6 +71,7 @@ export async function clearLocalDb(): Promise<void> {
       db.transactions,
       db.goals,
       db.goal_contributions,
+      db.investments,
       db.recurring_rules,
       db.prefs,
       db.sync_queue,
@@ -72,6 +83,7 @@ export async function clearLocalDb(): Promise<void> {
         db.transactions.clear(),
         db.goals.clear(),
         db.goal_contributions.clear(),
+        db.investments.clear(),
         db.recurring_rules.clear(),
         db.prefs.clear(),
         db.sync_queue.clear(),

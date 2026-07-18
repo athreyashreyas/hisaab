@@ -102,7 +102,7 @@ export function CategoryPicker({
             >
               <Icon name={c.icon} size={18} />
             </span>
-            <span className="w-full truncate text-center text-[11px] font-medium text-ink-700">
+            <span className="line-clamp-2 w-full break-words text-center text-[11px] font-medium leading-tight text-ink-700">
               {c.name}
             </span>
           </button>

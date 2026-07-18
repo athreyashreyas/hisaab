@@ -62,6 +62,7 @@ const SYNC_TABLES = [
   'transactions',
   'goals',
   'goal_contributions',
+  'investments',
   'recurring_rules',
 ] as const;
 

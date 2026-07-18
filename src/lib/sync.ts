@@ -33,6 +33,7 @@ const TABLES: SyncTable[] = [
   'transactions',
   'goals',
   'goal_contributions',
+  'investments',
   'recurring_rules',
   // Account prefs (e.g. the last "What's new" version seen) ride the same
   // encrypted path as everything else, so they follow you across devices

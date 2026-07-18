@@ -6,7 +6,7 @@
 import { db } from '../lib/db';
 import { useLiveQuery } from './useLiveQuery';
 import { monthBounds } from '../lib/calculations';
-import type { Account, Category, Transaction, Goal, RecurringRule, ID } from '../types';
+import type { Account, Category, Transaction, Goal, Investment, RecurringRule, ID } from '../types';
 
 const live = <T>(t: T[] | undefined): T[] => t ?? [];
 
@@ -121,6 +121,34 @@ export function useRecurringRules(): RecurringRule[] {
   );
 }
 
+// --- investments ----------------------------------------------------------
+
+export function useInvestments(includeArchived = false): Investment[] {
+  return live(
+    useLiveQuery(async () => {
+      const all = await db.investments.toArray();
+      return all
+        .filter((i) => !i.deleted_at && (includeArchived || !i.archived))
+        .sort((a, b) => a.updated_at - b.updated_at);
+    }, [includeArchived])
+  );
+}
+
+export interface PortfolioSummary {
+  invested: number; // paise
+  current: number; // paise
+  gain: number; // paise (current − invested)
+  returnPct: number; // gain / invested, 0 when nothing invested
+}
+
+/** Roll a set of holdings into invested / current / gain totals. */
+export function portfolioSummary(holdings: Investment[]): PortfolioSummary {
+  const invested = holdings.reduce((s, h) => s + h.invested, 0);
+  const current = holdings.reduce((s, h) => s + h.current_value, 0);
+  const gain = current - invested;
+  return { invested, current, gain, returnPct: invested > 0 ? gain / invested : 0 };
+}
+
 // --- balances -------------------------------------------------------------
 
 export interface AccountBalance {
@@ -130,12 +158,16 @@ export interface AccountBalance {
 
 /**
  * Running balance per account = opening balance + income − expense, with
- * transfers moving paise between the from/to accounts. Computed locally over all
- * transactions (cheap; the whole ledger is on-device).
+ * transfers moving paise between the from/to accounts. Money set aside into a
+ * goal from an account is earmarked out of that account's available balance
+ * (and returned on a withdrawal), so goal money is never double-counted as both
+ * sitting in the bank and saved toward a goal. Computed locally over all
+ * transactions and contributions (cheap; the whole ledger is on-device).
  */
 export function useAccountBalances(): AccountBalance[] {
   const accounts = useAccounts(true);
   const txns = useTransactions();
+  const contribs = useAllContributions();
 
   const byAccount = new Map<ID, number>();
   for (const a of accounts) byAccount.set(a.id, a.opening_balance);
@@ -151,6 +183,14 @@ export function useAccountBalances(): AccountBalance[] {
         byAccount.set(t.to_account_id, (byAccount.get(t.to_account_id) ?? 0) + t.amount);
       }
     }
+  }
+
+  // Earmark goal contributions out of their source account. A positive
+  // contribution leaves the account for the goal; a negative one (withdrawal)
+  // comes back. Unattributed contributions (account_id null) touch no balance.
+  for (const c of contribs) {
+    if (!c.account_id) continue;
+    byAccount.set(c.account_id, (byAccount.get(c.account_id) ?? 0) - c.amount);
   }
 
   return accounts.map((account) => ({ account, balance: byAccount.get(account.id) ?? 0 }));

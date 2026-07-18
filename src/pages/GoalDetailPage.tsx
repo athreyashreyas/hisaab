@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Plus, Minus, Pencil } from 'lucide-react';
+import { Plus, Minus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card, SectionHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -10,17 +10,28 @@ import { Modal } from '../components/ui/Modal';
 import { Money } from '../components/ui/Money';
 import { ProgressRing } from '../components/ui/ProgressRing';
 import { EmptyState } from '../components/ui/EmptyState';
+import { AccountPicker } from '../components/add/Pickers';
 import { GoalMeta, formatShort } from '../components/finance/GoalRow';
 import { GoalFormModal } from '../components/finance/GoalFormModal';
-import { useGoal, useContributions, useAllContributions, monthlyRate } from '../hooks/useData';
-import { addContribution } from '../lib/repo';
+import {
+  useGoal,
+  useContributions,
+  useAllContributions,
+  useAccounts,
+  useAccountMap,
+  monthlyRate,
+} from '../hooks/useData';
+import { addContribution, deleteContribution } from '../lib/repo';
 import { goalProjection } from '../lib/calculations';
+import type { Account } from '../types';
 
 export function GoalDetailPage() {
   const { id } = useParams();
   const goal = useGoal(id);
   const contributions = useContributions(id);
   const allContribs = useAllContributions();
+  const accounts = useAccounts();
+  const accountMap = useAccountMap();
   const [editing, setEditing] = useState(false);
   const [contribMode, setContribMode] = useState<null | 'add' | 'withdraw'>(null);
 
@@ -86,33 +97,49 @@ export function GoalDetailPage() {
         </Card>
       ) : (
         <Card className="divide-y divide-parchment-200 overflow-hidden">
-          {contributions.map((c) => (
-            <div key={c.id} className="flex items-center gap-3 px-4 py-3">
-              <span
-                className="grid h-8 w-8 place-items-center rounded-full"
-                style={{
-                  backgroundColor: c.amount >= 0 ? '#E8F0E6' : '#F3E2E6',
-                  color: c.amount >= 0 ? '#4F7942' : '#A14A5E',
-                }}
-              >
-                {c.amount >= 0 ? <Plus size={15} /> : <Minus size={15} />}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[13.5px] font-semibold text-ink-900">
-                  {c.amount >= 0 ? 'Added' : 'Withdrew'}
+          {contributions.map((c) => {
+            const account = c.account_id ? accountMap.get(c.account_id) : undefined;
+            return (
+              <div key={c.id} className="group flex items-center gap-3 px-4 py-3">
+                <span
+                  className="grid h-8 w-8 place-items-center rounded-full"
+                  style={{
+                    backgroundColor: c.amount >= 0 ? '#E8F0E6' : '#F3E2E6',
+                    color: c.amount >= 0 ? '#4F7942' : '#A14A5E',
+                  }}
+                >
+                  {c.amount >= 0 ? <Plus size={15} /> : <Minus size={15} />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-900">
+                    {c.amount >= 0 ? 'Added' : 'Withdrew'}
+                    {account && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-parchment-200 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-500">
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: account.color }} />
+                        {c.amount >= 0 ? account.name : `to ${account.name}`}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11.5px] text-ink-500">
+                    {format(c.date, 'd MMM yyyy')}
+                    {c.note && ` · ${c.note}`}
+                  </div>
                 </div>
-                <div className="text-[11.5px] text-ink-500">
-                  {format(c.date, 'd MMM yyyy')}
-                  {c.note && ` · ${c.note}`}
-                </div>
+                <Money
+                  paise={c.amount}
+                  sign={c.amount >= 0 ? '+' : '-'}
+                  className={c.amount >= 0 ? 'font-semibold text-moss-600' : 'font-semibold text-rose-600'}
+                />
+                <button
+                  onClick={() => void deleteContribution(c.id)}
+                  aria-label="Delete entry"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink-300 hover:bg-parchment-200 hover:text-rose-600"
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
-              <Money
-                paise={c.amount}
-                sign={c.amount >= 0 ? '+' : '-'}
-                className={c.amount >= 0 ? 'font-semibold text-moss-600' : 'font-semibold text-rose-600'}
-              />
-            </div>
-          ))}
+            );
+          })}
         </Card>
       )}
 
@@ -120,9 +147,10 @@ export function GoalDetailPage() {
         mode={contribMode}
         goalName={goal.name}
         maxWithdraw={goal.saved}
+        accounts={accounts}
         onClose={() => setContribMode(null)}
-        onSubmit={async (paise, note) => {
-          await addContribution(goal.id, paise, note);
+        onSubmit={async (paise, accountId, note) => {
+          await addContribution(goal.id, paise, accountId, note);
           setContribMode(null);
         }}
       />
@@ -135,17 +163,26 @@ function ContributionModal({
   mode,
   goalName,
   maxWithdraw,
+  accounts,
   onClose,
   onSubmit,
 }: {
   mode: null | 'add' | 'withdraw';
   goalName: string;
   maxWithdraw: number;
+  accounts: Account[];
   onClose: () => void;
-  onSubmit: (paise: number, note: string) => void;
+  onSubmit: (paise: number, accountId: string | null, note: string) => void;
 }) {
   const [rupees, setRupees] = useState('');
   const [note, setNote] = useState('');
+  const [accountId, setAccountId] = useState<string | null>(null);
+
+  // Default to the first account whenever the sheet opens.
+  useEffect(() => {
+    if (mode) setAccountId((prev) => prev ?? accounts[0]?.id ?? null);
+  }, [mode, accounts]);
+
   const paise = Math.round(Number(rupees) * 100);
   const isWithdraw = mode === 'withdraw';
   const over = isWithdraw && paise > maxWithdraw;
@@ -167,12 +204,20 @@ function ContributionModal({
           onChange={(e) => setRupees(e.target.value.replace(/[^0-9]/g, ''))}
           error={over ? `You only have ${formatShort(maxWithdraw)} saved.` : undefined}
         />
+        {accounts.length > 0 && (
+          <AccountPicker
+            accounts={accounts}
+            value={accountId}
+            onChange={setAccountId}
+            label={isWithdraw ? 'Return to account' : 'Save from account'}
+          />
+        )}
         <Input label="Note" placeholder="Optional" value={note} onChange={(e) => setNote(e.target.value)} />
         <Button
           block
           disabled={!canSave}
           onClick={() => {
-            onSubmit(isWithdraw ? -paise : paise, note.trim());
+            onSubmit(isWithdraw ? -paise : paise, accountId, note.trim());
             setRupees('');
             setNote('');
           }}
