@@ -9,6 +9,7 @@ import type { WrappedVaultKey } from './crypto';
 const K = {
   wrapped: 'hisaab.vault', // DEK wrapped under the password KEK
   recovery: 'hisaab.vault.recovery', // DEK wrapped under the recovery-phrase KEK
+  dek: 'hisaab.vault.dek', // live DEK (base64) kept for auto-unlock on this device
   email: 'hisaab.email',
   onboardedAt: 'hisaab.onboardedAt',
 } as const;
@@ -35,6 +36,28 @@ export const vaultStorage = {
   setWrapped: (w: WrappedVaultKey) => writeJson(K.wrapped, w),
   getRecoveryWrap: () => readJson<WrappedVaultKey>(K.recovery),
   setRecoveryWrap: (w: WrappedVaultKey) => writeJson(K.recovery, w),
+  /** The device-stored live DEK (base64), for auto-unlock. Null if locked out. */
+  getDek: () => {
+    try {
+      return localStorage.getItem(K.dek);
+    } catch {
+      return null;
+    }
+  },
+  setDek: (b64: string) => {
+    try {
+      localStorage.setItem(K.dek, b64);
+    } catch {
+      /* ignore */
+    }
+  },
+  clearDek: () => {
+    try {
+      localStorage.removeItem(K.dek);
+    } catch {
+      /* ignore */
+    }
+  },
   getEmail: () => {
     try {
       return localStorage.getItem(K.email);
@@ -69,6 +92,7 @@ export const vaultStorage = {
     try {
       localStorage.removeItem(K.wrapped);
       localStorage.removeItem(K.recovery);
+      localStorage.removeItem(K.dek);
       if (!opts.keepEmail) localStorage.removeItem(K.email);
       if (!opts.keepOnboarded) localStorage.removeItem(K.onboardedAt);
     } catch {

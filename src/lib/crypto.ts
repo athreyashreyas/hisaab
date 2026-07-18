@@ -243,6 +243,26 @@ export async function importDekExtractable(raw: Uint8Array): Promise<CryptoKey> 
   ]);
 }
 
+// --- device-local DEK persistence (auto-unlock) ---------------------------
+
+/**
+ * Serialise the live DEK to base64 so it can be kept on this device and restored
+ * on the next launch without re-entering the password. This is sound under
+ * Hisaab's stated trust model — the local Dexie ledger is already plaintext on
+ * the device, so a stored DEK exposes nothing that device access didn't already.
+ * It is cleared by "Lock now" and sign out. Never sent anywhere; the server only
+ * ever holds the *wrapped* DEK.
+ */
+export async function exportDekB64(dek: CryptoKey): Promise<string> {
+  const raw = new Uint8Array(await crypto.subtle.exportKey('raw', dek));
+  return toB64(raw);
+}
+
+/** Restore a DEK previously saved with exportDekB64. */
+export async function importDekB64(b64: string): Promise<CryptoKey> {
+  return importDekExtractable(fromB64(b64));
+}
+
 // --- record encryption (what sync uses) -----------------------------------
 
 /** Encrypt any JSON-serialisable record for upload. */
@@ -273,7 +293,12 @@ export function exportVault(
   return { format: 'hisaab-vault', version: 1, wrapped, records };
 }
 
-// --- session keyring (in-memory only, never persisted in the clear) -------
+// --- session keyring (in-memory; optionally mirrored to device storage) ---
+//
+// The live DEK is held here for the session. It may also be kept on the device
+// (see exportDekB64 / vaultStorage) so a reopen auto-unlocks without the
+// password — sound because the local ledger is already plaintext on this device.
+// It is never sent anywhere; the server only holds the *wrapped* DEK.
 
 let sessionDek: CryptoKey | null = null;
 

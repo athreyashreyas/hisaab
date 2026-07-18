@@ -31,6 +31,7 @@ export const CHANGELOG: Release[] = [
       'Because Hisaab never phones home, there is no live price feed, and that is the point. You update a value when you like, and it stays end to end encrypted like everything else.',
       'Saving toward a goal now comes from a real account. Pick which account the money is set aside from, and two accounts can each fund a slice of the same goal. That money is earmarked out of the account balance, so nothing is counted twice as both in the bank and saved.',
       'Fixed a bug where money added to a goal stayed in your set-aside total even after you took it back out or deleted the goal. Deleting a goal now clears its contributions too, and withdrawals free the money properly.',
+      'You stay signed in now. Once you have unlocked Hisaab on a device it keeps you in across reopens, so you are not typing your password every time you come back. Tap Lock now in Settings whenever you want to lock it again.',
       'Added an Education & learning category, and long category names no longer get clipped with a trailing dot-dot-dot.',
     ],
     howTo: [

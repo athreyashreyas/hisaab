@@ -23,6 +23,8 @@ import {
   unlockVault,
   rewrapDek,
   keyring,
+  exportDekB64,
+  importDekB64,
   WrongPassphraseError,
 } from '../lib/crypto';
 import {
@@ -84,6 +86,19 @@ interface AccountState {
 
 const now = () => Date.now();
 
+/** Load the DEK into the session keyring and keep a copy on this device so the
+ *  next launch auto-unlocks. Persistence is best-effort; the keyring is the
+ *  source of truth for this session. */
+async function keepUnlocked(dek: CryptoKey): Promise<void> {
+  keyring.set(dek);
+  try {
+    vaultStorage.setDek(await exportDekB64(dek));
+  } catch {
+    // If the DEK can't be serialised/stored, the session still works; the next
+    // launch just falls back to the unlock screen.
+  }
+}
+
 export const useAccountStore = create<AccountState>((set, get) => ({
   status: 'checking',
   user: null,
@@ -100,10 +115,39 @@ export const useAccountStore = create<AccountState>((set, get) => ({
       onboardedAt = now();
       vaultStorage.setOnboardedAt(onboardedAt);
     }
+    set({ email, onboardedAt });
 
-    const status: AccountStatus =
+    // Ask the browser to keep this origin's storage (session, vault key, ledger)
+    // from being evicted, so an installed PWA stays signed in across launches.
+    try {
+      void navigator.storage?.persist?.();
+    } catch {
+      /* not supported; ignore */
+    }
+
+    const lockedStatus: AccountStatus =
       onboardedAt == null ? 'onboarding' : wrapped ? 'locked' : 'signed-out';
-    set({ email, onboardedAt, status });
+
+    // Auto-unlock: if this device kept the DEK from a previous session, restore
+    // it and go straight to the app — no password prompt on every reopen. Safe
+    // under the trust model (the local ledger is already plaintext here); "Lock
+    // now" and sign out clear it. Recovery links still win via onAuthStateChange.
+    const storedDek = wrapped ? vaultStorage.getDek() : null;
+    if (storedDek) {
+      set({ status: 'checking' });
+      void importDekB64(storedDek)
+        .then((dek) => {
+          keyring.set(dek);
+          if (get().status !== 'recovery') set({ status: 'unlocked' });
+          void syncNow();
+        })
+        .catch(() => {
+          vaultStorage.clearDek();
+          if (get().status !== 'recovery') set({ status: lockedStatus });
+        });
+    } else {
+      set({ status: lockedStatus });
+    }
 
     if (supabase) {
       supabase.auth.getSession().then(({ data }) => set({ user: data.session?.user ?? null }));
@@ -133,7 +177,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
 
     // Mint the vault (the password is the passphrase) and a recovery phrase.
     const { wrapped, dek } = await createVault(password);
-    keyring.set(dek);
+    await keepUnlocked(dek);
     const recoveryPhrase = generateRecoveryPhrase();
     const recoveryWrap = await rewrapDek(dek, recoveryPhrase);
 
@@ -170,7 +214,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
     if (!cloud) throw new Error('No encrypted vault was found for this account.');
 
     const dek = await unlockVault(password, cloud.wrapped);
-    keyring.set(dek);
+    await keepUnlocked(dek);
 
     vaultStorage.setWrapped(cloud.wrapped);
     if (cloud.recoveryWrap) vaultStorage.setRecoveryWrap(cloud.recoveryWrap);
@@ -189,7 +233,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
       return;
     }
     const dek = await unlockVault(password, wrapped); // throws WrongPassphraseError
-    keyring.set(dek);
+    await keepUnlocked(dek);
     set({ status: 'unlocked' });
 
     // Best-effort: make sure there's a live Supabase session for backup. We have
@@ -214,7 +258,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
       if (error) throw error;
     }
     if (user) await pushVaultKeys(user.id, newWrapped, currentRecoveryWrap());
-    keyring.set(dek);
+    await keepUnlocked(dek); // DEK is unchanged; refresh the device copy anyway
   },
 
   // --- password reset ------------------------------------------------------
@@ -256,7 +300,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
     vaultStorage.setEmail(email);
     if (get().onboardedAt == null) vaultStorage.setOnboardedAt(now());
 
-    keyring.set(dek);
+    await keepUnlocked(dek);
     set({ email, onboardedAt: get().onboardedAt ?? now(), status: 'unlocked' });
     void syncNow();
   },
@@ -284,6 +328,7 @@ export const useAccountStore = create<AccountState>((set, get) => ({
 
   lock() {
     keyring.clear();
+    vaultStorage.clearDek(); // drop the auto-unlock copy so the password is needed
     set({ status: 'locked' });
   },
 
