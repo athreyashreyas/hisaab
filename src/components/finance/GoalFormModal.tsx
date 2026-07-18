@@ -15,10 +15,14 @@ const GOAL_ICONS = ['target', 'plane', 'gift', 'home', 'car', 'graduation-cap', 
 export function GoalFormModal({
   open,
   onClose,
+  onDeleted,
   goal,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Called after the goal is deleted, so the caller can navigate away from a
+   *  now-gone goal (the detail page redirects to the goals list). */
+  onDeleted?: () => void;
   goal?: Goal | null;
 }) {
   const [name, setName] = useState('');
@@ -61,6 +65,7 @@ export function GoalFormModal({
   async function remove() {
     if (goal) await deleteGoal(goal.id);
     onClose();
+    onDeleted?.();
   }
 
   return (

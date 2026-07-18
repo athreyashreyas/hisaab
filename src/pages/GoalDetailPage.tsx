@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Plus, Minus, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -27,6 +27,7 @@ import type { Account } from '../types';
 
 export function GoalDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const goal = useGoal(id);
   const contributions = useContributions(id);
   const allContribs = useAllContributions();
@@ -154,7 +155,12 @@ export function GoalDetailPage() {
           setContribMode(null);
         }}
       />
-      <GoalFormModal open={editing} onClose={() => setEditing(false)} goal={goal} />
+      <GoalFormModal
+        open={editing}
+        onClose={() => setEditing(false)}
+        onDeleted={() => navigate('/goals', { replace: true })}
+        goal={goal}
+      />
     </div>
   );
 }

@@ -1,10 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card, SectionHeader } from '../components/ui/Card';
 import { SafeToSpendCard } from '../components/finance/SafeToSpendCard';
 import { GoalRow } from '../components/finance/GoalRow';
-import { CategoryPie } from '../components/finance/CategoryPie';
 import { TxnRow } from '../components/finance/TxnRow';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Button } from '../components/ui/Button';
@@ -29,6 +29,12 @@ import {
   monthBounds,
 } from '../lib/calculations';
 import { cn } from '../lib/cn';
+
+// The donut pulls in recharts, which is heavy; loading it lazily keeps it out of
+// the initial bundle so Home's shell paints fast and the chart streams in after.
+const CategoryPie = lazy(() =>
+  import('../components/finance/CategoryPie').then((m) => ({ default: m.CategoryPie }))
+);
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -167,7 +173,9 @@ export function HomePage() {
             }
           />
           <Card>
-            <CategoryPie slices={slices} categoryMap={categoryMap} total={spentTotal} />
+            <Suspense fallback={<div className="h-[168px]" />}>
+              <CategoryPie slices={slices} categoryMap={categoryMap} total={spentTotal} />
+            </Suspense>
           </Card>
         </>
       )}

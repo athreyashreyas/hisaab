@@ -17,7 +17,11 @@
  * the same DEK (stored in the cloud too), so a password reset can restore access
  * on any device. It is generated here and never stored anywhere by us.
  */
-import { argon2id } from 'hash-wasm';
+// Loaded on demand so the Argon2id wasm stays out of the cold-start bundle; it's
+// only needed when signing in, registering, or changing the password.
+async function loadArgon2id() {
+  return (await import('hash-wasm')).argon2id;
+}
 
 const AUTH_KDF = { memoryKiB: 64 * 1024, iterations: 3, parallelism: 1 };
 const AUTH_VERSION = 'hisaab-auth-v1';
@@ -37,6 +41,7 @@ export async function deriveAuthToken(email: string, password: string): Promise<
   const saltSource = new TextEncoder().encode(`${AUTH_VERSION}:${normalizeEmail(email)}`);
   const saltBuf = await crypto.subtle.digest('SHA-256', saltSource);
   const salt = new Uint8Array(saltBuf).slice(0, 16);
+  const argon2id = await loadArgon2id();
   return argon2id({
     password: password.normalize('NFKC'),
     salt,

@@ -17,9 +17,91 @@
       content="An honest reckoning of where your money goes. Local-first, end-to-end encrypted."
     />
     <title>Hisaab</title>
+
+    <!-- Fonts, loaded off the critical path so they never block first paint. The
+         boot splash below uses a system-serif fallback, so text is visible
+         instantly and swaps to DM Serif once it arrives. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
+      />
+    </noscript>
+
+    <!-- Critical, inline, zero-network styles so the very first paint is the
+         Hisaab splash on parchment — never a blank/black screen while the app
+         bundle loads. React replaces #root on mount, which removes the splash. -->
+    <style>
+      html {
+        background: #faf9f6;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        margin: 0;
+        background: #faf9f6;
+      }
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: #faf9f6;
+      }
+      #boot .mark {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background: #1e7f75;
+        color: #fff;
+        font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+        font-size: 26px;
+        line-height: 1;
+        box-shadow: 0 8px 20px -6px rgba(30, 127, 117, 0.5);
+      }
+      #boot .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #4ba096;
+        animation: hisaab-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes hisaab-pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.35;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot .dot {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Instant splash: painted with the HTML, before any JavaScript runs. -->
+      <div id="boot" aria-label="Loading Hisaab" role="status">
+        <div class="mark">₹</div>
+        <div class="dot"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

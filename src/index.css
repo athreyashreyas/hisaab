@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
-
+/* Fonts are loaded off the critical path in index.html (preconnect + async
+   stylesheet), so this file no longer @imports them — an @import here would be
+   render-blocking and delay first paint. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

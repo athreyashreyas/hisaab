@@ -78,4 +78,22 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
   },
+  build: {
+    // Split big, independently-cached vendors into their own chunks so the app
+    // shell isn't one monolith: the boot path pulls only react + its core deps,
+    // while recharts (charts) and framer-motion (animation) load in parallel /
+    // on demand and stay cached across deploys that don't touch them.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-data': ['@supabase/supabase-js', 'dexie', '@tanstack/react-query'],
+          'vendor-icons': ['lucide-react'],
+          'vendor-dates': ['date-fns'],
+        },
+      },
+    },
+  },
 });

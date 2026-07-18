@@ -34,7 +34,13 @@
  * mid-range phones.
  */
 
-import { argon2id } from 'hash-wasm';
+// hash-wasm (Argon2id) is loaded on demand, not at module load: it pulls in a
+// wasm blob only needed when actually deriving a key (register / unlock / change
+// password). A returning device auto-unlocks from the stored DEK and never
+// touches it, so keeping it out of the boot chunk speeds up cold starts.
+async function loadArgon2id() {
+  return (await import('hash-wasm')).argon2id;
+}
 
 // --- tunables -------------------------------------------------------------
 
@@ -96,6 +102,7 @@ async function deriveKekRaw(
   salt: Uint8Array,
   kdf: WrappedVaultKey['kdf']
 ): Promise<Uint8Array> {
+  const argon2id = await loadArgon2id();
   const hex = await argon2id({
     password: passphrase.normalize('NFKC'),
     salt,

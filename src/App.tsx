@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -7,10 +7,23 @@ import { router } from './router';
 import { useAccountStore } from './stores/accountStore';
 import { useSyncQueue } from './hooks/useSyncQueue';
 import { backfillNewDefaultCategories } from './lib/repo';
-import { OnboardingFlow } from './pages/onboarding/OnboardingFlow';
-import { UnlockScreen } from './pages/auth/UnlockScreen';
-import { SignInScreen } from './pages/auth/SignInScreen';
-import { ResetPasswordScreen } from './pages/auth/ResetPasswordScreen';
+
+// The account gate renders exactly one of these based on status. The common cold
+// open — a returning device auto-unlocking straight to the app — needs none of
+// them, so they're code-split out of the boot chunk (onboarding drags in the
+// guide art especially). Each is covered by the same BootSplash while it loads.
+const OnboardingFlow = lazy(() =>
+  import('./pages/onboarding/OnboardingFlow').then((m) => ({ default: m.OnboardingFlow }))
+);
+const UnlockScreen = lazy(() =>
+  import('./pages/auth/UnlockScreen').then((m) => ({ default: m.UnlockScreen }))
+);
+const SignInScreen = lazy(() =>
+  import('./pages/auth/SignInScreen').then((m) => ({ default: m.SignInScreen }))
+);
+const ResetPasswordScreen = lazy(() =>
+  import('./pages/auth/ResetPasswordScreen').then((m) => ({ default: m.ResetPasswordScreen }))
+);
 
 /**
  * Boot + account gate. One email + password is the whole identity: it signs you
@@ -30,7 +43,9 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MotionConfig reducedMotion="user">{renderGate()}</MotionConfig>
+      <MotionConfig reducedMotion="user">
+        <Suspense fallback={<BootSplash />}>{renderGate()}</Suspense>
+      </MotionConfig>
     </QueryClientProvider>
   );
 
