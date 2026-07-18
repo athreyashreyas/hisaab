@@ -6,6 +6,7 @@ import { queryClient } from './lib/queryClient';
 import { router } from './router';
 import { useAccountStore } from './stores/accountStore';
 import { useSyncQueue } from './hooks/useSyncQueue';
+import { backfillNewDefaultCategories } from './lib/repo';
 import { OnboardingFlow } from './pages/onboarding/OnboardingFlow';
 import { UnlockScreen } from './pages/auth/UnlockScreen';
 import { SignInScreen } from './pages/auth/SignInScreen';
@@ -56,6 +57,11 @@ export default function App() {
 /** Everything behind the vault: sync wiring + the routed shell. */
 function UnlockedApp() {
   useSyncQueue();
+  // Backfill defaults added in newer versions (e.g. Education & learning), once,
+  // locally — so they show up without a manual sync or "restore defaults".
+  useEffect(() => {
+    void backfillNewDefaultCategories();
+  }, []);
   return <RouterProvider router={router} />;
 }
 

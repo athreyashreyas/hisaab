@@ -375,6 +375,28 @@ export async function restoreDefaultCategories(): Promise<void> {
   }
 }
 
+/**
+ * Backfill defaults that were added to the app *after* this account was first
+ * seeded (e.g. "Education & learning" in v0.6.0), so returning users get them
+ * without a manual "restore defaults". Runs once per boot behind the vault.
+ *
+ * The check is against *all* category rows including tombstones, keyed by name:
+ * a default the user has ever created — even one they later deleted — is left
+ * alone, so this never resurrects something removed on purpose. It only adds a
+ * brand-new default that has no row at all. It's a plain local write that syncs
+ * like any other, so it needs no sync to appear and can be deleted afterwards.
+ */
+export async function backfillNewDefaultCategories(): Promise<void> {
+  const all = await db.categories.toArray();
+  if (all.length === 0) return; // fresh install: seedDefaults owns this
+  const known = new Set(all.map((c) => c.name)); // includes tombstoned names
+  let order = all.filter((c) => !c.deleted_at).length;
+  for (const c of DEFAULT_CATEGORIES) {
+    if (known.has(c.name)) continue;
+    await createCategory({ ...c, order: order++ });
+  }
+}
+
 // --- prefs ----------------------------------------------------------------
 
 /**
