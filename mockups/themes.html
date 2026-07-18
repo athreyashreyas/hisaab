@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hisaab — theme options</title>
+<style>
+  /* ---------------------------------------------------------------------------
+     Theme preview gallery. Each card is the SAME markup, re-skinned only by the
+     CSS variables on its .theme-* wrapper — exactly how the real app will work
+     (one data-theme attribute on <html>, everything cascades from tokens).
+     Greenlight the ones you like and I'll wire them into the app's token layer.
+     --------------------------------------------------------------------------- */
+
+  :root {
+    --page: #EBE7DF;
+    --page-ink: #33302B;
+    --page-ink-soft: #6B675E;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background: var(--page);
+    color: var(--page-ink);
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 24px 80px;
+  }
+  .page-head { max-width: 1200px; margin: 0 auto 32px; }
+  .page-head h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 34px; font-weight: 400; letter-spacing: -0.01em; }
+  .page-head p { margin-top: 8px; color: var(--page-ink-soft); font-size: 15px; max-width: 640px; line-height: 1.55; }
+  .legend { margin-top: 14px; font-size: 13px; color: var(--page-ink-soft); }
+  .legend b { color: var(--page-ink); font-weight: 600; }
+
+  .grid {
+    max-width: 1200px; margin: 0 auto;
+    display: grid; gap: 26px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  /* ---- one theme card ---- */
+  .card {
+    background: var(--surface);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px -12px rgba(20,16,10,0.28), 0 2px 6px -2px rgba(20,16,10,0.12);
+  }
+  .frame { background: var(--bg); padding: 16px 16px 12px; }
+
+  .app-top { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+  .logo { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+          background: var(--primary); color: var(--on-primary); font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; }
+  .app-name { font-family: 'DM Serif Display', Georgia, serif; font-size: 20px; color: var(--ink-900); }
+  .app-date { margin-left: auto; font-size: 11px; color: var(--ink-300); font-weight: 600; }
+
+  /* safe-to-spend hero */
+  .hero {
+    background: linear-gradient(135deg, var(--primary-600), var(--primary));
+    color: var(--on-primary);
+    border-radius: 14px; padding: 15px 16px 14px;
+    box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--primary) 60%, transparent);
+  }
+  .hero .k { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.72; }
+  .hero .amt { font-family: 'DM Serif Display', Georgia, serif; font-size: 33px; line-height: 1; margin-top: 3px; }
+  .hero .sub { font-size: 11px; opacity: 0.8; margin-top: 5px; }
+  .hero .bar { height: 5px; border-radius: 99px; background: color-mix(in srgb, var(--on-primary) 22%, transparent); margin-top: 11px; overflow: hidden; }
+  .hero .bar > span { display: block; height: 100%; width: 56%; border-radius: 99px; background: color-mix(in srgb, var(--on-primary) 82%, transparent); }
+  .hero .split { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-top: 12px; padding-top: 10px;
+                 border-top: 1px solid color-mix(in srgb, var(--on-primary) 16%, transparent); text-align: center; }
+  .hero .split .l { font-size: 8px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.55; }
+  .hero .split .v { font-family: 'DM Serif Display', Georgia, serif; font-size: 12px; opacity: 0.95; margin-top: 1px; }
+
+  .sec { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-300); margin: 14px 4px 7px; }
+
+  /* ledger rows */
+  .rows { background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(20,16,10,0.06); }
+  .row { display: flex; align-items: center; gap: 11px; padding: 9px 12px; position: relative; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row .stripe { position: absolute; left: 4px; top: 8px; bottom: 8px; width: 3px; border-radius: 99px; }
+  .row .ic { width: 27px; height: 27px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+  .row .ic svg { width: 15px; height: 15px; }
+  .row .t { min-width: 0; flex: 1; }
+  .row .m { font-size: 12.5px; font-weight: 600; color: var(--ink-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .c { font-size: 10px; color: var(--ink-300); margin-top: 1px; }
+  .row .val { font-family: 'DM Serif Display', Georgia, serif; font-size: 14px; color: var(--ink-900); }
+  .row .val.pos { color: var(--pos); }
+
+  /* button + nav */
+  .btn { margin-top: 12px; width: 100%; border: none; border-radius: 12px; padding: 11px; font-weight: 700; font-size: 13.5px;
+         background: var(--primary); color: var(--on-primary); font-family: inherit; }
+  .nav { display: flex; justify-content: space-around; padding: 10px 4px 4px; margin-top: 8px; border-top: 1px solid var(--line); }
+  .nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 8.5px; font-weight: 600; color: var(--ink-300); }
+  .nav a svg { width: 19px; height: 19px; }
+  .nav a.on { color: var(--primary); }
+
+  /* caption */
+  .cap { padding: 13px 16px 15px; background: var(--surface); border-top: 1px solid var(--line); }
+  .cap .name { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: var(--ink-900); display: flex; align-items: center; gap: 8px; }
+  .cap .tag { font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px;
+              background: var(--primary-100); color: var(--primary-600); }
+  .cap .desc { font-size: 12.5px; color: var(--ink-500); margin-top: 4px; line-height: 1.5; }
+  .cap .sw { display: flex; gap: 6px; margin-top: 11px; }
+  .cap .sw span { width: 22px; height: 22px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+
+  /* ============================ THE THEMES ============================ */
+
+  /* 1 — Ledger Teal (current default) */
+  .t-teal {
+    --bg:#FAF9F6; --surface:#FDFCF9; --line:#E0DCD2;
+    --ink-900:#1A1A18; --ink-700:#3D3D38; --ink-500:#6B6960; --ink-300:#9B9890;
+    --primary:#1E7F75; --primary-600:#16615A; --primary-100:#D6E9E5; --on-primary:#F3FBF9;
+    --pos:#4F7942;
+  }
+  /* 2 — Indigo Ink */
+  .t-indigo {
+    --bg:#F5F6FA; --surface:#FCFDFF; --line:#DBE0EE;
+    --ink-900:#16182A; --ink-700:#33374A; --ink-500:#5B6076; --ink-300:#9195AC;
+    --primary:#3D5AC0; --primary-600:#31489C; --primary-100:#DEE4F8; --on-primary:#F5F8FF;
+    --pos:#4F7942;
+  }
+  /* 3 — Rosewood */
+  .t-rosewood {
+    --bg:#FBF3F1; --surface:#FFF9F7; --line:#EAD3CC;
+    --ink-900:#2A1A17; --ink-700:#4A342E; --ink-500:#7A5C54; --ink-300:#B29A93;
+    --primary:#A63D52; --primary-600:#8A2F42; --primary-100:#F5DBE0; --on-primary:#FFF6F3;
+    --pos:#4F7942;
+  }
+  /* 4 — Sage Ledger */
+  .t-sage {
+    --bg:#EEF1E4; --surface:#F8FAEE; --line:#D3DABC;
+    --ink-900:#1E2618; --ink-700:#34402A; --ink-500:#4E5C38; --ink-300:#889168;
+    --primary:#3F6B34; --primary-600:#325628; --primary-100:#DDE9CF; --on-primary:#F2F7E9;
+    --pos:#2E8B7F;
+  }
+  /* 5 — Marigold */
+  .t-marigold {
+    --bg:#FFF6E4; --surface:#FFFCF3; --line:#F0D89C;
+    --ink-900:#3A2A0E; --ink-700:#5E4A1E; --ink-500:#8A7038; --ink-300:#BBA268;
+    --primary:#E08A1E; --primary-600:#C0701A; --primary-100:#FBE6C2; --on-primary:#3A2A0E;
+    --pos:#4F7942;
+  }
+  /* 6 — Plum */
+  .t-plum {
+    --bg:#F4F1FA; --surface:#FBF9FF; --line:#DDD2EF;
+    --ink-900:#221C33; --ink-700:#3A3152; --ink-500:#625A7E; --ink-300:#9A90B8;
+    --primary:#7C55C0; --primary-600:#653FA6; --primary-100:#E7DCF7; --on-primary:#F7F4FF;
+    --pos:#4F7942;
+  }
+  /* 7 — Midnight (dark) */
+  .t-midnight {
+    --bg:#16181F; --surface:#20242E; --line:#333A48;
+    --ink-900:#ECEEF3; --ink-700:#C2C6D0; --ink-500:#9599A6; --ink-300:#676C7A;
+    --primary:#35B0A0; --primary-600:#2A8F82; --primary-100:#22403C; --on-primary:#0E1614;
+    --pos:#6FBF73;
+  }
+  /* 8 — Espresso (dark) */
+  .t-espresso {
+    --bg:#221B15; --surface:#2F261E; --line:#463A2D;
+    --ink-900:#F1E9E0; --ink-700:#D3C6B8; --ink-500:#A8988A; --ink-300:#7A6C5E;
+    --primary:#CF9455; --primary-600:#B27B3E; --primary-100:#3A2E22; --on-primary:#221810;
+    --pos:#8FBF5A;
+  }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Hisaab — theme options</h1>
+    <p>Eight candidates, each shown on a real Hisaab screen. Every card is the identical markup re-skinned by one set of CSS variables, which is exactly how it works in the app: one <code>data-theme</code> on the page, all colour cascades from the token layer. Adding another later is one CSS block + one registry line.</p>
+    <p class="legend"><b>Tell me which to ship</b> (any subset) and which should be the default. Default today is <b>Ledger Teal</b>.</p>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+<script>
+  // Inline icon set (lucide-style) so the mini-UI reads like the real app.
+  const I = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>',
+    list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+    target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>',
+    invest: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-8"/><path d="M17 7h4v4"/></svg>',
+    pie: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9l7 4"/><circle cx="12" cy="12" r="9"/></svg>',
+    coffee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 9h2a2 2 0 0 1 0 4h-2"/></svg>',
+    bus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="12" rx="2"/><path d="M4 11h16M8 17v2M16 17v2"/><circle cx="8.5" cy="14" r=".6"/><circle cx="15.5" cy="14" r=".6"/></svg>',
+    salary: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 7h7a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h8"/></svg>',
+  };
+
+  const THEMES = [
+    { cls:'t-teal',     name:'Ledger Teal', tag:'Default', desc:'Antique ledger teal on warm cream. Hisaab as it is today.', sw:['#1E7F75','#FAF9F6','#4F7942'] },
+    { cls:'t-indigo',   name:'Indigo Ink',  tag:'Light',   desc:'Deep fountain-pen indigo on cool paper. Crisp and classic.', sw:['#3D5AC0','#F5F6FA','#4F7942'] },
+    { cls:'t-rosewood', name:'Rosewood',    tag:'Light',   desc:'A warm burgundy on blush cream. Rich and intimate.', sw:['#A63D52','#FBF3F1','#4F7942'] },
+    { cls:'t-sage',     name:'Sage Ledger', tag:'Light',   desc:'Restful forest green on soft moss paper. Calm as a garden.', sw:['#3F6B34','#EEF1E4','#2E8B7F'] },
+    { cls:'t-marigold', name:'Marigold',    tag:'Light',   desc:'Festive Indian gold on sunlit cream. Bright and unmistakable.', sw:['#E08A1E','#FFF6E4','#4F7942'] },
+    { cls:'t-plum',     name:'Plum',        tag:'Light',   desc:'A royal wisteria purple on pale lilac. Serene and modern.', sw:['#7C55C0','#F4F1FA','#4F7942'] },
+    { cls:'t-midnight', name:'Midnight',    tag:'Dark',    desc:'Teal-cyan lights on deep navy. Easy on the eyes after dark.', sw:['#35B0A0','#16181F','#6FBF73'] },
+    { cls:'t-espresso', name:'Espresso',    tag:'Dark',    desc:'Warm caramel on deep coffee-brown. Cozy after hours.', sw:['#CF9455','#221B15','#8FBF5A'] },
+  ];
+
+  function screen(t) {
+    return `
+    <div class="card ${t.cls}">
+      <div class="frame">
+        <div class="app-top">
+          <div class="logo">₹</div>
+          <div class="app-name">Hisaab</div>
+          <div class="app-date">Sat, 18 Jul</div>
+        </div>
+
+        <div class="hero">
+          <div class="k">Safe to spend</div>
+          <div class="amt">₹24,860</div>
+          <div class="sub">₹1,776 a day for 14 days left</div>
+          <div class="bar"><span></span></div>
+          <div class="split">
+            <div><div class="l">In</div><div class="v">₹82k</div></div>
+            <div><div class="l">Spent</div><div class="v">₹41k</div></div>
+            <div><div class="l">Bills</div><div class="v">₹9k</div></div>
+            <div><div class="l">Goals</div><div class="v">₹7k</div></div>
+          </div>
+        </div>
+
+        <div class="sec">Recent</div>
+        <div class="rows">
+          <div class="row">
+            <span class="stripe" style="background:#6B6E68"></span>
+            <span class="ic" style="background:color-mix(in srgb, var(--primary) 14%, transparent); color:var(--primary)">${I.coffee}</span>
+            <div class="t"><div class="m">Third Wave Coffee</div><div class="c">Food & dining · HDFC</div></div>
+            <div class="val">₹420</div>
+          </div>
+          <div class="row">
+            <span class="stripe" style="background:#6B6E68"></span>
+            <span class="ic" style="background:color-mix(in srgb, var(--primary) 14%, transparent); color:var(--primary)">${I.bus}</span>
+            <div class="t"><div class="m">Auto</div><div class="c">Transport · Cash</div></div>
+            <div class="val">₹220</div>
+          </div>
+          <div class="row">
+            <span class="stripe" style="background:#C43E82"></span>
+            <span class="ic" style="background:color-mix(in srgb, var(--pos) 16%, transparent); color:var(--pos)">${I.salary}</span>
+            <div class="t"><div class="m">Refund</div><div class="c">Income · HDFC</div></div>
+            <div class="val pos">+₹1,200</div>
+          </div>
+        </div>
+
+        <button class="btn">Add entry</button>
+
+        <div class="nav">
+          <a class="on">${I.home}Home</a>
+          <a>${I.list}Ledger</a>
+          <a>${I.target}Goals</a>
+          <a>${I.invest}Invest</a>
+          <a>${I.pie}Insights</a>
+        </div>
+      </div>
+
+      <div class="cap">
+        <div class="name">${t.name} <span class="tag">${t.tag}</span></div>
+        <div class="desc">${t.desc}</div>
+        <div class="sw">${t.sw.map(c=>`<span style="background:${c}"></span>`).join('')}</div>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('grid').innerHTML = THEMES.map(screen).join('');
+</script>
+</body>
+</html>
