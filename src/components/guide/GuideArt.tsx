@@ -340,6 +340,41 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
         </div>
       );
 
+    // The banknote themes: each note's accent over its tinted paper.
+    case 'themes':
+      return (
+        <div className="w-full max-w-[250px]">
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              ['Teal', '#faf9f6', '#1e7f75'],
+              ['₹50', '#f3f7fa', '#1f7ba8'],
+              ['₹100', '#f5f2fb', '#7c5ac4'],
+              ['₹200', '#fdf7e9', '#be7518'],
+              ['₹500', '#f5f5f1', '#5e6e68'],
+              ['₹2000', '#fbf2f6', '#c43e82'],
+              ['₹20', '#f5f7e9', '#6e8a1e'],
+              ['₹10', '#f8f3eb', '#8a5a3b'],
+            ].map(([label, bg, accent], i) => (
+              <motion.div
+                key={label}
+                className="flex flex-col items-center gap-1"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.05 + i * 0.05 }}
+              >
+                <span
+                  className="grid h-11 w-11 place-items-center rounded-[10px] shadow-sm"
+                  style={{ backgroundColor: bg }}
+                >
+                  <span className="h-6 w-6 rounded-full" style={{ backgroundColor: accent }} />
+                </span>
+                <span className="text-[8.5px] text-ink-300">{label}</span>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      );
+
     // What actually leaves the phone: your row, sealed into ciphertext.
     case 'security':
       return (

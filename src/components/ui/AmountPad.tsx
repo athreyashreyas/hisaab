@@ -19,7 +19,7 @@ import { cn } from '../../lib/cn';
 export function AmountPad({
   paise,
   onChange,
-  tint = '#1E7F75',
+  tint = 'var(--teal-500)',
 }: {
   paise: number;
   onChange: (paise: number) => void;

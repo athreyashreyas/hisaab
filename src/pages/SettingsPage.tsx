@@ -13,6 +13,9 @@ import { Icon } from '../components/ui/Icon';
 import { useAccountStore } from '../stores/accountStore';
 import { isCloudConfigured } from '../lib/supabase';
 import { APP_VERSION } from '../lib/changelog';
+import { useTheme } from '../lib/theme';
+import { THEMES } from '../lib/themes';
+import { cn } from '../lib/cn';
 import {
   exportTransactionsCsv,
   exportEncryptedVault,
@@ -58,6 +61,8 @@ export function SettingsPage() {
         <Row icon={<Wallet size={18} />} label="Accounts" onClick={() => navigate('/settings/accounts')} chevron />
         <Row icon={<Shapes size={18} />} label="Categories & budgets" onClick={() => navigate('/settings/categories')} chevron />
       </SettingsGroup>
+
+      <ThemeSection />
 
       <SettingsGroup title="Security">
         <Row icon={<KeyRound size={18} />} label="Change password" onClick={() => setChangePass(true)} chevron />
@@ -120,6 +125,53 @@ export function SettingsPage() {
           {toast}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Theme picker: a grid of banknote-inspired swatches. Selecting one re-skins
+ *  the whole app instantly (per device) via the token layer. */
+function ThemeSection() {
+  const themeId = useTheme((s) => s.themeId);
+  const setTheme = useTheme((s) => s.setTheme);
+
+  return (
+    <div className="mt-5">
+      <div className="mb-1.5 px-1 text-[12px] font-semibold uppercase tracking-wide text-ink-300">
+        Appearance
+      </div>
+      <Card className="p-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {THEMES.map((t) => {
+            const active = t.id === themeId;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className={cn(
+                  'flex items-center gap-2.5 rounded-card border p-2.5 text-left transition-colors',
+                  active ? 'border-teal-400 bg-teal-50' : 'border-parchment-300 hover:bg-parchment-100'
+                )}
+                aria-pressed={active}
+              >
+                <span
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full ring-1 ring-black/5"
+                  style={{ backgroundColor: t.bg }}
+                >
+                  <span className="h-5 w-5 rounded-full" style={{ backgroundColor: t.accent }} />
+                </span>
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1 text-[13px] font-semibold text-ink-900">
+                    <span className="truncate">{t.name}</span>
+                    {active && <Check size={13} className="shrink-0 text-teal-600" />}
+                  </span>
+                  {t.note && <span className="block text-[11px] text-ink-500">{t.note} note</span>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
 }

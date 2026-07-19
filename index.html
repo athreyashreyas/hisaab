@@ -18,6 +18,17 @@
     />
     <title>Hisaab</title>
 
+    <!-- Apply the saved theme to <html> before the stylesheet and app load, so
+         the very first paint (the splash below, then the app) is already in the
+         chosen theme with no flash of the default. Colours resolve from the CSS
+         variables in tokens.css once the bundled stylesheet lands. -->
+    <script>
+      try {
+        var t = localStorage.getItem('hisaab.theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    </script>
+
     <!-- Fonts, loaded off the critical path so they never block first paint. The
          boot splash below uses a system-serif fallback, so text is visible
          instantly and swaps to DM Serif once it arrives. -->
@@ -40,13 +51,16 @@
          Hisaab splash on parchment — never a blank/black screen while the app
          bundle loads. React replaces #root on mount, which removes the splash. -->
     <style>
+      /* Fallback hex for the first frame before the bundled stylesheet (which
+         defines the theme variables) loads; once it does, the splash adopts the
+         chosen theme's colours. */
       html {
-        background: #faf9f6;
+        background: var(--parchment-100, #faf9f6);
         -webkit-tap-highlight-color: transparent;
       }
       body {
         margin: 0;
-        background: #faf9f6;
+        background: var(--parchment-100, #faf9f6);
       }
       #boot {
         position: fixed;
@@ -56,7 +70,7 @@
         align-items: center;
         justify-content: center;
         gap: 14px;
-        background: #faf9f6;
+        background: var(--parchment-100, #faf9f6);
       }
       #boot .mark {
         width: 52px;
@@ -64,18 +78,18 @@
         border-radius: 16px;
         display: grid;
         place-items: center;
-        background: #1e7f75;
-        color: #fff;
+        background: var(--teal-500, #1e7f75);
+        color: var(--on-primary, #fff);
         font-family: 'DM Serif Display', Georgia, 'Times New Roman', serif;
         font-size: 26px;
         line-height: 1;
-        box-shadow: 0 8px 20px -6px rgba(30, 127, 117, 0.5);
+        box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.28);
       }
       #boot .dot {
         width: 8px;
         height: 8px;
         border-radius: 999px;
-        background: #4ba096;
+        background: var(--teal-400, #4ba096);
         animation: hisaab-pulse 1.4s ease-in-out infinite;
       }
       @keyframes hisaab-pulse {

@@ -73,7 +73,7 @@ export function InvestmentsPage() {
         </Card>
       ) : (
         <>
-          <Card className="mt-3 overflow-hidden bg-gradient-to-br from-teal-600 to-teal-500 p-5 text-[#F3FBF9]">
+          <Card className="mt-3 overflow-hidden bg-gradient-to-br from-teal-600 to-teal-500 p-5 text-[color:var(--on-primary)]">
             <div className="text-[12px] font-semibold uppercase tracking-[0.12em] opacity-80">
               Current value
             </div>

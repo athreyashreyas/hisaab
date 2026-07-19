@@ -11,32 +11,38 @@ export default {
         sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Warm base, shared family DNA.
+        // Themed tokens resolve from CSS variables (see src/tokens.css) as
+        // rgb(var(--x-rgb) / <alpha>), so utilities and their opacity modifiers
+        // (bg-teal-500/20) re-theme when <html data-theme> changes. The values
+        // themselves live in tokens.css; a theme is one block there.
         parchment: {
-          50: '#FDFCF9',
-          100: '#FAF9F6',
-          200: '#F0EDE6',
-          300: '#E0DCD2',
+          50: 'rgb(var(--parchment-50-rgb) / <alpha-value>)',
+          100: 'rgb(var(--parchment-100-rgb) / <alpha-value>)',
+          200: 'rgb(var(--parchment-200-rgb) / <alpha-value>)',
+          300: 'rgb(var(--parchment-300-rgb) / <alpha-value>)',
         },
         ink: {
-          900: '#1A1A18',
-          700: '#3D3D38',
-          500: '#6B6960',
-          300: '#9B9890',
-          100: '#D4D2CB',
+          900: 'rgb(var(--ink-900-rgb) / <alpha-value>)',
+          700: 'rgb(var(--ink-700-rgb) / <alpha-value>)',
+          500: 'rgb(var(--ink-500-rgb) / <alpha-value>)',
+          300: 'rgb(var(--ink-300-rgb) / <alpha-value>)',
+          100: 'rgb(var(--ink-100-rgb) / <alpha-value>)',
         },
-        // Hisaab's signature: a deep antique ledger teal. This is the brand /
-        // primary / nav accent, the equivalent of Attend's sage and Harmony's
-        // iris. Desaturated so it sits like aged ink on cream, not neon fintech.
+        // Hisaab's signature: a deep antique ledger teal by default, re-skinned
+        // to a banknote hue by each theme. Still named `teal` across the app so
+        // the class names never change; only the values behind them do.
         teal: {
-          700: '#114A44',
-          600: '#16615A',
-          500: '#1E7F75',
-          400: '#4BA096',
-          300: '#86C0B8',
-          100: '#D6E9E5',
-          50: '#EFF6F4',
+          700: 'rgb(var(--teal-700-rgb) / <alpha-value>)',
+          600: 'rgb(var(--teal-600-rgb) / <alpha-value>)',
+          500: 'rgb(var(--teal-500-rgb) / <alpha-value>)',
+          400: 'rgb(var(--teal-400-rgb) / <alpha-value>)',
+          300: 'rgb(var(--teal-300-rgb) / <alpha-value>)',
+          100: 'rgb(var(--teal-100-rgb) / <alpha-value>)',
+          50: 'rgb(var(--teal-50-rgb) / <alpha-value>)',
         },
+        // The readable text colour on a teal-filled surface (buttons, the
+        // safe-to-spend hero). Themed alongside the accent.
+        'on-primary': 'rgb(var(--on-primary-rgb) / <alpha-value>)',
         // Money income / positive delta (kept distinct from teal so "up" never
         // reads as "brand"). Muted moss.
         moss: {

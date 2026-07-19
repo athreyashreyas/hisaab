@@ -17,13 +17,16 @@ export interface TrendPoint {
 /** Spend-over-time area chart for Insights (teal fill on parchment). */
 export function TrendChart({ data }: { data: TrendPoint[] }) {
   return (
-    <div className="h-52 w-full px-1 pt-2">
+    // `color` carries the themed accent; the chart's paint uses currentColor so
+    // the line, fill, and active dot re-theme (var() isn't reliable in SVG
+    // presentation attributes, but currentColor is).
+    <div className="h-52 w-full px-1 pt-2 text-teal-500">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
           <defs>
             <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#1E7F75" stopOpacity={0.28} />
-              <stop offset="100%" stopColor="#1E7F75" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="currentColor" stopOpacity={0.28} />
+              <stop offset="100%" stopColor="currentColor" stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} stroke="#E0DCD2" strokeDasharray="3 3" />
@@ -43,7 +46,7 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
             tickFormatter={(v) => formatCompactINR(v)}
           />
           <Tooltip
-            cursor={{ stroke: '#86C0B8', strokeWidth: 1 }}
+            cursor={{ stroke: 'currentColor', strokeOpacity: 0.4, strokeWidth: 1 }}
             contentStyle={{
               borderRadius: 12,
               border: '1px solid #E0DCD2',
@@ -57,11 +60,11 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
           <Area
             type="monotone"
             dataKey="spent"
-            stroke="#1E7F75"
+            stroke="currentColor"
             strokeWidth={2}
             fill="url(#trendFill)"
             dot={false}
-            activeDot={{ r: 4, fill: '#1E7F75' }}
+            activeDot={{ r: 4, fill: 'currentColor' }}
           />
         </AreaChart>
       </ResponsiveContainer>

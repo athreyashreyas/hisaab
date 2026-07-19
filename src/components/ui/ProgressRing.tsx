@@ -8,8 +8,8 @@ export function ProgressRing({
   progress,
   size = 46,
   stroke = 5,
-  color = '#1E7F75',
-  track = '#E0DCD2',
+  color = 'var(--teal-500)',
+  track = 'var(--parchment-300)',
   label,
   className,
 }: {

@@ -20,7 +20,7 @@ export function SafeToSpendCard({
   const negative = data.amount < 0;
 
   return (
-    <div className="relative overflow-hidden rounded-sheet bg-gradient-to-br from-teal-600 to-teal-500 p-5 text-[#F3FBF9] shadow">
+    <div className="relative overflow-hidden rounded-sheet bg-gradient-to-br from-teal-600 to-teal-500 p-5 text-[color:var(--on-primary)] shadow">
       <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/[0.06]" />
 
       <div className="text-[12px] font-semibold uppercase tracking-[0.12em] opacity-80">
@@ -45,7 +45,7 @@ export function SafeToSpendCard({
 
       <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/25">
         <div
-          className="h-full rounded-full bg-[#F3FBF9] transition-[width] duration-500"
+          className="h-full rounded-full bg-[color:var(--on-primary)] transition-[width] duration-500"
           style={{ width: `${Math.min(100, Math.round(monthElapsed * 100))}%` }}
         />
       </div>

@@ -22,6 +22,21 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.8.0',
+    date: '2026-07-19',
+    major: true,
+    title: 'Dressed in the colour of a note',
+    notes: [
+      'Hisaab comes in themes now, each drawn from an Indian banknote. Deep ledger teal stays the default; you can also wear the blue of a fifty, the lavender of a hundred, the marigold of a two-hundred, the stone of a five-hundred, the magenta of the two-thousand, the greenish-yellow of a twenty, or the chocolate of a ten.',
+      'Pick one in Settings → Appearance and the whole app re-skins at once — the paper takes a hint of the note, the accent becomes its colour, and income green and overspend rose stay put so money always reads the same. It is per-device and applies the instant the app opens.',
+    ],
+    howTo: [
+      'Open Settings and find Appearance.',
+      'Tap any note to wear it; tap Ledger Teal to go back to the default.',
+    ],
+    art: 'themes',
+  },
+  {
     version: '0.7.0',
     date: '2026-07-19',
     title: 'Bills you can add yourself',

@@ -135,7 +135,7 @@ export function AddSheet() {
     []
   );
 
-  const tint = type === 'income' ? '#6E9B61' : type === 'transfer' ? '#3E7CA1' : '#1E7F75';
+  const tint = type === 'income' ? '#6E9B61' : type === 'transfer' ? '#3E7CA1' : 'var(--teal-500)';
 
   return (
     <BottomSheet open={addSheetOpen} onClose={closeAdd} title={isEdit ? 'Edit entry' : 'Add entry'}>

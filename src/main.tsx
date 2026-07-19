@@ -2,7 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
+import { initTheme } from './lib/theme';
 import './index.css';
+
+// Apply the saved theme to <html> and sync the status-bar tint before the app
+// renders. The index.html inline snippet already set data-theme pre-paint; this
+// keeps the meta tag and the store in step.
+initTheme();
 
 /**
  * Service-worker + auto-update handling, ported from the suite (Attend/Harmony).

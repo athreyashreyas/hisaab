@@ -1,6 +1,9 @@
-/* Fonts are loaded off the critical path in index.html (preconnect + async
-   stylesheet), so this file no longer @imports them — an @import here would be
-   render-blocking and delay first paint. */
+/* Theme tokens first: defines the CSS variables every colour cascades from, per
+   theme. A local @import is bundled into one stylesheet at build (not a network
+   request), so unlike the old Google-Fonts @import it doesn't block first paint.
+   Fonts stay off the critical path in index.html. */
+@import './tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
