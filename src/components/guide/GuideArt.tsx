@@ -350,7 +350,7 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
               ['₹50', '#f3f7fa', '#1f7ba8'],
               ['₹100', '#f5f2fb', '#7c5ac4'],
               ['₹200', '#fdf7e9', '#be7518'],
-              ['₹500', '#f5f5f1', '#5e6e68'],
+              ['₹500', '#f1f5ef', '#647a5e'],
               ['₹2000', '#fbf2f6', '#c43e82'],
               ['₹20', '#f5f7e9', '#6e8a1e'],
               ['₹10', '#f8f3eb', '#8a5a3b'],

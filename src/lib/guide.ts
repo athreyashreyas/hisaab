@@ -158,7 +158,7 @@ export const GUIDE: GuideSection[] = [
     id: 'themes',
     title: 'The colour you wear',
     body: [
-      'Hisaab comes in themes drawn from the Indian rupee notes. Deep ledger teal is the default, and you can switch to the blue of a fifty, the lavender of a hundred, the marigold of a two-hundred, the stone of a five-hundred, the magenta of the two-thousand, the greenish-yellow of a twenty, or the chocolate of a ten.',
+      'Hisaab comes in themes drawn from the Indian rupee notes. Deep ledger teal is the default, and you can switch to the blue of a fifty, the lavender of a hundred, the marigold of a two-hundred, the olive of a five-hundred, the magenta of the two-thousand, the greenish-yellow of a twenty, or the chocolate of a ten.',
       'The paper takes a hint of the note and the accent becomes its colour, while income green, overspend rose, and the note stripes on each entry stay constant so money always reads the same. It is a per-device choice and applies the instant the app opens.',
     ],
     steps: [

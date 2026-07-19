@@ -161,11 +161,11 @@ function ThemeSection() {
                   <span className="h-5 w-5 rounded-full" style={{ backgroundColor: t.accent }} />
                 </span>
                 <span className="min-w-0">
-                  <span className="flex items-center gap-1 text-[13px] font-semibold text-ink-900">
-                    <span className="truncate">{t.name}</span>
+                  <span className="flex items-center gap-1 text-[13px] font-semibold leading-tight text-ink-900">
+                    <span>{t.name}</span>
                     {active && <Check size={13} className="shrink-0 text-teal-600" />}
                   </span>
-                  {t.note && <span className="block text-[11px] text-ink-500">{t.note} note</span>}
+                  {t.note && <span className="mt-0.5 block text-[11px] text-ink-500">{t.note}</span>}
                 </span>
               </button>
             );
