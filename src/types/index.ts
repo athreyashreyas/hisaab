@@ -140,7 +140,7 @@ export interface Investment extends SyncMeta {
 
 // --- recurring detection --------------------------------------------------
 
-export type Cadence = 'weekly' | 'monthly' | 'yearly';
+export type Cadence = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface RecurringRule extends SyncMeta {
   id: ID;

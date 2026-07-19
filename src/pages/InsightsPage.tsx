@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { format, startOfWeek, addDays, subMonths } from 'date-fns';
-import { ArrowUp, ArrowDown, Check, X } from 'lucide-react';
+import { ArrowUp, ArrowDown, Check, X, Plus, ChevronRight } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card, SectionHeader } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
@@ -22,11 +22,13 @@ import {
   categoryPace,
   detectRecurring,
   monthBounds,
+  monthlyEquivalent,
   formatINR,
   formatCompactINR,
 } from '../lib/calculations';
-import { createRecurringRule, updateRecurringRule } from '../lib/repo';
-import type { Transaction } from '../types';
+import { createRecurringRule } from '../lib/repo';
+import { RecurringSheet } from '../components/finance/RecurringSheet';
+import type { Cadence, RecurringRule, Transaction } from '../types';
 
 type Granularity = 'day' | 'week' | 'month';
 
@@ -37,6 +39,10 @@ export function InsightsPage() {
   const accountMap = useAccountMap();
   const rules = useRecurringRules();
   const [gran, setGran] = useState<Granularity>('day');
+  const [recurringSheet, setRecurringSheet] = useState<{ open: boolean; editing: RecurringRule | null }>({
+    open: false,
+    editing: null,
+  });
 
   const now = new Date();
   const { start, end } = monthBounds(now);
@@ -92,6 +98,19 @@ export function InsightsPage() {
             body="Log a few expenses and this fills with trends, breakdowns, and budget pacing."
           />
         </Card>
+        <SectionHeader title="Recurring" action={<AddRecurringButton onClick={() => setRecurringSheet({ open: true, editing: null })} />} />
+        <Card>
+          <EmptyState
+            icon="repeat"
+            title="Add a recurring payment"
+            body="Rent, subscriptions, SIPs — add them here and they'll count toward “Bills to come”."
+          />
+        </Card>
+        <RecurringSheet
+          open={recurringSheet.open}
+          editing={recurringSheet.editing}
+          onClose={() => setRecurringSheet({ open: false, editing: null })}
+        />
       </div>
     );
   }
@@ -178,19 +197,22 @@ export function InsightsPage() {
       <SectionHeader
         title="Recurring"
         action={
-          confirmed.length > 0 ? (
-            <span className="text-[12px] tabular-nums text-ink-500">
-              {formatINR(monthlyCommitted)}/mo committed
-            </span>
-          ) : undefined
+          <div className="flex items-center gap-3">
+            {confirmed.length > 0 && (
+              <span className="text-[12px] tabular-nums text-ink-500">
+                {formatINR(monthlyCommitted)}/mo committed
+              </span>
+            )}
+            <AddRecurringButton onClick={() => setRecurringSheet({ open: true, editing: null })} />
+          </div>
         }
       />
       {confirmed.length === 0 && suggestions.length === 0 ? (
         <Card>
           <EmptyState
             icon="repeat"
-            title="No recurring bills spotted yet"
-            body="Once a merchant repeats on a regular cadence, Hisaab suggests it here."
+            title="No recurring bills yet"
+            body="Add rent, subscriptions or SIPs with the “Add” button — or Hisaab suggests one once a merchant repeats on a regular cadence."
           />
         </Card>
       ) : (
@@ -255,32 +277,50 @@ export function InsightsPage() {
           {confirmed.length > 0 && (
             <Card className="divide-y divide-parchment-200 overflow-hidden">
               {confirmed.map((r) => (
-                <div key={r.id} className="flex items-center gap-3 px-4 py-3">
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setRecurringSheet({ open: true, editing: r })}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-parchment-100"
+                >
                   <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-amber-100 text-amber-600">
                     <Icon name="repeat" size={15} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13.5px] font-semibold text-ink-900">{r.merchant}</div>
                     <div className="text-[11.5px] text-ink-500">
-                      Next {format(r.next_due, 'd MMM')} · {accountMap.get(r.account_id)?.name ?? '-'}
+                      {CADENCE_LABEL[r.cadence]} · next {format(r.next_due, 'd MMM')} ·{' '}
+                      {accountMap.get(r.account_id)?.name ?? '-'}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Money paise={r.amount} className="text-[13.5px] font-semibold text-ink-900" />
-                    <button
-                      onClick={() => updateRecurringRule(r.id, { active: false, confirmed: false })}
-                      className="mt-0.5 block text-[11px] text-ink-300 hover:text-rose-500"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
+                  <Money paise={r.amount} className="text-[13.5px] font-semibold text-ink-900" />
+                  <ChevronRight size={16} className="shrink-0 text-ink-300" />
+                </button>
               ))}
             </Card>
           )}
         </div>
       )}
+
+      <RecurringSheet
+        open={recurringSheet.open}
+        editing={recurringSheet.editing}
+        onClose={() => setRecurringSheet({ open: false, editing: null })}
+      />
     </div>
+  );
+}
+
+function AddRecurringButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-[12px] font-semibold text-teal-700 transition-colors hover:bg-teal-100"
+    >
+      <Plus size={13} />
+      Add
+    </button>
   );
 }
 
@@ -294,15 +334,17 @@ function DeltaChip({ delta }: { delta: number }) {
   );
 }
 
-function monthlyEquivalent(amount: number, cadence: 'weekly' | 'monthly' | 'yearly'): number {
-  if (cadence === 'weekly') return Math.round((amount * 52) / 12);
-  if (cadence === 'yearly') return Math.round(amount / 12);
-  return amount;
-}
+const CADENCE_LABEL: Record<Cadence, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  yearly: 'Yearly',
+};
 
-function nextDue(cadence: 'weekly' | 'monthly' | 'yearly'): number {
+function nextDue(cadence: Cadence): number {
   const d = new Date();
-  if (cadence === 'weekly') d.setDate(d.getDate() + 7);
+  if (cadence === 'daily') d.setDate(d.getDate() + 1);
+  else if (cadence === 'weekly') d.setDate(d.getDate() + 7);
   else if (cadence === 'yearly') d.setFullYear(d.getFullYear() + 1);
   else d.setMonth(d.getMonth() + 1);
   d.setHours(0, 0, 0, 0);

@@ -22,17 +22,30 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.7.0',
+    date: '2026-07-19',
+    title: 'Bills you can add yourself',
+    notes: [
+      'Add a recurring payment by hand — rent, a subscription, an SIP. Set the amount, how often it repeats, and when it is next due, and it counts toward "Bills to come" on Home. No need to wait for Hisaab to spot it in your spending.',
+      'Repeat it your way: daily, weekly, monthly, or yearly. A daily bill counts every day still left in the month.',
+      'Tap any recurring payment to edit its amount, cadence, or account, or to remove it.',
+    ],
+    howTo: [
+      'Open Insights, find Recurring, and tap Add.',
+      'Set the amount, how often it repeats, and the next due date.',
+      'Tap a saved payment any time to change or remove it.',
+    ],
+    art: 'sync',
+  },
+  {
     version: '0.6.0',
     date: '2026-07-18',
     major: true,
     title: 'Investments, and money that adds up',
     notes: [
-      'A new Investments tab holds your whole portfolio in one place: stocks, mutual funds, fixed deposits, and anything else. Add what you put in and the value today, and Hisaab shows what each holding has earned and how the portfolio is doing overall. FDs can carry their interest rate and maturity date.',
-      'Because Hisaab never phones home, there is no live price feed, and that is the point. You update a value when you like, and it stays end to end encrypted like everything else.',
-      'Saving toward a goal now comes from a real account. Pick which account the money is set aside from, and two accounts can each fund a slice of the same goal. That money is earmarked out of the account balance, so nothing is counted twice as both in the bank and saved.',
-      'Fixed a bug where money added to a goal stayed in your set-aside total even after you took it back out or deleted the goal. Deleting a goal now clears its contributions too, and withdrawals free the money properly.',
-      'You stay signed in now. Once you have unlocked Hisaab on a device it keeps you in across reopens, so you are not typing your password every time you come back. Tap Lock now in Settings whenever you want to lock it again.',
-      'Added an Education & learning category, and long category names no longer get clipped with a trailing dot-dot-dot.',
+      'A new Investments tab holds your whole portfolio — stocks, mutual funds, fixed deposits, and more. Log what you put in and its value today, and Hisaab shows each holding\'s return and how the portfolio is doing. No live price feed by design; you update values when you like, end-to-end encrypted like everything else.',
+      'Saving toward a goal now draws from a real account. Pick which account sets the money aside, and two accounts can each fund a slice of one goal, so nothing is counted twice.',
+      'Fixed set-aside money lingering after a withdrawal or a deleted goal. Added an Education & learning category, and long category names no longer get clipped. You also stay signed in now — once unlocked on a device, Hisaab keeps you in; tap Lock now in Settings to lock again.',
     ],
     howTo: [
       'Tap Invest in the bottom bar, then Add, to log a stock, mutual fund, or FD.',
@@ -47,11 +60,9 @@ export const CHANGELOG: Release[] = [
     major: true,
     title: 'The colour of money',
     notes: [
-      'Amounts now carry the colour of the note you would reach for to pay them. A ₹47 coffee reads in ₹50 blue, a ₹1,800 dinner in ₹2,000 magenta. It is the palette of the Indian rupee, brought quietly into your ledger.',
-      'You will see it in the amount pad as you type, the figure easing from one note to the next, and as a slim stripe down the left of each entry, so a glance tells you the shape of your spending before you read a number.',
-      'Categories share the same banknote palette, tuned to stay clear and legible for colour-blind readers too, so the whole app speaks one language of colour.',
-      'What is new now greets you once per account, not once per device. Read it on your phone and your laptop will not show it again, and it stays end to end encrypted like everything else.',
-      'Fixed a crop at the top of the sign-in and setup screens in landscape, and tidied the edges so nothing hides behind the notch when you turn your phone sideways.',
+      'Amounts now carry the colour of the note you would reach for to pay them — a ₹47 coffee in ₹50 blue, a ₹1,800 dinner in ₹2,000 magenta. You will see it in the amount pad as you type and as a slim stripe down the left of each entry, so a glance tells you the shape of your spending.',
+      'Categories share the same banknote palette, tuned to stay clear and legible for colour-blind readers too.',
+      'What is new now greets you once per account, not once per device. Fixed a landscape crop at the top of the sign-in and setup screens.',
     ],
     howTo: [
       'Open the amount pad and watch the figure take on its note colour as the amount grows.',
@@ -66,11 +77,9 @@ export const CHANGELOG: Release[] = [
     major: true,
     title: 'A steadier frame, and a Sync that means it',
     notes: [
-      'Nothing slides under the clock any more. Every screen now scrolls inside its own region, so the top of the app stays put and your entries stay clear of the status bar and the home indicator.',
-      'Settings has moved into the bar at the bottom, where it is always a tap away, and it carries the guide and What\'s new with it. The teal + is now a floating button at the bottom right, so adding a spend is still the easiest thing in the app.',
-      'The guide has illustrations now. Each section shows the real surface it is describing, from the safe-to-spend card to the goal ring to what your data actually looks like once it leaves your phone.',
-      'Tap the sync dot and Sync now does what it says: it sends up what you have added, pulls in anything new, and looks for a newer version of Hisaab. If one is waiting, it lands right then, with no need to delete and re-add your home-screen icon.',
-      'Sheets close the way you expect. Swipe down on the handle of the add sheet, or any sheet, and it goes away. They also lift above the keyboard now, so the field you are typing in stays where you can see it.',
+      'Every screen now scrolls inside its own region, so the top of the app stays put and your entries stay clear of the status bar and the home indicator.',
+      'Settings has moved into the bottom bar, carrying the guide and What\'s new with it, and the teal + now floats at the bottom right. The guide has illustrations too, each showing the real surface it describes.',
+      'Tap the sync dot and Sync now sends up what you added, pulls in anything new, and picks up a newer version of Hisaab in one go. Swipe any sheet down to dismiss it, and sheets lift above the keyboard now.',
     ],
     howTo: [
       'Tap Settings at the right of the bottom bar for the guide, What\'s new, and everything else.',
@@ -85,10 +94,9 @@ export const CHANGELOG: Release[] = [
     major: true,
     title: 'One password, and a recovery phrase',
     notes: [
-      'Signing in is simpler now: one email and one password. That single password logs you in and unlocks your ledger, so there is no separate vault passphrase to remember.',
-      'It stays end to end encrypted. Your login is derived separately from the key to your data, so the server can check who you are but can never read what you saved.',
-      'A twelve-word recovery phrase replaces the old recovery key. Keep it safe and offline: if you ever forget your password, it is what lets you reset it without losing a thing.',
-      'Forgot your password? Reset it by email and set a new one with your recovery phrase, on any device.',
+      'Signing in is simpler now: one email and one password. That single password logs you in and unlocks your ledger — no separate vault passphrase to remember.',
+      'It stays end-to-end encrypted. Your login is derived separately from the key to your data, so the server can check who you are but never read what you saved.',
+      'A twelve-word recovery phrase replaces the old recovery key. Keep it safe and offline — if you forget your password, it lets you reset it by email on any device without losing a thing.',
     ],
     howTo: [
       'Sign in with your email and password, the same one everywhere.',
@@ -103,10 +111,8 @@ export const CHANGELOG: Release[] = [
     major: true,
     title: 'A friendly welcome, and a guide',
     notes: [
-      'A gentle guided setup for new accounts: back up across your devices, lock your vault, save your Recovery Key, and add the accounts you keep, one calm step at a time.',
-      'A new guide with two sides: What\'s new, and a walk-through of everything, from safe-to-spend and adding entries to the ledger, accounts, goals, insights, and how your data stays encrypted.',
-      'It greets you with the full guide once, right after you set up, so your first moments have a friendly hand to hold. Open it any time from Settings.',
-      'What\'s new now greets you just once per update, then steps aside.',
+      'A gentle guided setup for new accounts: back up across your devices, lock your vault, save your recovery key, and add the accounts you keep, one calm step at a time.',
+      'A new guide with two sides — What\'s new, and a full walk-through of the app. It greets you with the guide once right after setup, then steps aside; open it any time from Settings.',
     ],
     howTo: [
       'Open Settings → How Hisaab works for the full walk-through any time.',
@@ -121,9 +127,8 @@ export const CHANGELOG: Release[] = [
     title: 'Hello, Hisaab',
     notes: [
       'Keep a clean reckoning of where your money goes. Log any expense or income in a couple of taps, split cash and cards across accounts, and see it all on your device first.',
-      'Your ledger is locked with a passphrase only you know. The backup to your account is encrypted before it ever leaves your phone, so no one but you can read it.',
-      'A single "safe to spend" number up top tells you what is genuinely free this month, after the bills still to come and what you have set aside for your goals.',
-      'Set goals worth saving for and watch each one fill up, with an honest guess of when you will get there.',
+      'Your ledger is locked with a passphrase only you know, and the backup is encrypted before it ever leaves your phone, so no one but you can read it.',
+      'A single "safe to spend" number tells you what is genuinely free this month, after bills to come and goal set-asides. Set goals worth saving for and watch each one fill up.',
     ],
     howTo: [
       'Tap the teal + to add an expense or income; the amount pad leads.',

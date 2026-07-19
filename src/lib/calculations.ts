@@ -100,15 +100,11 @@ export function safeToSpend(
     month.filter((t) => t.recurring_id).map((t) => t.recurring_id)
   );
   const billsRemaining = recurring
-    .filter(
-      (r) =>
-        r.active &&
-        r.confirmed &&
-        !r.deleted_at &&
-        r.next_due < end &&
-        !paidRecurringIds.has(r.id)
-    )
-    .reduce((s, r) => s + r.amount, 0);
+    .filter((r) => r.active && r.confirmed && !r.deleted_at && r.next_due < end)
+    .reduce(
+      (s, r) => s + r.amount * billOccurrencesLeft(r, paidRecurringIds, ref, end),
+      0
+    );
 
   const amount = income - spentSoFar - billsRemaining - monthlyGoalSetAside;
 
@@ -123,6 +119,58 @@ export function safeToSpend(
     goalSetAside: monthlyGoalSetAside,
     perDayRemaining,
   };
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * How many times a recurring rule is still expected to hit before month end,
+ * for the "bills to come" figure.
+ *
+ * For weekly/monthly/yearly we count a single upcoming hit — once a matching
+ * txn is logged this month it's considered paid and drops to zero. A daily bill
+ * can't be zeroed by one payment: it counts the days remaining from the later of
+ * today and its next-due through month end.
+ */
+function billOccurrencesLeft(
+  r: RecurringRule,
+  paidIds: Set<string | null>,
+  ref: Date,
+  end: number
+): number {
+  if (r.cadence === 'daily') {
+    const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate()).getTime();
+    const from = Math.max(r.next_due, today);
+    if (from >= end) return 0;
+    return Math.ceil((end - from) / DAY_MS);
+  }
+  return paidIds.has(r.id) ? 0 : 1;
+}
+
+/**
+ * Advance a (possibly past) due date to the next occurrence at or after today,
+ * stepping by the rule's cadence. Lets the user pick any anchor date — "the 1st"
+ * — without the rule reading as already overdue.
+ */
+export function rollForward(due: number, cadence: Cadence, ref = new Date()): number {
+  const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate()).getTime();
+  const d = new Date(due);
+  let guard = 0;
+  while (d.getTime() < today && guard++ < 4000) {
+    if (cadence === 'daily') d.setDate(d.getDate() + 1);
+    else if (cadence === 'weekly') d.setDate(d.getDate() + 7);
+    else if (cadence === 'yearly') d.setFullYear(d.getFullYear() + 1);
+    else d.setMonth(d.getMonth() + 1);
+  }
+  return d.getTime();
+}
+
+/** Rough monthly-equivalent cost of a recurring rule, for a "committed/mo" total. */
+export function monthlyEquivalent(amount: number, cadence: Cadence): number {
+  if (cadence === 'daily') return Math.round((amount * 365) / 12);
+  if (cadence === 'weekly') return Math.round((amount * 52) / 12);
+  if (cadence === 'yearly') return Math.round(amount / 12);
+  return amount;
 }
 
 // --- budget pacing --------------------------------------------------------
