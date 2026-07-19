@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Plus, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownRight, Repeat } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card, SectionHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -10,16 +10,18 @@ import { Money } from '../components/ui/Money';
 import { DateInput } from '../components/ui/DateInput';
 import { Icon } from '../components/ui/Icon';
 import { EmptyState } from '../components/ui/EmptyState';
-import { Segmented, AccountPicker } from '../components/add/Pickers';
+import { Segmented, AccountPicker, CadencePicker } from '../components/add/Pickers';
 import { useInvestments, useAccounts, portfolioSummary } from '../hooks/useData';
 import {
   createInvestment,
   updateInvestment,
   deleteInvestment,
+  createRecurringRule,
   midnight,
 } from '../lib/repo';
+import { rollForward, groupIndianDigits } from '../lib/calculations';
 import { ACCENT_PALETTE } from '../lib/categories';
-import type { Investment, InvestmentKind } from '../types';
+import type { Cadence, Investment, InvestmentKind } from '../types';
 import { cn } from '../lib/cn';
 
 const KIND_META: Record<InvestmentKind, { label: string; plural: string; icon: string }> = {
@@ -183,8 +185,18 @@ function InvestmentModal({
   const [note, setNote] = useState('');
   const [color, setColor] = useState(ACCENT_PALETTE[0]);
 
+  // Optional recurring plan (SIP): repeat the same contribution on a cadence.
+  const [sip, setSip] = useState(false);
+  const [sipCadence, setSipCadence] = useState<Cadence>('monthly');
+  const [sipInterval, setSipInterval] = useState(1);
+  const [sipNext, setSipNext] = useState(() => midnight());
+
   useEffect(() => {
     if (!open) return;
+    setSip(false);
+    setSipCadence('monthly');
+    setSipInterval(1);
+    setSipNext(midnight());
     if (existing) {
       setName(existing.name);
       setKind(existing.kind);
@@ -214,6 +226,9 @@ function InvestmentModal({
   // Current value defaults to the invested amount when left blank (a fresh buy).
   const currentPaise = current.trim() ? Math.round(Number(current) * 100) : investedPaise;
   const canSave = name.trim().length > 0 && investedPaise > 0;
+  // A SIP is only offered on a fresh holding, and needs a funding account so the
+  // recurring contribution has somewhere to draw from and count against.
+  const canSip = !existing;
 
   async function save() {
     if (!canSave) return;
@@ -228,8 +243,26 @@ function InvestmentModal({
       note: note.trim(),
       color,
     };
-    if (existing) await updateInvestment(existing.id, payload);
-    else await createInvestment(payload);
+    if (existing) {
+      await updateInvestment(existing.id, payload);
+    } else {
+      await createInvestment(payload);
+      if (canSip && sip && accountId) {
+        const anchor = new Date(sipNext);
+        await createRecurringRule({
+          merchant: `${name.trim()} SIP`,
+          amount: investedPaise,
+          account_id: accountId,
+          category_id: null,
+          cadence: sipCadence,
+          interval: sipInterval,
+          anchor: sipCadence === 'weekly' ? anchor.getDay() : anchor.getDate(),
+          next_due: rollForward(sipNext, sipCadence, sipInterval),
+          confirmed: true,
+          active: true,
+        });
+      }
+    }
     onClose();
   }
 
@@ -261,15 +294,15 @@ function InvestmentModal({
           <Input
             label="Amount invested"
             inputMode="numeric"
-            placeholder="50000"
-            value={invested}
+            placeholder="50,000"
+            value={groupIndianDigits(invested)}
             onChange={(e) => setInvested(e.target.value.replace(/[^0-9]/g, ''))}
           />
           <Input
             label="Current value"
             inputMode="numeric"
             placeholder="Same as invested"
-            value={current}
+            value={groupIndianDigits(current)}
             onChange={(e) => setCurrent(e.target.value.replace(/[^0-9]/g, ''))}
             hint="Update this over time."
           />
@@ -309,8 +342,63 @@ function InvestmentModal({
             accounts={accounts}
             value={accountId}
             onChange={setAccountId}
-            label="Funded from (optional)"
+            label={canSip && sip ? 'Funded from' : 'Funded from (optional)'}
           />
+        )}
+
+        {canSip && (
+          <div className="rounded-card border border-parchment-300 bg-parchment-50/60 p-3">
+            <button
+              type="button"
+              onClick={() => setSip((v) => !v)}
+              className="flex w-full items-center gap-2.5 text-left"
+              aria-pressed={sip}
+            >
+              <span
+                className={cn(
+                  'grid h-8 w-8 shrink-0 place-items-center rounded-[9px]',
+                  sip ? 'bg-teal-500 text-white' : 'bg-parchment-200 text-ink-500'
+                )}
+              >
+                <Repeat size={16} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-ink-900">Invest on a schedule (SIP)</span>
+                <span className="block text-[12px] text-ink-500">
+                  {sip ? 'Repeats as a recurring investment' : 'Repeat this contribution automatically'}
+                </span>
+              </span>
+              <span
+                className={cn(
+                  'relative h-6 w-10 shrink-0 rounded-full transition-colors',
+                  sip ? 'bg-teal-500' : 'bg-parchment-300'
+                )}
+              >
+                <span
+                  className={cn(
+                    'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all',
+                    sip ? 'left-[1.125rem]' : 'left-0.5'
+                  )}
+                />
+              </span>
+            </button>
+            {sip && (
+              <div className="mt-3 space-y-3">
+                <CadencePicker
+                  cadence={sipCadence}
+                  interval={sipInterval}
+                  onCadence={setSipCadence}
+                  onInterval={setSipInterval}
+                />
+                <DateInput label="Next investment" value={sipNext} onChange={setSipNext} />
+                {!accountId && (
+                  <p className="text-[12px] text-amber-600">
+                    Pick a funding account above to schedule the SIP.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         <Input label="Note" placeholder="Optional" value={note} onChange={(e) => setNote(e.target.value)} />
@@ -343,7 +431,7 @@ function InvestmentModal({
               Delete
             </Button>
           )}
-          <Button onClick={save} disabled={!canSave} className="flex-1">
+          <Button onClick={save} disabled={!canSave || (canSip && sip && !accountId)} className="flex-1">
             {existing ? 'Save changes' : 'Add investment'}
           </Button>
         </div>

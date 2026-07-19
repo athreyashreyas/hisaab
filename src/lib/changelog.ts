@@ -28,20 +28,26 @@ export const CHANGELOG: Release[] = [
     title: 'Dressed in the colour of a note',
     notes: [
       'Hisaab comes in themes now, each drawn from an Indian banknote. Deep ledger teal stays the default; you can also wear the blue of a fifty, the lavender of a hundred, the marigold of a two-hundred, the olive of a five-hundred, the magenta of the two-thousand, the greenish-yellow of a twenty, or the chocolate of a ten.',
-      'Pick one in Settings → Appearance and the whole app re-skins at once — the paper takes a hint of the note, the accent becomes its colour, and income green and overspend rose stay put so money always reads the same. It is per-device and applies the instant the app opens.',
+      'Pick one in Settings → Appearance and the whole app re-skins at once: the paper takes a hint of the note, the accent becomes its colour, and income green and overspend rose stay put so money always reads the same. It is per-device and applies the instant the app opens.',
+      'Recurring your way, on any cadence. Set a bill or an entry to repeat every day, week, month or year, or every 2 weeks, every 3 months, whatever the real schedule is. Turn on "Repeat this" right from the Add sheet, or add one in Insights → Recurring.',
+      'Invest on a schedule too. When you add a holding, flip on "Invest on a schedule (SIP)" to plan a repeating contribution on the cadence you choose, from the account you choose.',
+      'Every picker is now Hisaab’s own. The date picker draws its own calendar instead of borrowing the phone’s. Open it, tap a day, and it applies and closes in one touch, the same on every device.',
+      'Goal money is kept out of your corpus for good. The Accounts card now shows what is in your accounts, what is set aside for goals, and the free corpus left once goals are taken out, so savings are never quietly counted as spendable.',
+      'Numbers wear Indian commas as you type them, in every amount field: ₹1,20,000 rather than 120000, so you never lose count of a zero.',
     ],
     howTo: [
-      'Open Settings and find Appearance.',
-      'Tap any note to wear it; tap Ledger Teal to go back to the default.',
+      'Open Settings and find Appearance; tap any note to wear it, or Ledger Teal for the default.',
+      'To repeat an entry, tap + and turn on "Repeat this", then set the cadence, including every N days, weeks or months.',
+      'To plan a SIP, open Invest → Add, turn on "Invest on a schedule", and pick the cadence and next date.',
     ],
-    art: 'themes',
+    art: 'recurring',
   },
   {
     version: '0.7.0',
     date: '2026-07-19',
     title: 'Bills you can add yourself',
     notes: [
-      'Add a recurring payment by hand — rent, a subscription, an SIP. Set the amount, how often it repeats, and when it is next due, and it counts toward "Bills to come" on Home. No need to wait for Hisaab to spot it in your spending.',
+      'Add a recurring payment by hand: rent, a subscription, an SIP. Set the amount, how often it repeats, and when it is next due, and it counts toward "Bills to come" on Home. No need to wait for Hisaab to spot it in your spending.',
       'Repeat it your way: daily, weekly, monthly, or yearly. A daily bill counts every day still left in the month.',
       'Tap any recurring payment to edit its amount, cadence, or account, or to remove it.',
     ],
@@ -58,9 +64,9 @@ export const CHANGELOG: Release[] = [
     major: true,
     title: 'Investments, and money that adds up',
     notes: [
-      'A new Investments tab holds your whole portfolio — stocks, mutual funds, fixed deposits, and more. Log what you put in and its value today, and Hisaab shows each holding\'s return and how the portfolio is doing. No live price feed by design; you update values when you like, end-to-end encrypted like everything else.',
+      'A new Investments tab holds your whole portfolio: stocks, mutual funds, fixed deposits, and more. Log what you put in and its value today, and Hisaab shows each holding\'s return and how the portfolio is doing. No live price feed by design; you update values when you like, end-to-end encrypted like everything else.',
       'Saving toward a goal now draws from a real account. Pick which account sets the money aside, and two accounts can each fund a slice of one goal, so nothing is counted twice.',
-      'Fixed set-aside money lingering after a withdrawal or a deleted goal. Added an Education & learning category, and long category names no longer get clipped. You also stay signed in now — once unlocked on a device, Hisaab keeps you in; tap Lock now in Settings to lock again.',
+      'Fixed set-aside money lingering after a withdrawal or a deleted goal. Added an Education & learning category, and long category names no longer get clipped. You also stay signed in now: once unlocked on a device, Hisaab keeps you in; tap Lock now in Settings to lock again.',
     ],
     howTo: [
       'Tap Invest in the bottom bar, then Add, to log a stock, mutual fund, or FD.',
@@ -75,7 +81,7 @@ export const CHANGELOG: Release[] = [
     major: true,
     title: 'The colour of money',
     notes: [
-      'Amounts now carry the colour of the note you would reach for to pay them — a ₹47 coffee in ₹50 blue, a ₹1,800 dinner in ₹2,000 magenta. You will see it in the amount pad as you type and as a slim stripe down the left of each entry, so a glance tells you the shape of your spending.',
+      'Amounts now carry the colour of the note you would reach for to pay them: a ₹47 coffee in ₹50 blue, a ₹1,800 dinner in ₹2,000 magenta. You will see it in the amount pad as you type and as a slim stripe down the left of each entry, so a glance tells you the shape of your spending.',
       'Categories share the same banknote palette, tuned to stay clear and legible for colour-blind readers too.',
       'What is new now greets you once per account, not once per device. Fixed a landscape crop at the top of the sign-in and setup screens.',
     ],
@@ -109,9 +115,9 @@ export const CHANGELOG: Release[] = [
     major: true,
     title: 'One password, and a recovery phrase',
     notes: [
-      'Signing in is simpler now: one email and one password. That single password logs you in and unlocks your ledger — no separate vault passphrase to remember.',
+      'Signing in is simpler now: one email and one password. That single password logs you in and unlocks your ledger, with no separate vault passphrase to remember.',
       'It stays end-to-end encrypted. Your login is derived separately from the key to your data, so the server can check who you are but never read what you saved.',
-      'A twelve-word recovery phrase replaces the old recovery key. Keep it safe and offline — if you forget your password, it lets you reset it by email on any device without losing a thing.',
+      'A twelve-word recovery phrase replaces the old recovery key. Keep it safe and offline: if you forget your password, it lets you reset it by email on any device without losing a thing.',
     ],
     howTo: [
       'Sign in with your email and password, the same one everywhere.',
@@ -127,7 +133,7 @@ export const CHANGELOG: Release[] = [
     title: 'A friendly welcome, and a guide',
     notes: [
       'A gentle guided setup for new accounts: back up across your devices, lock your vault, save your recovery key, and add the accounts you keep, one calm step at a time.',
-      'A new guide with two sides — What\'s new, and a full walk-through of the app. It greets you with the guide once right after setup, then steps aside; open it any time from Settings.',
+      'A new guide with two sides: What\'s new, and a full walk-through of the app. It greets you with the guide once right after setup, then steps aside; open it any time from Settings.',
     ],
     howTo: [
       'Open Settings → How Hisaab works for the full walk-through any time.',

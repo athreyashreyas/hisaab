@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Icon } from '../components/ui/Icon';
-import { formatINR } from '../lib/calculations';
+import { formatINR, groupIndianDigits } from '../lib/calculations';
 import { useCategories } from '../hooks/useData';
 import { createCategory, updateCategory, restoreDefaultCategories } from '../lib/repo';
 import { CATEGORY_PALETTE } from '../lib/categories';
@@ -108,7 +108,7 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
           label="Monthly budget"
           inputMode="numeric"
           placeholder="Optional"
-          value={budget}
+          value={groupIndianDigits(budget)}
           onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))}
           hint="Leave blank to leave this category untracked."
         />

@@ -298,12 +298,13 @@ export async function createRecurringRule(
     RecurringRule,
     'merchant' | 'amount' | 'category_id' | 'account_id' | 'cadence' | 'anchor' | 'next_due'
   > &
-    Partial<Pick<RecurringRule, 'confirmed' | 'active'>>
+    Partial<Pick<RecurringRule, 'confirmed' | 'active' | 'interval'>>
 ): Promise<RecurringRule> {
   const rule: RecurringRule = {
     id: newId(),
     confirmed: false,
     active: true,
+    interval: 1,
     ...input,
     ...freshMeta(),
   };

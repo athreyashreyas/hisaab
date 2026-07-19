@@ -7,7 +7,8 @@ import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Money } from '../components/ui/Money';
 import { Segmented } from '../components/add/Pickers';
-import { useAccountBalances } from '../hooks/useData';
+import { useAccountBalances, useGoalsReserved } from '../hooks/useData';
+import { groupIndianDigits } from '../lib/calculations';
 import { createAccount, updateAccount, archiveAccount } from '../lib/repo';
 import { ACCENT_PALETTE } from '../lib/categories';
 import type { Account, AccountKind } from '../types';
@@ -22,15 +23,19 @@ const KIND_ICON: Record<AccountKind, typeof Wallet> = {
 
 /** Net worth across accounts + per-account balances, with a cash/digital split. */
 export function AccountsPage() {
-  const balances = useAccountBalances();
+  // Raw money actually in each account (goal set-asides shown split out, not
+  // silently subtracted). See the hero card below for the corpus breakdown.
+  const balances = useAccountBalances(false);
+  const reserved = useGoalsReserved();
   const [editing, setEditing] = useState<Account | null | 'new'>(null);
 
   const active = balances.filter((b) => !b.account.archived);
   const archived = balances.filter((b) => b.account.archived);
 
-  const net = active.reduce((s, b) => s + b.balance, 0);
+  const inAccounts = active.reduce((s, b) => s + b.balance, 0);
+  const freeCorpus = inAccounts - reserved;
   const cash = active.filter((b) => b.account.kind === 'cash').reduce((s, b) => s + b.balance, 0);
-  const digital = net - cash;
+  const digital = inAccounts - cash;
 
   return (
     <div>
@@ -46,8 +51,23 @@ export function AccountsPage() {
       />
 
       <Card className="mt-3 overflow-hidden bg-gradient-to-br from-teal-600 to-teal-500 p-5 text-[color:var(--on-primary)]">
-        <div className="text-[12px] font-semibold uppercase tracking-[0.12em] opacity-80">Net balance</div>
-        <Money paise={net} className="mt-1 text-[38px] leading-none" />
+        <div className="text-[12px] font-semibold uppercase tracking-[0.12em] opacity-80">
+          {reserved > 0 ? 'Free corpus' : 'Net balance'}
+        </div>
+        <Money paise={freeCorpus} className="mt-1 text-[38px] leading-none" />
+
+        {reserved > 0 && (
+          <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-3 text-[12px] tabular-nums opacity-90">
+            <span>
+              In accounts <Money paise={inAccounts} className="font-semibold" />
+            </span>
+            <span className="opacity-70">−</span>
+            <span>
+              Set aside for goals <Money paise={reserved} className="font-semibold" />
+            </span>
+          </div>
+        )}
+
         <div className="mt-3 flex gap-6 text-[12px] opacity-90">
           <div>
             Cash<Money paise={cash} className="mt-0.5 block text-[15px] font-semibold" />
@@ -170,7 +190,7 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
           label="Opening balance"
           inputMode="numeric"
           placeholder="0"
-          value={opening}
+          value={opening.startsWith('-') ? `-${groupIndianDigits(opening)}` : groupIndianDigits(opening)}
           onChange={(e) => setOpening(e.target.value.replace(/[^0-9-]/g, ''))}
           hint="What's in this account right now."
         />

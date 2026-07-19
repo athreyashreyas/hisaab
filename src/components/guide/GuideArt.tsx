@@ -340,6 +340,47 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
         </div>
       );
 
+    // Recurring: a scheduled bill with its cadence, over the "every N" control.
+    case 'recurring':
+      return (
+        <div className="w-full max-w-[240px] space-y-2.5">
+          <div className="flex items-center gap-2.5 rounded-card bg-parchment-50 px-3 py-2.5 shadow-sm">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px]" style={{ backgroundColor: `${AMBER}1f`, color: AMBER }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M17 2l4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" />
+              </svg>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] font-semibold text-ink-900">Netflix</span>
+              <span className="block text-[9px] text-ink-300">Every 2 weeks · next 12 Aug</span>
+            </span>
+            <Rupee className="text-[11px] text-ink-900">499</Rupee>
+          </div>
+          <div className="flex items-center gap-2 rounded-card bg-parchment-200 px-3 py-2">
+            <span className="text-[10px] font-semibold text-ink-500">Every</span>
+            <span className="ml-auto flex items-center gap-1.5">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-parchment-50 text-ink-500 shadow-sm">−</span>
+              <span className="min-w-[4ch] text-center text-[11px] font-semibold tabular-nums text-ink-900">2 weeks</span>
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-parchment-50 text-ink-500 shadow-sm">+</span>
+            </span>
+          </div>
+          <div className="flex gap-1 rounded-full bg-parchment-200 p-0.5 text-[9px] font-semibold">
+            {['Day', 'Week', 'Month', 'Year'].map((l, i) => (
+              <span
+                key={l}
+                className={
+                  i === 1
+                    ? 'flex-1 rounded-full bg-parchment-50 py-1 text-center text-teal-700 shadow-sm'
+                    : 'flex-1 py-1 text-center text-ink-300'
+                }
+              >
+                {l}
+              </span>
+            ))}
+          </div>
+        </div>
+      );
+
     // The banknote themes: each note's accent over its tinted paper.
     case 'themes':
       return (

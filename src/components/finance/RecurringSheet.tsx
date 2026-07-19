@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { DateInput } from '../ui/DateInput';
 import { AmountPad } from '../ui/AmountPad';
-import { Segmented, AccountPicker, CategoryPicker } from '../add/Pickers';
+import { CadencePicker, AccountPicker, CategoryPicker } from '../add/Pickers';
 import { useAccounts, useCategories } from '../../hooks/useData';
 import {
   createRecurringRule,
@@ -16,13 +16,6 @@ import {
 import { guessCategory } from '../../lib/categories';
 import { rollForward } from '../../lib/calculations';
 import type { Cadence, RecurringRule } from '../../types';
-
-const CADENCE_OPTIONS: { value: Cadence; label: string }[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'yearly', label: 'Yearly' },
-];
 
 /**
  * Manual add / edit for a recurring payment (rent, subscriptions, SIPs…). This
@@ -48,6 +41,7 @@ export function RecurringSheet({
   const [accountId, setAccountId] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [cadence, setCadence] = useState<Cadence>('monthly');
+  const [interval, setInterval] = useState(1);
   const [nextDue, setNextDue] = useState(() => midnight());
   const [categoryTouched, setCategoryTouched] = useState(false);
 
@@ -62,6 +56,7 @@ export function RecurringSheet({
       setAccountId(editing.account_id);
       setCategoryId(editing.category_id);
       setCadence(editing.cadence);
+      setInterval(editing.interval ?? 1);
       setNextDue(editing.next_due);
       setCategoryTouched(true);
     } else {
@@ -70,6 +65,7 @@ export function RecurringSheet({
       setAccountId(accounts[0]?.id ?? null);
       setCategoryId(null);
       setCadence('monthly');
+      setInterval(1);
       setNextDue(midnight());
       setCategoryTouched(false);
     }
@@ -98,13 +94,14 @@ export function RecurringSheet({
 
   async function save() {
     if (!canSave || !accountId) return;
-    const due = rollForward(nextDue, cadence);
+    const due = rollForward(nextDue, cadence, interval);
     const payload = {
       merchant: merchant.trim(),
       amount,
       account_id: accountId,
       category_id: categoryId,
       cadence,
+      interval,
       anchor: cadence === 'weekly' ? anchorDate.getDay() : anchorDate.getDate(),
       next_due: due,
     };
@@ -140,7 +137,12 @@ export function RecurringSheet({
 
         <div>
           <div className="mb-1.5 text-sm font-semibold text-ink-700">Repeats</div>
-          <Segmented options={CADENCE_OPTIONS} value={cadence} onChange={setCadence} />
+          <CadencePicker
+            cadence={cadence}
+            interval={interval}
+            onCadence={setCadence}
+            onInterval={setInterval}
+          />
         </div>
 
         <AccountPicker

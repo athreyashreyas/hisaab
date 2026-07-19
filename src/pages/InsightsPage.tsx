@@ -23,6 +23,7 @@ import {
   detectRecurring,
   monthBounds,
   monthlyEquivalent,
+  cadenceLabel,
   formatINR,
   formatCompactINR,
 } from '../lib/calculations';
@@ -83,7 +84,7 @@ export function InsightsPage() {
   const knownMerchants = new Set(rules.map((r) => r.merchant.trim().toLowerCase()));
   const suggestions = detected.filter((d) => !knownMerchants.has(d.merchant.trim().toLowerCase()));
   const monthlyCommitted = confirmed.reduce(
-    (s, r) => s + monthlyEquivalent(r.amount, r.cadence),
+    (s, r) => s + monthlyEquivalent(r.amount, r.cadence, r.interval),
     0
   );
 
@@ -103,7 +104,7 @@ export function InsightsPage() {
           <EmptyState
             icon="repeat"
             title="Add a recurring payment"
-            body="Rent, subscriptions, SIPs — add them here and they'll count toward “Bills to come”."
+            body="Rent, subscriptions, SIPs: add them here and they'll count toward “Bills to come”."
           />
         </Card>
         <RecurringSheet
@@ -212,7 +213,7 @@ export function InsightsPage() {
           <EmptyState
             icon="repeat"
             title="No recurring bills yet"
-            body="Add rent, subscriptions or SIPs with the “Add” button — or Hisaab suggests one once a merchant repeats on a regular cadence."
+            body="Add rent, subscriptions or SIPs with the “Add” button, or let Hisaab suggest one once a merchant repeats on a regular cadence."
           />
         </Card>
       ) : (
@@ -289,7 +290,7 @@ export function InsightsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13.5px] font-semibold text-ink-900">{r.merchant}</div>
                     <div className="text-[11.5px] text-ink-500">
-                      {CADENCE_LABEL[r.cadence]} · next {format(r.next_due, 'd MMM')} ·{' '}
+                      {cadenceLabel(r.cadence, r.interval)} · next {format(r.next_due, 'd MMM')} ·{' '}
                       {accountMap.get(r.account_id)?.name ?? '-'}
                     </div>
                   </div>
@@ -333,13 +334,6 @@ function DeltaChip({ delta }: { delta: number }) {
     </Badge>
   );
 }
-
-const CADENCE_LABEL: Record<Cadence, string> = {
-  daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
-  yearly: 'Yearly',
-};
 
 function nextDue(cadence: Cadence): number {
   const d = new Date();

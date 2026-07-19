@@ -149,6 +149,12 @@ export interface RecurringRule extends SyncMeta {
   category_id: ID | null;
   account_id: ID;
   cadence: Cadence;
+  /**
+   * How many cadence units between hits: 1 = every day/week/month/year, 2 = every
+   * other, and so on. Lets a rule read as "every 2 weeks" or "every 3 months"
+   * instead of only the fixed cadences. Legacy rows without it are treated as 1.
+   */
+  interval: number;
   /** Day-of-month (monthly), day-of-week (weekly), or day-of-year anchor. */
   anchor: number;
   next_due: number; // epoch ms

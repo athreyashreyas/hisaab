@@ -22,7 +22,7 @@ import {
   monthlyRate,
 } from '../hooks/useData';
 import { addContribution, deleteContribution } from '../lib/repo';
-import { goalProjection } from '../lib/calculations';
+import { goalProjection, groupIndianDigits } from '../lib/calculations';
 import type { Account } from '../types';
 
 export function GoalDetailPage() {
@@ -205,8 +205,8 @@ function ContributionModal({
           label="Amount"
           inputMode="numeric"
           autoFocus
-          placeholder="5000"
-          value={rupees}
+          placeholder="5,000"
+          value={groupIndianDigits(rupees)}
           onChange={(e) => setRupees(e.target.value.replace(/[^0-9]/g, ''))}
           error={over ? `You only have ${formatShort(maxWithdraw)} saved.` : undefined}
         />

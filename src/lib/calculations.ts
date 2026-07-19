@@ -26,6 +26,21 @@ export function formatINR(paise: number, showPaise = false): string {
   return showPaise ? inrPaise.format(rupees) : inr.format(rupees);
 }
 
+const inrGroup = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+
+/**
+ * Group a plain rupee number string with Indian commas for use *inside a text
+ * input* — so a balance or target reads "1,20,000" as you type, not "120000".
+ * Keeps only digits, drops leading zeros, and returns '' for empty so the field
+ * can still be cleared. The caller keeps raw digits in state and strips commas
+ * back out on change; this is display-only.
+ */
+export function groupIndianDigits(value: string): string {
+  const clean = value.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  if (!clean) return '';
+  return inrGroup.format(Number(clean));
+}
+
 /** Compact form for chart labels: ₹1.2L, ₹34.5k, ₹980. */
 export function formatCompactINR(paise: number): string {
   const r = Math.abs(paise) / 100;
@@ -139,38 +154,74 @@ function billOccurrencesLeft(
   end: number
 ): number {
   if (r.cadence === 'daily') {
+    const step = cadenceInterval(r.interval);
     const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate()).getTime();
     const from = Math.max(r.next_due, today);
     if (from >= end) return 0;
-    return Math.ceil((end - from) / DAY_MS);
+    // "Every N days" hits once per N-day window in the remaining span.
+    return Math.ceil((end - from) / DAY_MS / step);
   }
   return paidIds.has(r.id) ? 0 : 1;
 }
 
+/** Normalise a possibly-undefined (legacy) interval to a whole number ≥ 1. */
+export function cadenceInterval(interval: number | undefined | null): number {
+  return Math.max(1, Math.round(interval ?? 1));
+}
+
 /**
  * Advance a (possibly past) due date to the next occurrence at or after today,
- * stepping by the rule's cadence. Lets the user pick any anchor date — "the 1st"
- * — without the rule reading as already overdue.
+ * stepping by the rule's cadence times its interval. Lets the user pick any
+ * anchor date — "the 1st" — without the rule reading as already overdue, and
+ * honours custom cadences like "every 2 weeks".
  */
-export function rollForward(due: number, cadence: Cadence, ref = new Date()): number {
+export function rollForward(
+  due: number,
+  cadence: Cadence,
+  interval = 1,
+  ref = new Date()
+): number {
+  const step = cadenceInterval(interval);
   const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate()).getTime();
   const d = new Date(due);
   let guard = 0;
   while (d.getTime() < today && guard++ < 4000) {
-    if (cadence === 'daily') d.setDate(d.getDate() + 1);
-    else if (cadence === 'weekly') d.setDate(d.getDate() + 7);
-    else if (cadence === 'yearly') d.setFullYear(d.getFullYear() + 1);
-    else d.setMonth(d.getMonth() + 1);
+    if (cadence === 'daily') d.setDate(d.getDate() + step);
+    else if (cadence === 'weekly') d.setDate(d.getDate() + 7 * step);
+    else if (cadence === 'yearly') d.setFullYear(d.getFullYear() + step);
+    else d.setMonth(d.getMonth() + step);
   }
   return d.getTime();
 }
 
 /** Rough monthly-equivalent cost of a recurring rule, for a "committed/mo" total. */
-export function monthlyEquivalent(amount: number, cadence: Cadence): number {
-  if (cadence === 'daily') return Math.round((amount * 365) / 12);
-  if (cadence === 'weekly') return Math.round((amount * 52) / 12);
-  if (cadence === 'yearly') return Math.round(amount / 12);
-  return amount;
+export function monthlyEquivalent(amount: number, cadence: Cadence, interval = 1): number {
+  const n = cadenceInterval(interval);
+  if (cadence === 'daily') return Math.round((amount * 365) / 12 / n);
+  if (cadence === 'weekly') return Math.round((amount * 52) / 12 / n);
+  if (cadence === 'yearly') return Math.round(amount / 12 / n);
+  return Math.round(amount / n); // monthly, once every n months
+}
+
+const CADENCE_UNIT: Record<Cadence, string> = {
+  daily: 'day',
+  weekly: 'week',
+  monthly: 'month',
+  yearly: 'year',
+};
+
+const CADENCE_EVERY: Record<Cadence, string> = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  yearly: 'Yearly',
+};
+
+/** Human label for a cadence: "Weekly", or "Every 2 weeks" for a custom interval. */
+export function cadenceLabel(cadence: Cadence, interval = 1): string {
+  const n = cadenceInterval(interval);
+  if (n === 1) return CADENCE_EVERY[cadence];
+  return `Every ${n} ${CADENCE_UNIT[cadence]}s`;
 }
 
 // --- budget pacing --------------------------------------------------------

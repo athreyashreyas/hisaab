@@ -158,13 +158,17 @@ export interface AccountBalance {
 
 /**
  * Running balance per account = opening balance + income − expense, with
- * transfers moving paise between the from/to accounts. Money set aside into a
- * goal from an account is earmarked out of that account's available balance
- * (and returned on a withdrawal), so goal money is never double-counted as both
- * sitting in the bank and saved toward a goal. Computed locally over all
- * transactions and contributions (cheap; the whole ledger is on-device).
+ * transfers moving paise between the from/to accounts.
+ *
+ * `earmarkGoals` controls whether money set aside into a goal is subtracted
+ * here. With it on (the default, used wherever we mean "money available to
+ * spend"), a goal contribution leaves its source account so goal money is never
+ * double-counted as both in the bank and saved. With it off, balances are the
+ * raw money actually sitting in each account — the Accounts screen uses this so
+ * it can show goal money split out explicitly rather than silently folded in.
+ * Computed locally over all transactions and contributions (cheap; on-device).
  */
-export function useAccountBalances(): AccountBalance[] {
+export function useAccountBalances(earmarkGoals = true): AccountBalance[] {
   const accounts = useAccounts(true);
   const txns = useTransactions();
   const contribs = useAllContributions();
@@ -188,10 +192,30 @@ export function useAccountBalances(): AccountBalance[] {
   // Earmark goal contributions out of their source account. A positive
   // contribution leaves the account for the goal; a negative one (withdrawal)
   // comes back. Unattributed contributions (account_id null) touch no balance.
-  for (const c of contribs) {
-    if (!c.account_id) continue;
-    byAccount.set(c.account_id, (byAccount.get(c.account_id) ?? 0) - c.amount);
+  if (earmarkGoals) {
+    for (const c of contribs) {
+      if (!c.account_id) continue;
+      byAccount.set(c.account_id, (byAccount.get(c.account_id) ?? 0) - c.amount);
+    }
   }
 
   return accounts.map((account) => ({ account, balance: byAccount.get(account.id) ?? 0 }));
+}
+
+/**
+ * Total money currently set aside into still-existing goals from real accounts
+ * (adds minus withdrawals), never below zero. This is exactly the amount
+ * `useAccountBalances(false)` leaves in accounts that `useAccountBalances(true)`
+ * takes out — the bridge between "in accounts" and "free corpus". Contributions
+ * to a deleted goal, or unattributed ones, don't reserve anything.
+ */
+export function useGoalsReserved(): number {
+  const goals = useGoals(true);
+  const contribs = useAllContributions();
+  const liveGoalIds = new Set(goals.map((g) => g.id));
+  const reserved = contribs.reduce(
+    (s, c) => (c.account_id && liveGoalIds.has(c.goal_id) ? s + c.amount : s),
+    0
+  );
+  return Math.max(0, reserved);
 }

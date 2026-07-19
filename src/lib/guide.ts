@@ -20,6 +20,7 @@ export type GuideArtKind =
   | 'goals'
   | 'investments'
   | 'insights'
+  | 'recurring'
   | 'themes'
   | 'security'
   | 'sync';
@@ -69,6 +70,7 @@ export const GUIDE: GuideSection[] = [
       'Tap + at the bottom right, type the amount, pick the type and account, then Save.',
       'Swipe the sheet down, or tap outside it, to put it away without saving.',
       'Enter a merchant like "Third Wave Coffee" and the category is guessed for you.',
+      'Turn on "Repeat this" to schedule the same entry on a cadence; see Recurring below.',
     ],
     icon: 'plus',
     art: 'adding',
@@ -101,11 +103,12 @@ export const GUIDE: GuideSection[] = [
     id: 'accounts',
     title: 'Accounts',
     body: [
-      'Keep cash, banks, cards, and wallets as separate accounts. Each carries its own running balance from an opening amount, and Home shows your net worth across them with a cash-versus-digital split.',
-      'Transfers move money between two accounts without counting as spending.',
+      'Keep cash, banks, cards, and wallets as separate accounts. Each carries its own running balance from an opening amount, with a cash-versus-digital split across them all.',
+      'Money saved toward goals is kept separate, never folded into the corpus. The Accounts card shows what is in your accounts, what is set aside for goals, and the free corpus left over once goals are taken out. Transfers move money between two accounts without counting as spending.',
     ],
     steps: [
       'Open Settings → Accounts to add or edit an account.',
+      'Read the top card for your free corpus: in accounts, minus what is set aside for goals.',
       'Use the Transfer type when moving money between your own accounts.',
     ],
     icon: 'landmark',
@@ -153,6 +156,21 @@ export const GUIDE: GuideSection[] = [
     ],
     icon: 'pie-chart',
     art: 'insights',
+  },
+  {
+    id: 'recurring',
+    title: 'Recurring, your way',
+    body: [
+      'Rent, a subscription, an SIP: anything that repeats can be scheduled so it counts toward "Bills to come" without you re-entering it. Set the amount, how often it repeats, and when it is next due.',
+      'The cadence is yours to shape. Repeat every day, week, month or year, or set a custom interval like every 2 weeks or every 3 months. Hisaab spots regular bills in your spending too, and offers them for you to confirm.',
+    ],
+    steps: [
+      'From the Add sheet, turn on "Repeat this" and set the cadence, then Save.',
+      'Or open Insights → Recurring → Add to declare one outright.',
+      'When you add an investment, turn on "Invest on a schedule (SIP)" to plan a repeating contribution.',
+    ],
+    icon: 'repeat',
+    art: 'recurring',
   },
   {
     id: 'themes',

@@ -5,6 +5,7 @@ import { Input } from '../ui/Input';
 import { DateInput } from '../ui/DateInput';
 import { Icon } from '../ui/Icon';
 import { createGoal, updateGoal, deleteGoal, midnight } from '../../lib/repo';
+import { groupIndianDigits } from '../../lib/calculations';
 import { ACCENT_PALETTE } from '../../lib/categories';
 import type { Goal } from '../../types';
 import { cn } from '../../lib/cn';
@@ -75,8 +76,8 @@ export function GoalFormModal({
         <Input
           label="Target amount"
           inputMode="numeric"
-          placeholder="50000"
-          value={rupees}
+          placeholder="50,000"
+          value={groupIndianDigits(rupees)}
           onChange={(e) => setRupees(e.target.value.replace(/[^0-9]/g, ''))}
         />
 

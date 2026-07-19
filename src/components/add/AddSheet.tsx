@@ -4,18 +4,20 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { DateInput } from '../ui/DateInput';
 import { AmountPad } from '../ui/AmountPad';
-import { Segmented, AccountPicker, CategoryPicker } from './Pickers';
+import { Segmented, AccountPicker, CategoryPicker, CadencePicker } from './Pickers';
 import { useUIStore } from '../../stores/uiStore';
 import { useAccounts, useCategories } from '../../hooks/useData';
 import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  createRecurringRule,
   midnight,
 } from '../../lib/repo';
 import { guessCategory } from '../../lib/categories';
-import type { TxnType } from '../../types';
-import { ArrowRight, Trash2 } from 'lucide-react';
+import { rollForward } from '../../lib/calculations';
+import type { Cadence, TxnType } from '../../types';
+import { ArrowRight, Repeat, Trash2 } from 'lucide-react';
 
 /**
  * Quick-add / edit sheet, opened from the FAB (and from a ledger row for edit).
@@ -39,6 +41,12 @@ export function AddSheet() {
   const [date, setDate] = useState(() => midnight());
   const [categoryTouched, setCategoryTouched] = useState(false);
 
+  // Optional: schedule this entry to repeat. When on, saving also records a
+  // recurring rule so it counts toward "Bills to come" from here on.
+  const [repeat, setRepeat] = useState(false);
+  const [cadence, setCadence] = useState<Cadence>('monthly');
+  const [interval, setInterval] = useState(1);
+
   const isEdit = Boolean(editingTxn);
 
   // Hydrate the form whenever the sheet opens (fresh add, or an edit target).
@@ -54,6 +62,7 @@ export function AddSheet() {
       setNote(editingTxn.note);
       setDate(editingTxn.date);
       setCategoryTouched(true);
+      setRepeat(false);
     } else {
       setAmount(0);
       setType('expense');
@@ -64,6 +73,9 @@ export function AddSheet() {
       setNote('');
       setDate(midnight());
       setCategoryTouched(false);
+      setRepeat(false);
+      setCadence('monthly');
+      setInterval(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addSheetOpen, editingTxn]);
@@ -94,7 +106,15 @@ export function AddSheet() {
     setCategoryId(null);
     setCategoryTouched(false);
     setDate(midnight());
+    setRepeat(false);
+    setCadence('monthly');
+    setInterval(1);
   };
+
+  // A recurring schedule only makes sense for a plain spend/receipt, not a
+  // transfer, and only when adding fresh (editing one entry shouldn't retro-fit
+  // a rule). Income can recur too — salary, a rent you collect.
+  const canRepeat = !isEdit && type !== 'transfer';
 
   async function save(addAnother: boolean) {
     if (!canSave || !accountId) return;
@@ -112,6 +132,21 @@ export function AddSheet() {
       await updateTransaction(editingTxn.id, payload);
     } else {
       await createTransaction(payload);
+      if (canRepeat && repeat) {
+        const anchor = new Date(date);
+        await createRecurringRule({
+          merchant: merchant.trim() || (type === 'income' ? 'Income' : 'Payment'),
+          amount,
+          account_id: accountId,
+          category_id: categoryId,
+          cadence,
+          interval,
+          anchor: cadence === 'weekly' ? anchor.getDay() : anchor.getDate(),
+          next_due: rollForward(date, cadence, interval),
+          confirmed: true,
+          active: true,
+        });
+      }
     }
     if (addAnother && !editingTxn) {
       reset();
@@ -192,6 +227,52 @@ export function AddSheet() {
             onChange={(e) => setNote(e.target.value)}
           />
         </div>
+
+        {canRepeat && (
+          <div className="rounded-card border border-parchment-300 bg-parchment-50/60 p-3">
+            <button
+              type="button"
+              onClick={() => setRepeat((v) => !v)}
+              className="flex w-full items-center gap-2.5 text-left"
+              aria-pressed={repeat}
+            >
+              <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-[9px] ${
+                  repeat ? 'bg-teal-500 text-white' : 'bg-parchment-200 text-ink-500'
+                }`}
+              >
+                <Repeat size={16} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-ink-900">Repeat this</span>
+                <span className="block text-[12px] text-ink-500">
+                  {repeat ? 'Scheduled as a recurring payment' : 'Make it a recurring bill or SIP'}
+                </span>
+              </span>
+              <span
+                className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+                  repeat ? 'bg-teal-500' : 'bg-parchment-300'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+                    repeat ? 'left-[1.125rem]' : 'left-0.5'
+                  }`}
+                />
+              </span>
+            </button>
+            {repeat && (
+              <div className="mt-3">
+                <CadencePicker
+                  cadence={cadence}
+                  interval={interval}
+                  onCadence={setCadence}
+                  onInterval={setInterval}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-2 pt-1">
           {isEdit && (
