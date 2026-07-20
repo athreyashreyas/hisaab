@@ -378,7 +378,13 @@ export function detectRecurring(txns: Transaction[]): Array<{
 
   for (const [, group] of byMerchant) {
     if (group.length < 2) continue;
-    const median = group[Math.floor(group.length / 2)].amount;
+    // `group` is in date order, so the middle *element* is the middle by date,
+    // not by amount. Sort the amounts to get a real median — otherwise one odd
+    // charge sitting in the middle of the run becomes the yardstick every other
+    // charge is measured against, and a genuine subscription fails the ±8% test.
+    const amounts = group.map((t) => t.amount).sort((a, b) => a - b);
+    const median = amounts[Math.floor(amounts.length / 2)];
+    if (median <= 0) continue; // guards the division below
     const consistent = group.filter(
       (t) => Math.abs(t.amount - median) / median <= 0.08
     );
@@ -388,12 +394,17 @@ export function detectRecurring(txns: Transaction[]): Array<{
     for (let i = 1; i < consistent.length; i++) {
       gaps.push((consistent[i].date - consistent[i - 1].date) / DAY);
     }
-    const avgGap = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+    // Median gap, not mean. The amount filter above drops odd charges, and each
+    // one it drops leaves a double-length hole between the charges either side
+    // of it — a single skipped month in a year of rent pulls the mean out of the
+    // monthly window and the bill goes undetected. The median shrugs that off.
+    const sortedGaps = [...gaps].sort((a, b) => a - b);
+    const typicalGap = sortedGaps[Math.floor(sortedGaps.length / 2)];
 
     let cadence: Cadence | null = null;
-    if (avgGap >= 6 && avgGap <= 8) cadence = 'weekly';
-    else if (avgGap >= 26 && avgGap <= 35) cadence = 'monthly';
-    else if (avgGap >= 350 && avgGap <= 380) cadence = 'yearly';
+    if (typicalGap >= 6 && typicalGap <= 8) cadence = 'weekly';
+    else if (typicalGap >= 26 && typicalGap <= 35) cadence = 'monthly';
+    else if (typicalGap >= 350 && typicalGap <= 380) cadence = 'yearly';
     if (!cadence) continue;
 
     const last = consistent[consistent.length - 1];

@@ -12,6 +12,7 @@ import { Icon } from '../components/ui/Icon';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Segmented, AccountPicker, CadencePicker } from '../components/add/Pickers';
 import { useInvestments, useAccounts, portfolioSummary } from '../hooks/useData';
+import { useSubmit } from '../hooks/useSubmit';
 import {
   createInvestment,
   updateInvestment,
@@ -19,7 +20,7 @@ import {
   createRecurringRule,
   midnight,
 } from '../lib/repo';
-import { rollForward, groupIndianDigits } from '../lib/calculations';
+import { rollForward, groupIndianDigits, sanitiseDecimalInput } from '../lib/calculations';
 import { ACCENT_PALETTE } from '../lib/categories';
 import type { Cadence, Investment, InvestmentKind } from '../types';
 import { cn } from '../lib/cn';
@@ -184,6 +185,7 @@ function InvestmentModal({
   const [accountId, setAccountId] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [color, setColor] = useState(ACCENT_PALETTE[0]);
+  const { pending, submit } = useSubmit();
 
   // Optional recurring plan (SIP): repeat the same contribution on a cadence.
   const [sip, setSip] = useState(false);
@@ -237,7 +239,7 @@ function InvestmentModal({
       kind,
       invested: investedPaise,
       current_value: currentPaise,
-      interest_rate: kind === 'fd' && rate.trim() ? Number(rate) : null,
+      interest_rate: kind === 'fd' && Number.isFinite(Number(rate)) && rate.trim() ? Number(rate) : null,
       maturity_date: kind === 'fd' && hasMaturity ? maturity : null,
       account_id: accountId,
       note: note.trim(),
@@ -315,7 +317,9 @@ function InvestmentModal({
               inputMode="decimal"
               placeholder="7.1"
               value={rate}
-              onChange={(e) => setRate(e.target.value.replace(/[^0-9.]/g, ''))}
+              // Plain [^0-9.] stripping still lets "7.1.2" through, which
+              // Number() turns into NaN and we'd store as the rate.
+              onChange={(e) => setRate(sanitiseDecimalInput(e.target.value))}
               hint="% per year"
             />
             <div>
@@ -431,7 +435,11 @@ function InvestmentModal({
               Delete
             </Button>
           )}
-          <Button onClick={save} disabled={!canSave || (canSip && sip && !accountId)} className="flex-1">
+          <Button
+            onClick={() => submit(save)}
+            disabled={!canSave || pending || (canSip && sip && !accountId)}
+            className="flex-1"
+          >
             {existing ? 'Save changes' : 'Add investment'}
           </Button>
         </div>

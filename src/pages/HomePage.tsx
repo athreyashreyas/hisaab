@@ -17,6 +17,7 @@ import {
   useAccountMap,
   useAllContributions,
   useInvestments,
+  useMonthlyGoalSetAside,
   portfolioSummary,
   monthlyRate,
 } from '../hooks/useData';
@@ -52,16 +53,7 @@ export function HomePage() {
   const portfolio = portfolioSummary(investments);
 
   const { start, end } = monthBounds(now);
-  // Net money moved into goals this month (adds minus withdrawals), counting only
-  // goals that still exist — so withdrawing it back, or deleting the goal, frees
-  // it from safe-to-spend instead of leaving it stuck in the corpus.
-  const liveGoalIds = new Set(goals.map((g) => g.id));
-  const goalSetAside = Math.max(
-    0,
-    contributions
-      .filter((c) => c.date >= start && c.date < end && liveGoalIds.has(c.goal_id))
-      .reduce((s, c) => s + c.amount, 0)
-  );
+  const goalSetAside = useMonthlyGoalSetAside(now);
 
   const sts = safeToSpend(monthTxns, recurring, goalSetAside, now);
 

@@ -8,6 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { Icon } from '../components/ui/Icon';
 import { formatINR, groupIndianDigits } from '../lib/calculations';
 import { useCategories } from '../hooks/useData';
+import { useSubmit } from '../hooks/useSubmit';
 import { createCategory, updateCategory, restoreDefaultCategories, reorderCategories } from '../lib/repo';
 import { CategoryReorderSheet } from '../components/finance/CategoryReorderSheet';
 import { CATEGORY_PALETTE } from '../lib/categories';
@@ -95,6 +96,7 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
   const [icon, setIcon] = useState('circle-dashed');
   const [color, setColor] = useState(CATEGORY_PALETTE.grey);
   const [budget, setBudget] = useState('');
+  const { pending, submit } = useSubmit();
 
   useEffect(() => {
     if (!open) return;
@@ -168,7 +170,7 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
           </div>
         </div>
 
-        <Button onClick={save} disabled={!canSave} block className="mt-1">
+        <Button onClick={() => submit(save)} disabled={!canSave || pending} block className="mt-1">
           {existing ? 'Save changes' : 'Add category'}
         </Button>
       </div>

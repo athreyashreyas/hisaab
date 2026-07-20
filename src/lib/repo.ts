@@ -40,7 +40,12 @@ function freshMeta() {
   return { updated_at: now(), deleted_at: null, synced_at: null };
 }
 
-async function enqueue(table_name: SyncTable, operation: SyncOp, record_id: ID) {
+/**
+ * Mark a record dirty for the sync engine. Exported because restoring a backup
+ * (lib/export) writes rows straight into Dexie and has to queue them too —
+ * anything that lands in Dexie without a queue entry never reaches the cloud.
+ */
+export async function enqueue(table_name: SyncTable, operation: SyncOp, record_id: ID) {
   await db.sync_queue.add({
     table_name,
     operation,

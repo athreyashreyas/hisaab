@@ -7,6 +7,7 @@ import { AmountPad } from '../ui/AmountPad';
 import { Segmented, AccountPicker, CategoryPicker, CadencePicker } from './Pickers';
 import { useUIStore } from '../../stores/uiStore';
 import { useAccounts, useCategories } from '../../hooks/useData';
+import { useSubmit } from '../../hooks/useSubmit';
 import {
   createTransaction,
   updateTransaction,
@@ -40,6 +41,7 @@ export function AddSheet() {
   const [note, setNote] = useState('');
   const [date, setDate] = useState(() => midnight());
   const [categoryTouched, setCategoryTouched] = useState(false);
+  const { pending, submit } = useSubmit();
 
   // Optional: schedule this entry to repeat. When on, saving also records a
   // recurring rule so it counts toward "Bills to come" from here on.
@@ -276,16 +278,31 @@ export function AddSheet() {
 
         <div className="flex items-center gap-2 pt-1">
           {isEdit && (
-            <Button variant="ghost" onClick={remove} aria-label="Delete" className="px-3 text-rose-600">
+            <Button
+              variant="ghost"
+              onClick={() => submit(remove)}
+              disabled={pending}
+              aria-label="Delete"
+              className="px-3 text-rose-600"
+            >
               <Trash2 size={18} />
             </Button>
           )}
           {!isEdit && (
-            <Button variant="secondary" onClick={() => save(true)} disabled={!canSave} className="flex-1">
+            <Button
+              variant="secondary"
+              onClick={() => submit(() => save(true))}
+              disabled={!canSave || pending}
+              className="flex-1"
+            >
               Save &amp; add another
             </Button>
           )}
-          <Button onClick={() => save(false)} disabled={!canSave} className="flex-1">
+          <Button
+            onClick={() => submit(() => save(false))}
+            disabled={!canSave || pending}
+            className="flex-1"
+          >
             {isEdit ? 'Save changes' : 'Save'}
           </Button>
         </div>

@@ -73,8 +73,10 @@ export const DEFAULT_CATEGORIES: SeedCategory[] = [
 export const MERCHANT_RULES: { pattern: RegExp; category: string }[] = [
   { pattern: /swiggy|zomato|third wave coffee|starbucks|cafe|restaurant|dominos|kfc/i, category: 'Food & dining' },
   { pattern: /bigbasket|blinkit|zepto|dmart|grofers|reliance fresh/i, category: 'Groceries' },
-  { pattern: /uber|ola|rapido|irctc|metro|petrol|hpcl|iocl|bpcl|fuel/i, category: 'Transport' },
-  { pattern: /electricity|water|gas|broadband|airtel|jio|vi |bescom|rent/i, category: 'Rent & bills' },
+  // Short tokens get \b so they don't match inside a longer word: bare `ola`
+  // hits "Sholay", bare `gas` hits "Gastro Pub", bare `rent` hits "Parent".
+  { pattern: /uber|\bola\b|rapido|irctc|metro|petrol|hpcl|iocl|bpcl|fuel/i, category: 'Transport' },
+  { pattern: /electricity|water|\bgas\b|broadband|airtel|jio|\bvi\b|bescom|\brent\b/i, category: 'Rent & bills' },
   { pattern: /amazon|flipkart|myntra|ajio|nykaa|meesho/i, category: 'Shopping' },
   { pattern: /pharmacy|apollo|1mg|pharmeasy|hospital|clinic|practo/i, category: 'Health' },
   { pattern: /netflix|spotify|prime video|hotstar|youtube premium|bookmyshow/i, category: 'Subscriptions' },

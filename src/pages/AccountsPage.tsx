@@ -8,6 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { Money } from '../components/ui/Money';
 import { Segmented } from '../components/add/Pickers';
 import { useAccountBalances, useGoalsReserved } from '../hooks/useData';
+import { useSubmit } from '../hooks/useSubmit';
 import { groupIndianDecimal, paiseToInput, rupeesToPaise, sanitiseDecimalInput } from '../lib/calculations';
 import { createAccount, updateAccount, archiveAccount } from '../lib/repo';
 import { ACCENT_PALETTE } from '../lib/categories';
@@ -143,6 +144,7 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
   const [kind, setKind] = useState<AccountKind>('bank');
   const [opening, setOpening] = useState('');
   const [color, setColor] = useState(ACCENT_PALETTE[0]);
+  const { pending, submit } = useSubmit();
 
   useEffect(() => {
     if (!open) return;
@@ -221,7 +223,7 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
               Archive
             </Button>
           )}
-          <Button onClick={save} disabled={!canSave} className="flex-1">
+          <Button onClick={() => submit(save)} disabled={!canSave || pending} className="flex-1">
             {existing ? 'Save changes' : 'Add account'}
           </Button>
         </div>

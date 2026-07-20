@@ -7,6 +7,7 @@ import { DateInput } from '../ui/DateInput';
 import { AmountPad } from '../ui/AmountPad';
 import { CadencePicker, AccountPicker, CategoryPicker } from '../add/Pickers';
 import { useAccounts, useCategories } from '../../hooks/useData';
+import { useSubmit } from '../../hooks/useSubmit';
 import {
   createRecurringRule,
   updateRecurringRule,
@@ -44,6 +45,7 @@ export function RecurringSheet({
   const [interval, setInterval] = useState(1);
   const [nextDue, setNextDue] = useState(() => midnight());
   const [categoryTouched, setCategoryTouched] = useState(false);
+  const { pending, submit } = useSubmit();
 
   const isEdit = Boolean(editing);
 
@@ -170,14 +172,15 @@ export function RecurringSheet({
           {isEdit && (
             <Button
               variant="ghost"
-              onClick={remove}
+              onClick={() => submit(remove)}
+              disabled={pending}
               aria-label="Delete"
               className="px-3 text-rose-600"
             >
               <Trash2 size={18} />
             </Button>
           )}
-          <Button onClick={save} disabled={!canSave} className="flex-1">
+          <Button onClick={() => submit(save)} disabled={!canSave || pending} className="flex-1">
             {isEdit ? 'Save changes' : 'Add payment'}
           </Button>
         </div>

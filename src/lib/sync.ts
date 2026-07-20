@@ -102,6 +102,13 @@ async function push(): Promise<void> {
   const latest = new Map<string, (typeof queue)[number]>();
   for (const item of queue) latest.set(`${item.table_name}:${item.record_id}`, item);
 
+  // Remember exactly which queue rows this pass covers. Writes made *while* the
+  // push is in flight land in the queue behind us, and clearing the table
+  // wholesale would drop them: the record would keep synced_at: null with
+  // nothing left to retry it, so it would never reach the cloud. Nothing else
+  // re-enqueues on synced_at, so that loss is silent and permanent.
+  const drainedIds = queue.map((item) => item.id).filter((id): id is number => id !== undefined);
+
   for (const item of latest.values()) {
     const row = await table(item.table_name).get(item.record_id);
 
@@ -141,7 +148,7 @@ async function push(): Promise<void> {
     if (row) await table(item.table_name).update(item.record_id, { synced_at: Date.now() });
   }
 
-  await db.sync_queue.clear();
+  await db.sync_queue.bulkDelete(drainedIds);
 }
 
 // --- pull -----------------------------------------------------------------

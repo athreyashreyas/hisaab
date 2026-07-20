@@ -21,6 +21,7 @@ import {
   useAccountMap,
   monthlyRate,
 } from '../hooks/useData';
+import { useSubmit } from '../hooks/useSubmit';
 import { addContribution, deleteContribution } from '../lib/repo';
 import { goalProjection, groupIndianDigits } from '../lib/calculations';
 import type { Account } from '../types';
@@ -35,6 +36,16 @@ export function GoalDetailPage() {
   const accountMap = useAccountMap();
   const [editing, setEditing] = useState(false);
   const [contribMode, setContribMode] = useState<null | 'add' | 'withdraw'>(null);
+
+  // undefined = the live query hasn't resolved yet. Rendering "not found" here
+  // would flash it on every cold load of this route before Dexie answers.
+  if (goal === undefined) {
+    return (
+      <div>
+        <PageHeader title="Goal" back />
+      </div>
+    );
+  }
 
   if (!goal) {
     return (
@@ -178,11 +189,12 @@ function ContributionModal({
   maxWithdraw: number;
   accounts: Account[];
   onClose: () => void;
-  onSubmit: (paise: number, accountId: string | null, note: string) => void;
+  onSubmit: (paise: number, accountId: string | null, note: string) => Promise<void>;
 }) {
   const [rupees, setRupees] = useState('');
   const [note, setNote] = useState('');
   const [accountId, setAccountId] = useState<string | null>(null);
+  const { pending, submit } = useSubmit();
 
   // Default to the first account whenever the sheet opens.
   useEffect(() => {
@@ -221,12 +233,14 @@ function ContributionModal({
         <Input label="Note" placeholder="Optional" value={note} onChange={(e) => setNote(e.target.value)} />
         <Button
           block
-          disabled={!canSave}
-          onClick={() => {
-            onSubmit(isWithdraw ? -paise : paise, accountId, note.trim());
-            setRupees('');
-            setNote('');
-          }}
+          disabled={!canSave || pending}
+          onClick={() =>
+            submit(async () => {
+              await onSubmit(isWithdraw ? -paise : paise, accountId, note.trim());
+              setRupees('');
+              setNote('');
+            })
+          }
         >
           {isWithdraw ? 'Withdraw' : 'Add money'}
         </Button>

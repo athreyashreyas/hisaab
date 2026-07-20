@@ -4,6 +4,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { DateInput } from '../ui/DateInput';
 import { Icon } from '../ui/Icon';
+import { useSubmit } from '../../hooks/useSubmit';
 import { createGoal, updateGoal, deleteGoal, midnight } from '../../lib/repo';
 import { groupIndianDigits } from '../../lib/calculations';
 import { ACCENT_PALETTE } from '../../lib/categories';
@@ -32,6 +33,7 @@ export function GoalFormModal({
   const [date, setDate] = useState(() => midnight());
   const [color, setColor] = useState(ACCENT_PALETTE[0]);
   const [icon, setIcon] = useState('target');
+  const { pending, submit } = useSubmit();
 
   useEffect(() => {
     if (!open) return;
@@ -134,11 +136,11 @@ export function GoalFormModal({
 
         <div className="flex gap-2 pt-1">
           {goal && (
-            <Button variant="ghost" onClick={remove} className="px-3 text-rose-600">
+            <Button variant="ghost" onClick={() => submit(remove)} disabled={pending} className="px-3 text-rose-600">
               Delete
             </Button>
           )}
-          <Button onClick={save} disabled={!canSave} className="flex-1">
+          <Button onClick={() => submit(save)} disabled={!canSave || pending} className="flex-1">
             {goal ? 'Save changes' : 'Create goal'}
           </Button>
         </div>

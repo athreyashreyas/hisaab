@@ -73,8 +73,18 @@ export function useGoals(includeArchived = false): Goal[] {
   );
 }
 
-export function useGoal(id: ID | undefined): Goal | undefined {
-  return useLiveQuery(async () => (id ? db.goals.get(id) : undefined), [id]);
+/**
+ * A single goal, or null once we know there isn't one. The tri-state matters:
+ * `undefined` means the live query hasn't resolved yet, so callers can hold off
+ * on rendering "not found" instead of flashing it on every cold load of the
+ * page. Tombstoned goals read as null like any other missing row.
+ */
+export function useGoal(id: ID | undefined): Goal | null | undefined {
+  return useLiveQuery(async () => {
+    if (!id) return null;
+    const goal = await db.goals.get(id);
+    return goal && !goal.deleted_at ? goal : null;
+  }, [id]);
 }
 
 export function useContributions(goalId: ID | undefined) {
@@ -172,6 +182,7 @@ export function useAccountBalances(earmarkGoals = true): AccountBalance[] {
   const accounts = useAccounts(true);
   const txns = useTransactions();
   const contribs = useAllContributions();
+  const goals = useGoals(true);
 
   const byAccount = new Map<ID, number>();
   for (const a of accounts) byAccount.set(a.id, a.opening_balance);
@@ -192,9 +203,16 @@ export function useAccountBalances(earmarkGoals = true): AccountBalance[] {
   // Earmark goal contributions out of their source account. A positive
   // contribution leaves the account for the goal; a negative one (withdrawal)
   // comes back. Unattributed contributions (account_id null) touch no balance.
+  //
+  // The live-goal test has to match useGoalsReserved() exactly, or the two
+  // disagree about the same money and "in accounts − set aside" stops equalling
+  // the free corpus. They can diverge for real: deleteGoal() tombstones the
+  // goal and its contributions together, but a sync that pulls the goal's
+  // tombstone before the contributions' leaves rows whose goal is already gone.
   if (earmarkGoals) {
+    const liveGoalIds = liveGoalIdSet(goals);
     for (const c of contribs) {
-      if (!c.account_id) continue;
+      if (!c.account_id || !liveGoalIds.has(c.goal_id)) continue;
       byAccount.set(c.account_id, (byAccount.get(c.account_id) ?? 0) - c.amount);
     }
   }
@@ -212,10 +230,40 @@ export function useAccountBalances(earmarkGoals = true): AccountBalance[] {
 export function useGoalsReserved(): number {
   const goals = useGoals(true);
   const contribs = useAllContributions();
-  const liveGoalIds = new Set(goals.map((g) => g.id));
+  const liveGoalIds = liveGoalIdSet(goals);
   const reserved = contribs.reduce(
     (s, c) => (c.account_id && liveGoalIds.has(c.goal_id) ? s + c.amount : s),
     0
   );
   return Math.max(0, reserved);
+}
+
+/**
+ * Net money moved into still-existing goals during `ref`'s month (adds minus
+ * withdrawals, never below zero) — the goal term in safeToSpend().
+ *
+ * Counting only live goals is what lets withdrawing the money back, or deleting
+ * the goal outright, release it into safe-to-spend instead of leaving it stuck
+ * in the corpus.
+ */
+export function useMonthlyGoalSetAside(ref = new Date()): number {
+  const goals = useGoals(true);
+  const contribs = useAllContributions();
+  const { start, end } = monthBounds(ref);
+  const liveGoalIds = liveGoalIdSet(goals);
+  return Math.max(
+    0,
+    contribs
+      .filter((c) => c.date >= start && c.date < end && liveGoalIds.has(c.goal_id))
+      .reduce((s, c) => s + c.amount, 0)
+  );
+}
+
+/**
+ * Goals that should still reserve money. Shared by the hooks above so the
+ * earmark rule is defined in exactly one place — they describe the same money
+ * from different angles and must never drift apart.
+ */
+function liveGoalIdSet(goals: Goal[]): Set<ID> {
+  return new Set(goals.map((g) => g.id));
 }

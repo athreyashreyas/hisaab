@@ -7,6 +7,7 @@
 import { db } from './db';
 import { sealRecord, openRecord, keyring, exportVault, type Envelope, type VaultBackup } from './crypto';
 import { currentWrappedKey } from './vaultStorage';
+import { enqueue } from './repo';
 import { formatINR } from './calculations';
 import type { Account, Category, Transaction } from '../types';
 
@@ -17,7 +18,23 @@ function download(filename: string, data: string, mime: string) {
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  // Revoking in the same tick can cancel the download before the browser has
+  // read the blob (Safari and Firefox both do this). Let the click settle first.
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+/**
+ * Local calendar date as YYYY-MM-DD.
+ *
+ * Not toISOString().slice(0,10): transactions store *local* midnight, and in any
+ * timezone ahead of UTC that instant is still the previous day in UTC — so an
+ * IST ledger exported every row a day early.
+ */
+function isoDay(d: Date | number): string {
+  const x = new Date(d);
+  const month = String(x.getMonth() + 1).padStart(2, '0');
+  const day = String(x.getDate()).padStart(2, '0');
+  return `${x.getFullYear()}-${month}-${day}`;
 }
 
 function csvCell(v: string): string {
@@ -40,7 +57,7 @@ export async function exportTransactionsCsv(): Promise<void> {
     .sort((a, b) => b.date - a.date)
     .map((t) =>
       [
-        new Date(t.date).toISOString().slice(0, 10),
+        isoDay(t.date),
         t.type,
         formatINR(t.amount, true).replace('₹', ''),
         accById.get(t.account_id)?.name ?? '',
@@ -104,12 +121,17 @@ export async function importEncryptedVault(file: File): Promise<number> {
     if (!SYNC_TABLES.includes(__table)) continue;
     const existing = await db.table(__table).get(row.id);
     if (existing && existing.updated_at >= row.updated_at) continue;
-    await db.table(__table).put(row);
+    // synced_at is cleared and the row queued: a restored record has only ever
+    // existed in this backup file as far as the cloud is concerned, and the
+    // backup may well carry a synced_at from the device that wrote it. Without
+    // this the restore stays stranded on one device.
+    await db.table(__table).put({ ...row, synced_at: null });
+    await enqueue(__table, 'upsert', row.id);
     restored++;
   }
   return restored;
 }
 
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return isoDay(new Date());
 }
