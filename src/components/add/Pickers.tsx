@@ -171,7 +171,12 @@ export function CategoryPicker({
             >
               <Icon name={c.icon} size={18} />
             </span>
-            <span className="w-full break-words text-center text-[11px] font-medium leading-snug text-ink-700">
+            {/* Two lines is the ceiling: longer names ellipsise rather than
+                growing the tile, so every row in the grid stays level. */}
+            <span
+              className="line-clamp-2 h-[30px] w-full break-words text-center text-[11px] font-medium leading-snug text-ink-700"
+              title={c.name}
+            >
               {c.name}
             </span>
           </button>

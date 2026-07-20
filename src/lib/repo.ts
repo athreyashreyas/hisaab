@@ -100,6 +100,25 @@ export async function updateCategory(id: ID, patch: Partial<Category>): Promise<
   await enqueue('categories', 'upsert', id);
 }
 
+/**
+ * Persist a new category order from a drag. `ids` is the full visible list in
+ * its new order; each row's `order` becomes its index. Only rows whose order
+ * actually moved are written, so a drag that ends where it started doesn't
+ * enqueue a sync for every category. Runs in one transaction so a half-applied
+ * order can never reach the UI.
+ */
+export async function reorderCategories(ids: ID[]): Promise<void> {
+  await db.transaction('rw', db.categories, db.sync_queue, async () => {
+    const stamp = now();
+    for (const [index, id] of ids.entries()) {
+      const current = await db.categories.get(id);
+      if (!current || current.order === index) continue;
+      await db.categories.update(id, { order: index, updated_at: stamp, synced_at: null });
+      await enqueue('categories', 'upsert', id);
+    }
+  });
+}
+
 // --- transactions ---------------------------------------------------------
 
 export type NewTransaction = Pick<Transaction, 'type' | 'amount' | 'account_id'> &

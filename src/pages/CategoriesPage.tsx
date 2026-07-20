@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, RotateCcw } from 'lucide-react';
+import { ArrowUpDown, Plus, RotateCcw } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -8,7 +8,8 @@ import { Modal } from '../components/ui/Modal';
 import { Icon } from '../components/ui/Icon';
 import { formatINR, groupIndianDigits } from '../lib/calculations';
 import { useCategories } from '../hooks/useData';
-import { createCategory, updateCategory, restoreDefaultCategories } from '../lib/repo';
+import { createCategory, updateCategory, restoreDefaultCategories, reorderCategories } from '../lib/repo';
+import { CategoryReorderSheet } from '../components/finance/CategoryReorderSheet';
 import { CATEGORY_PALETTE } from '../lib/categories';
 import type { Category } from '../types';
 import { cn } from '../lib/cn';
@@ -23,6 +24,7 @@ const ICON_CHOICES = [
 export function CategoriesPage() {
   const categories = useCategories();
   const [editing, setEditing] = useState<Category | null | 'new'>(null);
+  const [reordering, setReordering] = useState(false);
 
   return (
     <div>
@@ -31,9 +33,22 @@ export function CategoriesPage() {
         title="Categories"
         back
         trailing={
-          <Button size="sm" onClick={() => setEditing('new')} className="px-3">
-            <Plus size={16} /> Add
-          </Button>
+          <div className="flex items-center gap-2">
+            {categories.length > 1 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setReordering(true)}
+                className="px-3 text-ink-500"
+                aria-label="Reorder categories"
+              >
+                <ArrowUpDown size={16} /> Reorder
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setEditing('new')} className="px-3">
+              <Plus size={16} /> Add
+            </Button>
+          </div>
         }
       />
 
@@ -62,6 +77,12 @@ export function CategoriesPage() {
       </Button>
 
       <CategoryModal target={editing} onClose={() => setEditing(null)} />
+      <CategoryReorderSheet
+        open={reordering}
+        categories={categories}
+        onClose={() => setReordering(false)}
+        onReorder={(next) => reorderCategories(next.map((c) => c.id))}
+      />
     </div>
   );
 }

@@ -41,6 +41,51 @@ export function groupIndianDigits(value: string): string {
   return inrGroup.format(Number(clean));
 }
 
+/**
+ * Like groupIndianDigits, but for fields that accept paise: "12345.6" reads
+ * "12,345.6" as you type. Only the whole part is grouped; the decimals are left
+ * exactly as typed so a half-finished "100." or "100.0" doesn't get rewritten
+ * out from under the caret. Pair with sanitiseDecimalInput() on change.
+ */
+export function groupIndianDecimal(value: string): string {
+  if (!value) return '';
+  const negative = value.startsWith('-');
+  const [whole = '', decimals] = value.replace('-', '').split('.');
+  const cleanWhole = whole.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  const grouped = cleanWhole ? inrGroup.format(Number(cleanWhole)) : decimals !== undefined ? '0' : '';
+  if (!grouped && decimals === undefined) return negative ? '-' : '';
+  return `${negative ? '-' : ''}${grouped}${decimals !== undefined ? `.${decimals.replace(/\D/g, '')}` : ''}`;
+}
+
+/**
+ * Normalise raw text from a rupee input down to what we can parse: an optional
+ * leading minus, digits, and at most one decimal point capped at two places
+ * (paise is the smallest unit we store). Extra dots and stray characters are
+ * dropped rather than rejected, so typing stays forgiving.
+ */
+export function sanitiseDecimalInput(value: string, allowNegative = false): string {
+  const negative = allowNegative && value.trimStart().startsWith('-');
+  const [whole = '', ...rest] = value.replace(/[^0-9.]/g, '').split('.');
+  const decimals = rest.join('').slice(0, 2);
+  const body = rest.length > 0 ? `${whole}.${decimals}` : whole;
+  return negative ? `-${body}` : body;
+}
+
+/** Parse a rupee string (possibly with paise) into integer paise. */
+export function rupeesToPaise(value: string): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+}
+
+/**
+ * Seed a rupee text input from stored paise. Whole amounts stay clean ("1200",
+ * not "1200.00") so editing an account that never had paise doesn't suddenly
+ * look like it does.
+ */
+export function paiseToInput(paise: number): string {
+  return paise % 100 === 0 ? String(paise / 100) : (paise / 100).toFixed(2);
+}
+
 /** Compact form for chart labels: ₹1.2L, ₹34.5k, ₹980. */
 export function formatCompactINR(paise: number): string {
   const r = Math.abs(paise) / 100;

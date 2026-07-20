@@ -22,6 +22,20 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.8.1',
+    date: '2026-07-20',
+    title: 'Put things in your own order',
+    notes: [
+      'Categories sit in the order you choose. Open Categories, tap Reorder, and drag them by the grip into the order that suits how you spend. The order you set is the order they appear in everywhere: the grid when you add an expense, the budgets list, and budget pacing in Insights.',
+      'Opening balances take paise. An account can start at ₹1,240.50 now, not just whole rupees, and the field still groups with Indian commas as you type.',
+      'Long category names no longer push the grid around when you add an expense. Names now settle into two neat lines, so every tile in a row lines up.',
+    ],
+    howTo: [
+      'Open Categories and tap Reorder, then drag by the grip on the left. Each drop saves on its own.',
+      'When adding or editing an account, type a decimal in Opening balance, for example 1240.50.',
+    ],
+  },
+  {
     version: '0.8.0',
     date: '2026-07-19',
     major: true,

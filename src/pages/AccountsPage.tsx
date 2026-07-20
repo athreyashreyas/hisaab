@@ -8,7 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { Money } from '../components/ui/Money';
 import { Segmented } from '../components/add/Pickers';
 import { useAccountBalances, useGoalsReserved } from '../hooks/useData';
-import { groupIndianDigits } from '../lib/calculations';
+import { groupIndianDecimal, paiseToInput, rupeesToPaise, sanitiseDecimalInput } from '../lib/calculations';
 import { createAccount, updateAccount, archiveAccount } from '../lib/repo';
 import { ACCENT_PALETTE } from '../lib/categories';
 import type { Account, AccountKind } from '../types';
@@ -149,7 +149,7 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
     if (existing) {
       setName(existing.name);
       setKind(existing.kind);
-      setOpening(String(Math.round(existing.opening_balance / 100)));
+      setOpening(paiseToInput(existing.opening_balance));
       setColor(existing.color);
     } else {
       setName('');
@@ -163,7 +163,7 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
 
   async function save() {
     if (!canSave) return;
-    const opening_balance = Math.round(Number(opening || '0') * 100);
+    const opening_balance = rupeesToPaise(opening || '0');
     if (existing) await updateAccount(existing.id, { name: name.trim(), kind, opening_balance, color });
     else await createAccount({ name: name.trim(), kind, opening_balance, color });
     onClose();
@@ -188,11 +188,11 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
         </div>
         <Input
           label="Opening balance"
-          inputMode="numeric"
-          placeholder="0"
-          value={opening.startsWith('-') ? `-${groupIndianDigits(opening)}` : groupIndianDigits(opening)}
-          onChange={(e) => setOpening(e.target.value.replace(/[^0-9-]/g, ''))}
-          hint="What's in this account right now."
+          inputMode="decimal"
+          placeholder="0.00"
+          value={groupIndianDecimal(opening)}
+          onChange={(e) => setOpening(sanitiseDecimalInput(e.target.value, true))}
+          hint="What's in this account right now. Paise are fine, e.g. 1,240.50."
         />
         <div>
           <div className="mb-1.5 text-sm font-semibold text-ink-700">Colour</div>
