@@ -39,7 +39,9 @@ export function PageHeader({
         )}
         <div className="min-w-0">
           {kicker && (
-            <div className="text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-300">
+            // Never wrap: a two-line kicker pushes the title down and reads as a
+            // broken heading. If it can't fit it ellipsises like the title does.
+            <div className="truncate text-[12px] font-semibold uppercase tracking-[0.14em] text-ink-300">
               {kicker}
             </div>
           )}

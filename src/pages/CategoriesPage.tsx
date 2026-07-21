@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowUpDown, Plus, RotateCcw } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
-import { Card } from '../components/ui/Card';
+import { Card, SectionHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
@@ -34,26 +34,30 @@ export function CategoriesPage() {
         title="Categories"
         back
         trailing={
-          <div className="flex items-center gap-2">
-            {categories.length > 1 && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setReordering(true)}
-                className="px-3 text-ink-500"
-                aria-label="Reorder categories"
-              >
-                <ArrowUpDown size={16} /> Reorder
-              </Button>
-            )}
-            <Button size="sm" onClick={() => setEditing('new')} className="px-3">
-              <Plus size={16} /> Add
-            </Button>
-          </div>
+          <Button size="sm" onClick={() => setEditing('new')} className="px-3">
+            <Plus size={16} /> Add
+          </Button>
         }
       />
 
-      <Card className="mt-3 divide-y divide-parchment-200 overflow-hidden">
+      {/* Reorder lives with the list, not in the header: it acts on the list, and
+          a second header button squeezed the title into an ellipsis. */}
+      <SectionHeader
+        className="mt-4"
+        title={categories.length === 1 ? '1 category' : `${categories.length} categories`}
+        action={
+          categories.length > 1 && (
+            <button
+              onClick={() => setReordering(true)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-teal-600"
+            >
+              <ArrowUpDown size={14} /> Reorder
+            </button>
+          )
+        }
+      />
+
+      <Card className="divide-y divide-parchment-200 overflow-hidden">
         {categories.map((c) => (
           <button
             key={c.id}
