@@ -29,6 +29,22 @@ export const THEMES: ThemeMeta[] = [
     accent: '#1e7f75',
   },
   {
+    id: 'cocoa',
+    name: 'Cocoa',
+    note: '₹10 note',
+    description: 'The chocolate brown of a ten, on warm cream.',
+    bg: '#f8f3eb',
+    accent: '#8a5a3b',
+  },
+  {
+    id: 'lime',
+    name: 'Lime',
+    note: '₹20 note',
+    description: 'The greenish-yellow of a twenty, on warm green cream.',
+    bg: '#f5f7e9',
+    accent: '#6e8a1e',
+  },
+  {
     id: 'blue',
     name: 'Blue',
     note: '₹50 note',
@@ -67,22 +83,6 @@ export const THEMES: ThemeMeta[] = [
     description: 'The bold magenta of the two-thousand, on blush.',
     bg: '#fbf2f6',
     accent: '#c43e82',
-  },
-  {
-    id: 'lime',
-    name: 'Lime',
-    note: '₹20 note',
-    description: 'The greenish-yellow of a twenty, on warm green cream.',
-    bg: '#f5f7e9',
-    accent: '#6e8a1e',
-  },
-  {
-    id: 'cocoa',
-    name: 'Cocoa',
-    note: '₹10 note',
-    description: 'The chocolate brown of a ten, on warm cream.',
-    bg: '#f8f3eb',
-    accent: '#8a5a3b',
   },
 ];
 
