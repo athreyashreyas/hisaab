@@ -70,7 +70,16 @@ export function SettingsPage() {
           icon={<RefreshCw size={18} />}
           label="New recovery phrase"
           sub="Replaces your old one"
-          onClick={async () => setRecoveryPhrase(await regenerate())}
+          onClick={async () => {
+            // A silent rejection here is the worst case: the user thinks nothing
+            // happened while, without the guard below, the old phrase may already
+            // have stopped working. Report it instead.
+            try {
+              setRecoveryPhrase(await regenerate());
+            } catch (err) {
+              flash(err instanceof Error ? err.message : 'Could not make a new recovery phrase.');
+            }
+          }}
           chevron
         />
         <Row icon={<Lock size={18} />} label="Lock now" onClick={lock} />

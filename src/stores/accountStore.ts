@@ -309,10 +309,14 @@ export const useAccountStore = create<AccountState>((set, get) => ({
     const dek = keyring.get(); // must be unlocked
     const phrase = generateRecoveryPhrase();
     const recoveryWrap = await rewrapDek(dek, phrase);
-    vaultStorage.setRecoveryWrap(recoveryWrap);
     const user = get().user;
     const wrapped = currentWrappedKey();
+    // Back up to the cloud BEFORE persisting locally. If the push fails, nothing
+    // has changed anywhere and the old phrase still works everywhere; persisting
+    // first would leave this device on the new phrase while the cloud kept the
+    // old one, silently breaking password reset from another device.
     if (user && wrapped) await pushVaultKeys(user.id, wrapped, recoveryWrap);
+    vaultStorage.setRecoveryWrap(recoveryWrap);
     return phrase;
   },
 

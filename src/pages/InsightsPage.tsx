@@ -364,13 +364,16 @@ function buildTrend(txns: Transaction[], gran: Granularity, ref: Date): TrendPoi
       if (b) b.spent += t.amount;
     }
   } else if (gran === 'week') {
+    // Key by the week-start date, not 'yyyy-ww': calendar year + week-of-year
+    // disagree near a year boundary (a late-Dec week can format as "2026-01"),
+    // and the week-start date is both unambiguous and self-sorting.
     for (let i = 7; i >= 0; i--) {
       const ws = startOfWeek(addDays(ref, -i * 7), { weekStartsOn: 1 });
-      bucket.set(format(ws, 'yyyy-ww'), { label: format(ws, 'd MMM'), spent: 0, order: 7 - i });
+      bucket.set(format(ws, 'yyyy-MM-dd'), { label: format(ws, 'd MMM'), spent: 0, order: 7 - i });
     }
     for (const t of expenses) {
       const ws = startOfWeek(new Date(t.date), { weekStartsOn: 1 });
-      const b = bucket.get(format(ws, 'yyyy-ww'));
+      const b = bucket.get(format(ws, 'yyyy-MM-dd'));
       if (b) b.spent += t.amount;
     }
   } else {

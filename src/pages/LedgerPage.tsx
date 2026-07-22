@@ -123,7 +123,10 @@ function groupByDay(txns: Transaction[]): DayGroup[] {
   return [...map.entries()]
     .sort((a, b) => (a[0] < b[0] ? 1 : -1))
     .map(([key, items]) => {
-      const d = new Date(key);
+      // Label off the item's own local-midnight epoch, never new Date(key):
+      // parsing "yyyy-MM-dd" gives UTC midnight, which in any timezone behind
+      // UTC lands on the previous day and shifts every day header back one.
+      const d = new Date(items[0].date);
       const label = isToday(d) ? 'Today' : isYesterday(d) ? 'Yesterday' : format(d, 'EEEE, d MMM');
       const net = items.reduce(
         (s, t) => s + (t.type === 'income' ? t.amount : t.type === 'expense' ? -t.amount : 0),
