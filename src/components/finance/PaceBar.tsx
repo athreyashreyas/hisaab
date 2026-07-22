@@ -40,7 +40,7 @@ export function PaceBar({ pace, category }: { pace: CategoryPace; category: Cate
 
       <div className="relative h-2 overflow-hidden rounded-full bg-parchment-200">
         <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${fill}%`, backgroundColor: color }} />
-        <div className="absolute top-0 h-full w-px bg-ink-300/60" style={{ left: `${tick}%` }} title="Today" />
+        <div className="absolute top-0 h-full w-px bg-ink-250/60" style={{ left: `${tick}%` }} title="Today" />
       </div>
 
       <div className="mt-1 flex justify-between text-[11.5px] tabular-nums text-ink-500">

@@ -8,7 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 const fieldClass =
-  'w-full rounded-card border-parchment-300 bg-parchment-50 text-ink-900 placeholder:text-ink-300 ' +
+  'w-full rounded-card border-parchment-300 bg-parchment-50 text-ink-900 placeholder:text-ink-250 ' +
   'text-[15px] px-3.5 py-2.5 focus:border-teal-400 focus:ring-teal-400';
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(

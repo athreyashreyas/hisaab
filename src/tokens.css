@@ -24,7 +24,14 @@
   --ink-900: #1a1a18; --ink-900-rgb: 26 26 24;
   --ink-700: #3d3d38; --ink-700-rgb: 61 61 56;
   --ink-500: #6b6960; --ink-500-rgb: 107 105 96;
-  --ink-300: #9b9890; --ink-300-rgb: 155 152 144;
+  /* Secondary text. Carried real content across the app (kickers, transaction
+     context, "of ₹target", day totals, section labels) yet the old #9b9890
+     measured only ~2.5:1 on parchment — below WCAG AA. Darkened to ink-500's
+     value (~4.6:1) so every text usage clears AA. Truly decorative marks
+     (chevrons, search placeholder, the amount-pad decimal, hairline dividers,
+     inactive nav) use --ink-250 to stay intentionally light. */
+  --ink-300: #6b6960; --ink-300-rgb: 107 105 96;
+  --ink-250: #9b9890; --ink-250-rgb: 155 152 144;
   --ink-100: #d4d2cb; --ink-100-rgb: 212 210 203;
 }
 

@@ -135,7 +135,7 @@ export function DateInput({ label, value, onChange, className, max }: DateInputP
                             ? 'bg-teal-500 font-semibold text-white'
                             : inMonth
                               ? 'text-ink-900 hover:bg-parchment-200'
-                              : 'text-ink-300 hover:bg-parchment-200',
+                              : 'text-ink-250 hover:bg-parchment-200',
                           disabled && 'cursor-not-allowed opacity-30 hover:bg-transparent'
                         )}
                       >

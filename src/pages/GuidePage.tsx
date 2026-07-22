@@ -97,7 +97,7 @@ export function GuidePage() {
                     </span>
                     <ChevronDown
                       size={16}
-                      className={cn('text-ink-300 transition-transform', historyOpen && 'rotate-180')}
+                      className={cn('text-ink-250 transition-transform', historyOpen && 'rotate-180')}
                     />
                   </button>
                   {historyOpen && (

@@ -153,29 +153,29 @@ function ThemeSection() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {THEMES.map((t) => {
             const active = t.id === themeId;
+            // Each swatch previews the theme itself: a mini banknote card in the
+            // theme's real paper tint, a sample serif figure in its accent, and a
+            // right-edge accent stripe — so you pick by seeing the result, not a dot.
             return (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
                 className={cn(
-                  'flex items-center gap-2.5 rounded-card border p-2.5 text-left transition-colors',
-                  active ? 'border-teal-400 bg-teal-50' : 'border-parchment-300 hover:bg-parchment-100'
+                  'overflow-hidden rounded-card border text-left transition-colors',
+                  active ? 'border-2 border-teal-500' : 'border-parchment-300 hover:bg-parchment-100'
                 )}
                 aria-pressed={active}
               >
-                <span
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full ring-1 ring-black/5"
-                  style={{ backgroundColor: t.bg }}
-                >
-                  <span className="h-5 w-5 rounded-full" style={{ backgroundColor: t.accent }} />
-                </span>
-                <span className="min-w-0">
-                  <span className="flex items-center gap-1 text-[13px] font-semibold leading-tight text-ink-900">
-                    <span>{t.name}</span>
-                    {active && <Check size={13} className="shrink-0 text-teal-600" />}
+                <div className="relative h-11" style={{ backgroundColor: t.bg }}>
+                  <span className="absolute left-2 top-2 font-serif text-[15px]" style={{ color: t.accent }}>
+                    ₹1,180
                   </span>
-                  {t.note && <span className="mt-0.5 block text-[11px] text-ink-500">{t.note}</span>}
-                </span>
+                  <span className="absolute inset-y-0 right-0 w-3.5" style={{ backgroundColor: t.accent }} />
+                </div>
+                <div className="flex items-center justify-between gap-1 px-2.5 py-1.5">
+                  <span className="truncate text-[12.5px] font-semibold text-ink-900">{t.name}</span>
+                  {active && <Check size={14} className="shrink-0 text-teal-600" />}
+                </div>
               </button>
             );
           })}
@@ -215,7 +215,7 @@ function Row({
         <span className="block truncate text-[14.5px] font-medium text-ink-900">{label}</span>
         {sub && <span className="block truncate text-[12px] text-ink-500">{sub}</span>}
       </span>
-      {chevron && <ChevronRight size={17} className="shrink-0 text-ink-300" />}
+      {chevron && <ChevronRight size={17} className="shrink-0 text-ink-250" />}
     </Tag>
   );
 }

@@ -38,7 +38,7 @@ function Row({ category }: { category: Category }) {
         }}
         aria-label={`Reorder ${category.name}`}
         style={{ touchAction: 'none' }}
-        className="-m-1.5 shrink-0 cursor-grab touch-none p-1.5 text-ink-300 active:cursor-grabbing"
+        className="-m-1.5 shrink-0 cursor-grab touch-none p-1.5 text-ink-250 active:cursor-grabbing"
       >
         <GripIcon />
       </button>

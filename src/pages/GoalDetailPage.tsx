@@ -145,7 +145,7 @@ export function GoalDetailPage() {
                 <button
                   onClick={() => void deleteContribution(c.id)}
                   aria-label="Delete entry"
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink-300 hover:bg-parchment-200 hover:text-rose-600"
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink-250 hover:bg-parchment-200 hover:text-rose-600"
                 >
                   <Trash2 size={14} />
                 </button>

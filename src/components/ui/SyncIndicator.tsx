@@ -20,10 +20,10 @@ import { cn } from '../../lib/cn';
 const dotColor: Record<SyncStatus, string> = {
   idle: 'bg-teal-500',
   syncing: 'bg-teal-400 animate-pulse-dot',
-  offline: 'bg-ink-300',
+  offline: 'bg-ink-250',
   error: 'bg-rose-500',
   locked: 'bg-amber-500',
-  local: 'bg-ink-300',
+  local: 'bg-ink-250',
 };
 
 const dotRing: Record<SyncStatus, string> = {

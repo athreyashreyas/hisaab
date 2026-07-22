@@ -34,7 +34,7 @@ function NavItemLink({ to, label, icon }: { to: string; label: string; icon: str
       className={({ isActive }) =>
         cn(
           'flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-colors',
-          isActive ? 'text-teal-600' : 'text-ink-300'
+          isActive ? 'text-teal-600' : 'text-ink-250'
         )
       }
     >

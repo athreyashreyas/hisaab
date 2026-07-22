@@ -18,7 +18,7 @@ import {
 import { guessCategory } from '../../lib/categories';
 import { rollForward } from '../../lib/calculations';
 import type { Cadence, TxnType } from '../../types';
-import { ArrowRight, Repeat, Trash2 } from 'lucide-react';
+import { ArrowRight, Check, Repeat, Trash2 } from 'lucide-react';
 
 /**
  * Quick-add / edit sheet, opened from the FAB (and from a ledger row for edit).
@@ -95,6 +95,17 @@ export function AddSheet() {
     const match = categories.find((c) => c.name === guessName);
     if (match) setCategoryId(match.id);
   }, [merchant, type, categoryTouched, categories]);
+
+  // The category the merchant guess silently filled in (until the user picks one
+  // themselves) — surfaced as a confirmation line so the auto-fill isn't a
+  // mystery.
+  const autoCategory = useMemo(() => {
+    if (type !== 'expense' || categoryTouched || !merchant.trim()) return null;
+    const name = guessCategory(merchant);
+    if (!name) return null;
+    const match = categories.find((c) => c.name === name);
+    return match && match.id === categoryId ? match : null;
+  }, [type, categoryTouched, merchant, categories, categoryId]);
 
   const canSave =
     amount > 0 &&
@@ -217,6 +228,12 @@ export function AddSheet() {
                 setCategoryTouched(true);
               }}
             />
+            {autoCategory && (
+              <div className="mt-1.5 flex items-center gap-1.5 text-[12px] font-semibold text-teal-600">
+                <Check size={13} />
+                Auto-categorised · {autoCategory.name}
+              </div>
+            )}
           </div>
         )}
 

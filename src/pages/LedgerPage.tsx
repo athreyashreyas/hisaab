@@ -9,6 +9,7 @@ import { TxnRow } from '../components/finance/TxnRow';
 import { ViewFilterBar, type LedgerFilter } from '../components/finance/ViewFilterBar';
 import { useMonthTransactions, useCategoryMap, useAccountMap } from '../hooks/useData';
 import { useUIStore } from '../stores/uiStore';
+import { cn } from '../lib/cn';
 import type { Transaction } from '../types';
 
 /** Reverse-chronological ledger, grouped by day with sticky headers + day totals. */
@@ -36,6 +37,18 @@ export function LedgerPage() {
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
 
+  // Month totals for the summary row — from the same month's transactions the
+  // list reduces (unaffected by the type/account/search filters).
+  const monthTotals = useMemo(() => {
+    let spent = 0;
+    let received = 0;
+    for (const t of txns) {
+      if (t.type === 'expense') spent += t.amount;
+      else if (t.type === 'income') received += t.amount;
+    }
+    return { spent, received, net: received - spent };
+  }, [txns]);
+
   return (
     <div>
       <PageHeader kicker="Your ledger" title="Ledger" />
@@ -48,6 +61,7 @@ export function LedgerPage() {
           onFilter={setFilter}
           search={search}
           onSearch={setSearch}
+          summary={<MonthSummary {...monthTotals} />}
         />
       </div>
 
@@ -69,10 +83,10 @@ export function LedgerPage() {
           {groups.map((group) => (
             <div key={group.key}>
               <div className="sticky top-0 z-10 -mx-1 mb-1.5 flex items-baseline justify-between bg-parchment-100/95 px-1 py-1.5 backdrop-blur">
-                <span className="text-[12px] font-semibold uppercase tracking-wide text-ink-500">
+                <span className="text-[12px] font-semibold uppercase tracking-wide text-ink-700">
                   {group.label}
                 </span>
-                <span className="text-[12px] tabular-nums text-ink-300">
+                <span className="text-[12px] font-semibold tabular-nums text-ink-500">
                   <DayTotal net={group.net} />
                 </span>
               </div>
@@ -92,6 +106,40 @@ export function LedgerPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Month spent / received / net, shown under the month switcher. */
+function MonthSummary({ spent, received, net }: { spent: number; received: number; net: number }) {
+  return (
+    <div className="flex gap-2">
+      <SummaryCell label="Spent" value={spent} />
+      <SummaryCell label="Received" value={received} moss />
+      <SummaryCell label="Net" value={net} moss={net >= 0} sign />
+    </div>
+  );
+}
+
+function SummaryCell({
+  label,
+  value,
+  moss = false,
+  sign = false,
+}: {
+  label: string;
+  value: number;
+  moss?: boolean;
+  sign?: boolean;
+}) {
+  return (
+    <div className="flex-1 rounded-[10px] border border-parchment-200 bg-parchment-50 px-2.5 py-2">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.05em] text-ink-500">{label}</div>
+      <Money
+        paise={Math.abs(value)}
+        sign={sign ? (value >= 0 ? '+' : '-') : undefined}
+        className={cn('mt-0.5 block text-[15px]', moss ? 'text-moss-600' : 'text-ink-900')}
+      />
     </div>
   );
 }

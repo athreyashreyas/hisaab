@@ -19,6 +19,7 @@ export function ViewFilterBar({
   onFilter,
   search,
   onSearch,
+  summary,
 }: {
   month: Date;
   onMonth: (d: Date) => void;
@@ -26,6 +27,8 @@ export function ViewFilterBar({
   onFilter: (f: LedgerFilter) => void;
   search: string;
   onSearch: (s: string) => void;
+  /** Optional summary row, shown directly under the month switcher. */
+  summary?: React.ReactNode;
 }) {
   const types: LedgerFilter['type'][] = ['all', 'expense', 'income', 'transfer'];
   const isThisMonth =
@@ -52,13 +55,15 @@ export function ViewFilterBar({
         </button>
       </div>
 
+      {summary}
+
       <div className="relative">
-        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-300" />
+        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-250" />
         <input
           value={search}
           onChange={(e) => onSearch(e.target.value)}
           placeholder="Search merchant or note"
-          className="w-full rounded-card border-parchment-300 bg-parchment-50 py-2 pl-9 pr-3 text-sm text-ink-900 placeholder:text-ink-300 focus:border-teal-400 focus:ring-teal-400"
+          className="w-full rounded-card border-parchment-300 bg-parchment-50 py-2 pl-9 pr-3 text-sm text-ink-900 placeholder:text-ink-250 focus:border-teal-400 focus:ring-teal-400"
         />
       </div>
 

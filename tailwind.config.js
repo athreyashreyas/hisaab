@@ -25,7 +25,10 @@ export default {
           900: 'rgb(var(--ink-900-rgb) / <alpha-value>)',
           700: 'rgb(var(--ink-700-rgb) / <alpha-value>)',
           500: 'rgb(var(--ink-500-rgb) / <alpha-value>)',
+          // Meaningful secondary text; darkened to clear WCAG AA (see tokens.css).
           300: 'rgb(var(--ink-300-rgb) / <alpha-value>)',
+          // Decorative-only light ink (chevrons, placeholders, dividers).
+          250: 'rgb(var(--ink-250-rgb) / <alpha-value>)',
           100: 'rgb(var(--ink-100-rgb) / <alpha-value>)',
         },
         // Hisaab's signature: a deep antique ledger teal by default, re-skinned

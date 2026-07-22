@@ -20,6 +20,11 @@ export function GoalsPage() {
   const rates = monthlyRate(contributions);
   const [adding, setAdding] = useState(false);
 
+  // Portfolio-level answer: total saved across all goals and the monthly
+  // set-aside run-rate, shown above the per-goal grid.
+  const totalSaved = goals.reduce((s, g) => s + g.saved, 0);
+  const monthlySetAside = goals.reduce((s, g) => s + (rates.get(g.id) ?? 0), 0);
+
   return (
     <div>
       <PageHeader
@@ -42,7 +47,23 @@ export function GoalsPage() {
           />
         </Card>
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <>
+          <Card className="mt-4 flex items-center justify-between p-4">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.05em] text-ink-500">
+                Saved across {goals.length} goal{goals.length === 1 ? '' : 's'}
+              </div>
+              <Money paise={totalSaved} className="mt-0.5 block text-[22px] text-ink-900" />
+            </div>
+            <div className="text-right">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.05em] text-ink-500">
+                Set aside / mo
+              </div>
+              <Money paise={monthlySetAside} className="mt-0.5 block text-[22px] text-teal-600" />
+            </div>
+          </Card>
+
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {goals.map((g) => {
             const rate = rates.get(g.id) ?? 0;
             const proj = goalProjection(g, rate);
@@ -67,14 +88,15 @@ export function GoalsPage() {
                   </div>
                   <div className="mt-1.5 text-[13px] tabular-nums text-ink-700">
                     <Money paise={g.saved} className="font-semibold" />
-                    <span className="text-ink-300"> of </span>
-                    <Money paise={g.target} className="text-ink-500" />
+                    <span className="text-[11.5px] text-ink-500"> of </span>
+                    <Money paise={g.target} className="text-[11.5px] text-ink-500" />
                   </div>
                 </div>
               </Card>
             );
           })}
-        </div>
+          </div>
+        </>
       )}
 
       <GoalFormModal open={adding} onClose={() => setAdding(false)} />

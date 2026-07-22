@@ -26,7 +26,8 @@ export function AmountPad({
   tint?: string;
 }) {
   // The note colour tracks the amount; an empty pad rests on the smallest note.
-  const noteColor = denominationFor(paise).color;
+  const note = denominationFor(paise);
+  const noteColor = note.color;
   const press = (digit: string) => {
     const next = paise * 10 + Number(digit);
     if (next > 9_99_99_99_99) return; // cap ~₹10 crore, keeps the display sane
@@ -42,7 +43,7 @@ export function AmountPad({
     <div className="flex flex-col">
       {/* Display. The figure carries its banknote colour, easing between notes as
           the amount crosses a denomination. Paise stays dim so the rupees lead. */}
-      <div className="flex items-end justify-center py-6">
+      <div className="flex items-end justify-center pb-2 pt-6">
         <span
           className="mb-1 mr-1 font-serif text-3xl transition-colors duration-300"
           style={{ color: noteColor, opacity: paise > 0 ? 0.7 : 0.4 }}
@@ -55,7 +56,21 @@ export function AmountPad({
         >
           {formatINR(rupees * 100, false).replace('₹', '')}
         </span>
-        <span className="mb-1.5 ml-0.5 font-serif text-3xl tabular-nums text-ink-300">.{p}</span>
+        <span className="mb-1.5 ml-0.5 font-serif text-3xl tabular-nums text-ink-250">.{p}</span>
+      </div>
+
+      {/* Names the banknote-colour system: the figure quietly tints by the note
+          that would cover the amount — this chip makes that discoverable. */}
+      <div className="mb-4 flex h-5 justify-center">
+        {paise > 0 && (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors duration-300"
+            style={{ backgroundColor: note.tint, color: note.color }}
+          >
+            <span className="h-[9px] w-[14px] rounded-[2px]" style={{ backgroundColor: note.color }} />
+            {note.label} note
+          </span>
+        )}
       </div>
 
       {/* Keypad */}

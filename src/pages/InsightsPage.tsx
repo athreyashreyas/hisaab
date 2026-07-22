@@ -63,6 +63,15 @@ export function InsightsPage() {
   const slices = categoryBreakdown(txns, start, end);
   const spentTotal = slices.reduce((s, x) => s + x.total, 0);
 
+  // Answer-first figures for the hero: month total (above), its month-over-month
+  // change, and the running daily average.
+  const lastSpent = useMemo(
+    () => lastMonth.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+    [lastMonth]
+  );
+  const momDelta = lastSpent > 0 ? (spentTotal - lastSpent) / lastSpent : null;
+  const dailyAvg = Math.round(spentTotal / Math.max(1, now.getDate()));
+
   // Month-over-month per category.
   const lastByCat = new Map<string | null, number>();
   for (const t of lastMonth) {
@@ -99,7 +108,7 @@ export function InsightsPage() {
             body="Log a few expenses and this fills with trends, breakdowns, and budget pacing."
           />
         </Card>
-        <SectionHeader title="Recurring" action={<AddRecurringButton onClick={() => setRecurringSheet({ open: true, editing: null })} />} />
+        <SectionHeader title="Recurring" subtle action={<AddRecurringButton onClick={() => setRecurringSheet({ open: true, editing: null })} />} />
         <Card>
           <EmptyState
             icon="repeat"
@@ -120,6 +129,31 @@ export function InsightsPage() {
     <div>
       <PageHeader kicker="Patterns & pacing" title="Insights" />
 
+      {/* Answer-first: the month total, its MoM change and daily average lead,
+          before any chart or breakdown. */}
+      <div className="relative mt-3 overflow-hidden rounded-sheet bg-gradient-to-br from-teal-600 to-teal-500 p-5 text-[color:var(--on-primary)] shadow">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/[0.06]" />
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.08em] opacity-80">
+              Spent in {format(now, 'MMMM')}
+            </div>
+            <Money paise={spentTotal} className="mt-1 block text-[34px] leading-none" />
+          </div>
+          <div className="shrink-0 text-right">
+            {momDelta !== null && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.16] px-2.5 py-1 text-[12px] font-semibold">
+                {momDelta >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+                {Math.round(Math.abs(momDelta) * 100)}% vs {format(subMonths(now, 1), 'MMM')}
+              </span>
+            )}
+            <div className="mt-1.5 text-[11.5px] tabular-nums opacity-85">
+              {formatINR(dailyAvg)} / day avg
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mt-3">
         <Segmented
           options={[
@@ -134,7 +168,9 @@ export function InsightsPage() {
 
       <Card className="mt-3">
         <div className="flex items-baseline justify-between px-4 pt-3">
-          <span className="text-[13px] font-semibold text-ink-700">Spending over time</span>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
+            Spending over time
+          </span>
           <span className="text-[12px] tabular-nums text-ink-500">
             {formatCompactINR(trend.reduce((s, p) => s + p.spent, 0))} total
           </span>
@@ -144,7 +180,7 @@ export function InsightsPage() {
 
       {spentTotal > 0 && (
         <>
-          <SectionHeader title="By category" />
+          <SectionHeader title="By category" subtle />
           <Card className="divide-y divide-parchment-200 overflow-hidden">
             {slices.map((s) => {
               const cat = s.categoryId ? categoryMap.get(s.categoryId) : undefined;
@@ -182,7 +218,7 @@ export function InsightsPage() {
 
       {budgeted.length > 0 && (
         <>
-          <SectionHeader title="Budget pacing" />
+          <SectionHeader title="Budget pacing" subtle />
           <Card className="divide-y divide-parchment-200 overflow-hidden">
             {budgeted.map((c) => (
               <PaceBar
@@ -197,6 +233,7 @@ export function InsightsPage() {
 
       <SectionHeader
         title="Recurring"
+        subtle
         action={
           <div className="flex items-center gap-3">
             {confirmed.length > 0 && (
@@ -295,7 +332,7 @@ export function InsightsPage() {
                     </div>
                   </div>
                   <Money paise={r.amount} className="text-[13.5px] font-semibold text-ink-900" />
-                  <ChevronRight size={16} className="shrink-0 text-ink-300" />
+                  <ChevronRight size={16} className="shrink-0 text-ink-250" />
                 </button>
               ))}
             </Card>
@@ -356,7 +393,9 @@ function buildTrend(txns: Transaction[], gran: Granularity, ref: Date): TrendPoi
     for (let i = 0; i < days; i++) {
       const d = new Date(start);
       d.setDate(i + 1);
-      bucket.set(format(d, 'yyyy-MM-dd'), { label: format(d, 'd'), spent: 0, order: i });
+      // Real date stamps ("1 Jul") rather than bare day numbers; the axis thins
+      // them to start/mid/end via preserveStartEnd + minTickGap.
+      bucket.set(format(d, 'yyyy-MM-dd'), { label: format(d, 'd MMM'), spent: 0, order: i });
     }
     for (const t of expenses) {
       const key = format(t.date, 'yyyy-MM-dd');

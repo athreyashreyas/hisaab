@@ -32,7 +32,7 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
           <CartesianGrid vertical={false} stroke="#E0DCD2" strokeDasharray="3 3" />
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fill: '#9B9890' }}
+            tick={{ fontSize: 11, fill: '#6B6960' }}
             axisLine={false}
             tickLine={false}
             interval="preserveStartEnd"
@@ -40,7 +40,7 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
           />
           <YAxis
             width={44}
-            tick={{ fontSize: 11, fill: '#9B9890' }}
+            tick={{ fontSize: 11, fill: '#6B6960' }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => formatCompactINR(v)}

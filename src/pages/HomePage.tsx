@@ -1,4 +1,3 @@
-import { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -28,14 +27,12 @@ import {
   safeToSpend,
   categoryBreakdown,
   monthBounds,
+  formatINR,
+  formatCompactINR,
 } from '../lib/calculations';
+import type { CategorySlice } from '../lib/calculations';
+import type { Category, ID } from '../types';
 import { cn } from '../lib/cn';
-
-// The donut pulls in recharts, which is heavy; loading it lazily keeps it out of
-// the initial bundle so Home's shell paints fast and the chart streams in after.
-const CategoryPie = lazy(() =>
-  import('../components/finance/CategoryPie').then((m) => ({ default: m.CategoryPie }))
-);
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -79,8 +76,23 @@ export function HomePage() {
       />
 
       <div className="mt-3">
-        <SafeToSpendCard data={sts} monthElapsed={monthElapsed} daysLeft={daysLeft} />
+        <SafeToSpendCard
+          data={sts}
+          monthElapsed={monthElapsed}
+          daysLeft={daysLeft}
+          dayOfMonth={now.getDate()}
+          daysInMonth={daysInMonth}
+        />
       </div>
+
+      {spentTotal > 0 && (
+        <WhereItWentStrip
+          slices={slices}
+          categoryMap={categoryMap}
+          total={spentTotal}
+          onInsights={() => navigate('/insights')}
+        />
+      )}
 
       {!hasAnything && (
         <Card className="mt-4">
@@ -97,6 +109,7 @@ export function HomePage() {
         <>
           <SectionHeader
             title="Goals"
+            subtle
             action={
               <button onClick={() => navigate('/goals')} className="text-xs font-semibold text-teal-600">
                 All goals →
@@ -120,6 +133,7 @@ export function HomePage() {
         <>
           <SectionHeader
             title="Investments"
+            subtle
             action={
               <button onClick={() => navigate('/invest')} className="text-xs font-semibold text-teal-600">
                 Portfolio →
@@ -154,28 +168,11 @@ export function HomePage() {
         </>
       )}
 
-      {spentTotal > 0 && (
-        <>
-          <SectionHeader
-            title="Where it went"
-            action={
-              <button onClick={() => navigate('/insights')} className="text-xs font-semibold text-teal-600">
-                Insights →
-              </button>
-            }
-          />
-          <Card>
-            <Suspense fallback={<div className="h-[168px]" />}>
-              <CategoryPie slices={slices} categoryMap={categoryMap} total={spentTotal} />
-            </Suspense>
-          </Card>
-        </>
-      )}
-
       {recent.length > 0 && (
         <>
           <SectionHeader
             title="Recent"
+            subtle
             action={
               <button onClick={() => navigate('/ledger')} className="text-xs font-semibold text-teal-600">
                 All →
@@ -196,6 +193,91 @@ export function HomePage() {
           </Card>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * "Where it went", fused into the hero group as a borderless money-story strip
+ * rather than a fifth equal card: a compact category donut on the left (total in
+ * the hole) and the top two categories with a "+N more" line on the right, so the
+ * safe-to-spend hero clearly leads the screen. The donut is a CSS conic-gradient
+ * (no recharts), keeping Home's shell light.
+ */
+function WhereItWentStrip({
+  slices,
+  categoryMap,
+  total,
+  onInsights,
+}: {
+  slices: CategorySlice[];
+  categoryMap: Map<ID, Category>;
+  total: number;
+  onInsights: () => void;
+}) {
+  const items = slices.map((s) => {
+    const cat = s.categoryId ? categoryMap.get(s.categoryId) : undefined;
+    return {
+      name: cat?.name ?? 'Uncategorised',
+      color: cat?.color ?? '#6B6960',
+      total: s.total,
+      share: s.share,
+    };
+  });
+
+  let acc = 0;
+  const stops = items
+    .map((it) => {
+      const from = acc * 100;
+      acc += it.share;
+      return `${it.color} ${from}% ${acc * 100}%`;
+    })
+    .join(', ');
+
+  const top = items.slice(0, 2);
+  const moreCount = Math.max(0, items.length - 2);
+
+  return (
+    <div className="mt-4 flex items-center gap-4 px-0.5">
+      <div
+        className="relative h-[74px] w-[74px] shrink-0 rounded-full"
+        style={{ background: items.length ? `conic-gradient(${stops})` : 'var(--parchment-300)' }}
+      >
+        <div className="absolute inset-[13px] rounded-full bg-parchment-100" />
+        <div className="absolute inset-0 grid place-content-center text-center">
+          <span className="text-[8.5px] uppercase tracking-[0.06em] text-ink-500">Spent</span>
+          <span className="font-serif text-[13px] tabular-nums text-ink-900">{formatCompactINR(total)}</span>
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="mb-1.5 flex items-baseline justify-between">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-500">
+            Where it went
+          </span>
+          <button onClick={onInsights} className="text-xs font-semibold text-teal-600">
+            Insights →
+          </button>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          {top.map((it) => (
+            <div key={it.name} className="flex items-center gap-2 text-[12.5px] text-ink-700">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: it.color }} />
+              <span className="truncate">{it.name}</span>
+              <span className="ml-auto shrink-0 font-semibold tabular-nums text-ink-900">
+                {formatINR(it.total)}
+              </span>
+            </div>
+          ))}
+          {moreCount > 0 && (
+            <div className="flex items-center gap-2 text-[12.5px] text-ink-500">
+              <span className="h-2.5 w-2.5 shrink-0 rounded-[3px] bg-parchment-300" />
+              <span className="truncate">Other categories</span>
+              <span className="ml-auto shrink-0 tabular-nums">+{moreCount} more</span>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
