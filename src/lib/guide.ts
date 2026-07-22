@@ -12,6 +12,7 @@
 /** The illustrations GuideArt knows how to draw. One per guide section. */
 export type GuideArtKind =
   | 'logo'
+  | 'clarity'
   | 'safeToSpend'
   | 'adding'
   | 'denominations'

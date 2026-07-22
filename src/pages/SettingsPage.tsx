@@ -153,9 +153,13 @@ function ThemeSection() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {THEMES.map((t) => {
             const active = t.id === themeId;
+            // The banknote each theme alludes to, shown big on the swatch so the
+            // inspiration is the thing you see (₹50, ₹100, …). The house default
+            // has no note, so it shows a plain ledger ₹.
+            const noteFace = t.note.startsWith('₹') ? t.note.replace(/\s*note$/i, '') : '₹';
             // Each swatch previews the theme itself: a mini banknote card in the
-            // theme's real paper tint, a sample serif figure in its accent, and a
-            // right-edge accent stripe — so you pick by seeing the result, not a dot.
+            // theme's real paper tint, its denomination in serif in the accent,
+            // and a right-edge accent stripe, so you pick by seeing the result.
             return (
               <button
                 key={t.id}
@@ -167,8 +171,8 @@ function ThemeSection() {
                 aria-pressed={active}
               >
                 <div className="relative h-11" style={{ backgroundColor: t.bg }}>
-                  <span className="absolute left-2 top-2 font-serif text-[15px]" style={{ color: t.accent }}>
-                    ₹1,180
+                  <span className="absolute left-2 top-1.5 font-serif text-[18px] leading-none" style={{ color: t.accent }}>
+                    {noteFace}
                   </span>
                   <span className="absolute inset-y-0 right-0 w-3.5" style={{ backgroundColor: t.accent }} />
                 </div>

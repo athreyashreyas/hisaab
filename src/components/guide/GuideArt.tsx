@@ -51,6 +51,64 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
         />
       );
 
+    // The refreshed look: a clearer hero that leads with the answer. The month
+    // bar is labeled so it can't be mistaken for budget-used, the supporting
+    // figures are serif and full-contrast, and a borderless "where it went"
+    // strip sits with the hero rather than as a fifth equal card.
+    case 'clarity':
+      return (
+        <div className="w-full max-w-[240px] space-y-3">
+          <div className="rounded-card p-3.5 text-white shadow" style={{ backgroundColor: TEAL }}>
+            <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/70">Safe to spend</p>
+            <Rupee className="mt-0.5 block text-[26px] leading-none">18,420</Rupee>
+            <div className="mt-3">
+              <div className="mb-1 flex justify-between text-[7.5px] font-semibold uppercase tracking-[0.06em] text-white/70">
+                <span>Month</span>
+                <span className="tabular-nums">Day 16 of 31</span>
+              </div>
+              <span className="block h-1 overflow-hidden rounded-full bg-white/25">
+                <motion.span
+                  className="block h-full rounded-full bg-white"
+                  initial={{ width: '0%' }}
+                  animate={{ width: '52%' }}
+                  transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 }}
+                />
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+              <div>
+                <p className="text-[7.5px] text-white/70">Income</p>
+                <Rupee className="text-[11px] leading-tight">72,000</Rupee>
+              </div>
+              <div className="border-l border-white/20 pl-3">
+                <p className="text-[7.5px] text-white/70">Spent</p>
+                <Rupee className="text-[11px] leading-tight">41,180</Rupee>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 px-0.5">
+            <span
+              className="relative h-9 w-9 shrink-0 rounded-full"
+              style={{ background: `conic-gradient(${AMBER} 0 45%, ${TEAL} 45% 72%, ${TEAL_400} 72% 100%)` }}
+            >
+              <span className="absolute inset-[6px] rounded-full bg-parchment-100" />
+            </span>
+            <span className="min-w-0 flex-1 space-y-1">
+              <span className="flex items-center gap-1.5 text-[9px] text-ink-700">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-[2px]" style={{ backgroundColor: AMBER }} />
+                Food &amp; dining
+                <Rupee className="ml-auto text-[9px] font-semibold text-ink-900">12,800</Rupee>
+              </span>
+              <span className="flex items-center gap-1.5 text-[9px] text-ink-500">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-[2px]" style={{ backgroundColor: TEAL }} />
+                Travel
+                <span className="ml-auto tabular-nums">+4 more</span>
+              </span>
+            </span>
+          </div>
+        </div>
+      );
+
     // A miniature of Home's teal hero card: the one number, the month bar, and
     // the four-up split that explains where it came from.
     case 'safeToSpend':

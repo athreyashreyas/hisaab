@@ -22,6 +22,28 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.9.0',
+    date: '2026-07-23',
+    major: true,
+    title: 'Clearer at a glance',
+    notes: [
+      'Every screen now leads with the answer. Home reads more clearly: the month bar under Safe to spend is labeled "Day 16 of 31", so it can no longer be mistaken for how much budget you have used, and the four figures below it are set larger in the ledger serif so income, spent, bills and goals are easy to take in.',
+      '"Where it went" now sits right under the hero as a small strip with your top categories, instead of a separate card lower down, so the whole money story reads top to bottom in one go.',
+      'Secondary text across the app is darker and easier to read. Kickers, the note under each entry, day totals, "of ₹target" on goals, and chart labels all step up to a readable contrast that meets accessibility guidance.',
+      'The Ledger gains a Spent, Received and Net summary for the month, right under the month switcher, and each day\'s heading and total are bolder.',
+      'Insights opens with the month total, how it compares with last month, and your daily average, before the chart and the breakdown.',
+      'Goals show a Saved across your goals total and what you set aside each month, above the grid.',
+      'Two quiet delights are easier to find: the amount pad now names the note colour it is showing, for example "₹500 note", and the Add sheet confirms when it has auto-categorised an entry from the merchant.',
+      'Theme swatches in Settings preview themselves: each shows its banknote in that theme\'s paper and accent, so you pick by seeing the result.',
+    ],
+    howTo: [
+      'Open Home and look at Safe to spend: the labeled bar shows how far through the month you are, with the money story running straight down into "Where it went".',
+      'Open the Ledger to see the month\'s Spent, Received and Net under the month switcher.',
+      'Open Settings, find Appearance, and each theme now previews as its own banknote.',
+    ],
+    art: 'clarity',
+  },
+  {
     version: '0.8.1',
     date: '2026-07-20',
     title: 'Put things in your own order',
