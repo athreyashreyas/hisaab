@@ -22,6 +22,30 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.10.0',
+    date: '2026-07-31',
+    major: true,
+    title: 'Goals that tell you what they need',
+    notes: [
+      'A goal can now be put on a schedule. Choose an amount and how often you will put it in, weekly, monthly, every two weeks, whatever your real rhythm is, and the goal leads with one figure: how much to add this month. What next month wants is shown right beside it.',
+      'Miss a payment and nothing goes quiet. The goal says how many payments you are behind and folds the catch-up into this month\'s figure. Put in more than asked and it tells you how far ahead you are, and stops asking until the plan catches up. A goal with no plan yet is told what it is missing instead of being called behind on its first day.',
+      'Say where a goal\'s money comes from. A goal can be funded out of an account or out of an investment, so "the trip fund is in my savings" and "the house fund is in my flexi-cap" are both sayable. Either way that money is held out of your free figure, and the goal shows a Funded from breakdown of every source that has chipped in.',
+      'Contributions can be fixed. Tap any entry in a goal\'s history to change its amount, its date, or where it came from. Backdating works too, so money you set aside last week counts for last week.',
+      'A new Money tab holds your accounts, goals and investments on one screen, with the arithmetic stated in full: what you hold, minus what goals have claimed, equals what is free. The bottom bar is a tab shorter for it, and Accounts is no longer buried in Settings.',
+      'Every amount field now opens Hisaab\'s own keypad rather than the phone keyboard, and paise are shown wherever they exist. A ₹1,240.50 balance reads as ₹1,240.50, not ₹1,241.',
+      'Six more categories by default: Fuel, Personal care, Fitness, Insurance, Loans & EMI, and Family & support. Twenty more wait in a tray in Categories, from pets to tolls to domestic help, each one tap away.',
+      'Sixteen colours to choose from for accounts, goals and investments, laid out as two even rows that fill the sheet instead of a ragged line.',
+    ],
+    howTo: [
+      'Open Money in the bottom bar to see everything you have and what is already promised to a goal.',
+      'Open a goal, tap Edit, and turn on "Save on a schedule". With a target date set, it offers the exact amount that lands it on time.',
+      'In a goal, tap Add money and pick an account or an investment for it to come out of.',
+      'Tap any entry in a goal\'s history to correct its amount, date, or source.',
+      'Open Settings, Categories & budgets, and tap anything in "Add another" to add it.',
+    ],
+    art: 'goalPlan',
+  },
+  {
     version: '0.9.0',
     date: '2026-07-23',
     major: true,

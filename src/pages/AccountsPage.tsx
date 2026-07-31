@@ -6,10 +6,11 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Money } from '../components/ui/Money';
+import { AmountField } from '../components/ui/AmountField';
+import { ColorPicker } from '../components/ui/ColorPicker';
 import { Segmented } from '../components/add/Pickers';
 import { useAccountBalances, useGoalsReserved } from '../hooks/useData';
 import { useSubmit } from '../hooks/useSubmit';
-import { groupIndianDecimal, paiseToInput, rupeesToPaise, sanitiseDecimalInput } from '../lib/calculations';
 import { createAccount, updateAccount, archiveAccount } from '../lib/repo';
 import { ACCENT_PALETTE } from '../lib/categories';
 import type { Account, AccountKind } from '../types';
@@ -142,7 +143,7 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
 
   const [name, setName] = useState('');
   const [kind, setKind] = useState<AccountKind>('bank');
-  const [opening, setOpening] = useState('');
+  const [opening, setOpening] = useState(0);
   const [color, setColor] = useState(ACCENT_PALETTE[0]);
   const { pending, submit } = useSubmit();
 
@@ -151,12 +152,12 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
     if (existing) {
       setName(existing.name);
       setKind(existing.kind);
-      setOpening(paiseToInput(existing.opening_balance));
+      setOpening(existing.opening_balance);
       setColor(existing.color);
     } else {
       setName('');
       setKind('bank');
-      setOpening('');
+      setOpening(0);
       setColor(ACCENT_PALETTE[0]);
     }
   }, [open, existing]);
@@ -165,9 +166,9 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
 
   async function save() {
     if (!canSave) return;
-    const opening_balance = rupeesToPaise(opening || '0');
-    if (existing) await updateAccount(existing.id, { name: name.trim(), kind, opening_balance, color });
-    else await createAccount({ name: name.trim(), kind, opening_balance, color });
+    if (existing)
+      await updateAccount(existing.id, { name: name.trim(), kind, opening_balance: opening, color });
+    else await createAccount({ name: name.trim(), kind, opening_balance: opening, color });
     onClose();
   }
 
@@ -188,28 +189,16 @@ function AccountModal({ target, onClose }: { target: Account | null | 'new'; onC
             onChange={(v) => setKind(v as AccountKind)}
           />
         </div>
-        <Input
+        <AmountField
           label="Opening balance"
-          inputMode="decimal"
-          placeholder="0.00"
-          value={groupIndianDecimal(opening)}
-          onChange={(e) => setOpening(sanitiseDecimalInput(e.target.value, true))}
-          hint="What's in this account right now. Paise are fine, e.g. 1,240.50."
+          title="What's in this account?"
+          value={opening}
+          onChange={setOpening}
+          allowNegative
+          placeholder="Tap to enter a balance"
+          hint="What's in this account right now. Paise are fine, e.g. ₹1,240.50."
         />
-        <div>
-          <div className="mb-1.5 text-sm font-semibold text-ink-700">Colour</div>
-          <div className="flex gap-2">
-            {ACCENT_PALETTE.map((c) => (
-              <button
-                key={c}
-                onClick={() => setColor(c)}
-                className={cn('h-8 w-8 rounded-full', color === c && 'ring-2 ring-offset-2 ring-offset-parchment-100')}
-                style={{ backgroundColor: c, boxShadow: color === c ? `0 0 0 2px ${c}` : undefined }}
-                aria-label={`Colour ${c}`}
-              />
-            ))}
-          </div>
-        </div>
+        <ColorPicker colors={ACCENT_PALETTE} value={color} onChange={setColor} />
         <div className="flex gap-2 pt-1">
           {existing && !existing.archived && (
             <Button

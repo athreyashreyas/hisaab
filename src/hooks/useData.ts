@@ -6,7 +6,16 @@
 import { db } from '../lib/db';
 import { useLiveQuery } from './useLiveQuery';
 import { monthBounds } from '../lib/calculations';
-import type { Account, Category, Transaction, Goal, Investment, RecurringRule, ID } from '../types';
+import type {
+  Account,
+  Category,
+  Transaction,
+  Goal,
+  GoalContribution,
+  Investment,
+  RecurringRule,
+  ID,
+} from '../types';
 
 const live = <T>(t: T[] | undefined): T[] => t ?? [];
 
@@ -107,19 +116,18 @@ export function useAllContributions() {
 }
 
 /**
- * Recent contribution run-rate per goal (paise/month) over the trailing ~3
- * months, used to drive goalProjection ETAs. Falls back to 0 with no history.
+ * Every goal's contributions, bucketed by goal id — what the list screens need
+ * to run goalPace() per row off a single live query, rather than one query per
+ * goal. Goals with no history simply aren't in the map; callers use `?? []`.
  */
-export function monthlyRate(contribs: { goal_id: ID; amount: number; date: number }[]): Map<ID, number> {
-  const since = Date.now() - 1000 * 60 * 60 * 24 * 92;
-  const byGoal = new Map<ID, number>();
+export function groupContributions(contribs: GoalContribution[]): Map<ID, GoalContribution[]> {
+  const byGoal = new Map<ID, GoalContribution[]>();
   for (const c of contribs) {
-    if (c.date < since || c.amount <= 0) continue;
-    byGoal.set(c.goal_id, (byGoal.get(c.goal_id) ?? 0) + c.amount);
+    const list = byGoal.get(c.goal_id);
+    if (list) list.push(c);
+    else byGoal.set(c.goal_id, [c]);
   }
-  const rate = new Map<ID, number>();
-  for (const [goal, total] of byGoal) rate.set(goal, Math.round(total / 3));
-  return rate;
+  return byGoal;
 }
 
 export function useRecurringRules(): RecurringRule[] {
@@ -221,11 +229,12 @@ export function useAccountBalances(earmarkGoals = true): AccountBalance[] {
 }
 
 /**
- * Total money currently set aside into still-existing goals from real accounts
+ * Total money currently set aside into still-existing goals out of real accounts
  * (adds minus withdrawals), never below zero. This is exactly the amount
  * `useAccountBalances(false)` leaves in accounts that `useAccountBalances(true)`
  * takes out — the bridge between "in accounts" and "free corpus". Contributions
- * to a deleted goal, or unattributed ones, don't reserve anything.
+ * to a deleted goal, ones funded from a holding, and unattributed ones don't
+ * reserve anything here.
  */
 export function useGoalsReserved(): number {
   const goals = useGoals(true);
@@ -236,6 +245,132 @@ export function useGoalsReserved(): number {
     0
   );
   return Math.max(0, reserved);
+}
+
+/**
+ * The same idea for holdings: how much of each investment's current value is
+ * spoken for by a goal, keyed by investment id. A goal funded out of a mutual
+ * fund earmarks part of that fund exactly as an account contribution earmarks
+ * part of a balance, so the same rupee is never both "invested and free" and
+ * "saved toward the house".
+ */
+export function useInvestmentEarmarks(): Map<ID, number> {
+  const goals = useGoals(true);
+  const contribs = useAllContributions();
+  const liveGoalIds = liveGoalIdSet(goals);
+  const byInvestment = new Map<ID, number>();
+  for (const c of contribs) {
+    if (!c.investment_id || !liveGoalIds.has(c.goal_id)) continue;
+    byInvestment.set(c.investment_id, (byInvestment.get(c.investment_id) ?? 0) + c.amount);
+  }
+  for (const [id, amount] of byInvestment) byInvestment.set(id, Math.max(0, amount));
+  return byInvestment;
+}
+
+/** Total set aside into goals out of holdings rather than accounts. */
+export function useGoalsReservedFromInvestments(): number {
+  const earmarks = useInvestmentEarmarks();
+  let total = 0;
+  for (const amount of earmarks.values()) total += amount;
+  return total;
+}
+
+export interface NetWorth {
+  /** Raw money sitting in accounts, before goal earmarks come out. */
+  inAccounts: number;
+  /** Latest value of every holding, before goal earmarks come out. */
+  inInvestments: number;
+  /** What was put into those holdings (cost basis). */
+  invested: number;
+  /** Everything you have: accounts + holdings. */
+  total: number;
+  /** Goal money living in accounts. */
+  reservedFromAccounts: number;
+  /** Goal money living in holdings. */
+  reservedFromInvestments: number;
+  reserved: number;
+  /** What's left once every goal has taken its share. */
+  free: number;
+}
+
+/**
+ * The one number that ties the three money screens together: what you have,
+ * where it sits, and how much of it is already promised to a goal.
+ *
+ * Accounts and investments are both counted at face value and the goal earmarks
+ * are subtracted once, at the end — so moving a goal's funding from a savings
+ * account to a mutual fund changes where the money sits without changing what's
+ * free, which is the whole point of showing them together.
+ */
+export function useNetWorth(): NetWorth {
+  const balances = useAccountBalances(false);
+  const holdings = useInvestments();
+  const reservedFromAccounts = useGoalsReserved();
+  const reservedFromInvestments = useGoalsReservedFromInvestments();
+
+  const inAccounts = balances
+    .filter((b) => !b.account.archived)
+    .reduce((s, b) => s + b.balance, 0);
+  const inInvestments = holdings.reduce((s, h) => s + h.current_value, 0);
+  const invested = holdings.reduce((s, h) => s + h.invested, 0);
+  const reserved = reservedFromAccounts + reservedFromInvestments;
+  const total = inAccounts + inInvestments;
+
+  return {
+    inAccounts,
+    inInvestments,
+    invested,
+    total,
+    reservedFromAccounts,
+    reservedFromInvestments,
+    reserved,
+    free: total - reserved,
+  };
+}
+
+export interface FundingSlice {
+  kind: 'account' | 'investment' | 'unattributed';
+  id: ID | null;
+  name: string;
+  color: string;
+  amount: number; // paise, net of withdrawals
+}
+
+/**
+ * Where a single goal's money actually came from, ready to render: one row per
+ * account or holding that has funded it, largest first. Sources that net out to
+ * nothing (money put in and later taken back) drop off the list.
+ */
+export function fundingBreakdown(
+  contributions: GoalContribution[],
+  accounts: Map<ID, Account>,
+  investments: Map<ID, Investment>
+): FundingSlice[] {
+  const byKey = new Map<string, FundingSlice>();
+  for (const c of contributions) {
+    const kind: FundingSlice['kind'] = c.account_id
+      ? 'account'
+      : c.investment_id
+        ? 'investment'
+        : 'unattributed';
+    const id = c.account_id ?? c.investment_id ?? null;
+    const key = `${kind}:${id ?? 'none'}`;
+    const existing = byKey.get(key);
+    if (existing) {
+      existing.amount += c.amount;
+      continue;
+    }
+    const source =
+      kind === 'account' ? accounts.get(id as ID) : kind === 'investment' ? investments.get(id as ID) : undefined;
+    byKey.set(key, {
+      kind,
+      id,
+      name: source?.name ?? (kind === 'unattributed' ? 'Not linked to a source' : 'Removed source'),
+      color: source?.color ?? '#6B6E68',
+      amount: c.amount,
+    });
+  }
+  return [...byKey.values()].filter((s) => s.amount > 0).sort((a, b) => b.amount - a.amount);
 }
 
 /**

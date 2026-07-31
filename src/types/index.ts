@@ -92,6 +92,28 @@ export interface Goal extends SyncMeta {
   color: string;
   icon: string;
   archived: boolean;
+
+  /**
+   * Where this goal's money comes from by default, pre-selected when adding a
+   * contribution. Exactly one of the two is set, or neither for a goal whose
+   * money isn't attributed anywhere. Individual contributions can still name a
+   * different source, so a goal funded mostly from savings can take a one-off
+   * top-up from a mutual fund without changing its default.
+   */
+  funding_account_id: ID | null;
+  funding_investment_id: ID | null;
+
+  /**
+   * The contribution schedule: "₹5,000 every month", "₹2,000 every 2 weeks".
+   * A plan is what makes "am I behind?" answerable in payments rather than only
+   * in rupees, and what a missed payment is measured against. null = no plan,
+   * in which case pace falls back to the target date if there is one.
+   */
+  plan_amount: number | null; // paise per period
+  plan_cadence: Cadence | null;
+  plan_interval: number; // every N periods, >= 1
+  /** First payment date; the whole schedule is counted from here. */
+  plan_start: number | null;
 }
 
 export interface GoalContribution extends SyncMeta {
@@ -101,10 +123,21 @@ export interface GoalContribution extends SyncMeta {
   /**
    * The account the money was set aside from (or returned to, on a withdrawal).
    * Contributions earmark money out of that account's available balance, so two
-   * different accounts can each fund a slice of the same goal. null = a legacy /
-   * unattributed contribution that doesn't touch any account balance.
+   * different accounts can each fund a slice of the same goal. null = the money
+   * came from somewhere else (see investment_id) or is unattributed, in which
+   * case no account balance moves.
    */
   account_id: ID | null;
+  /**
+   * The holding the money is earmarked out of instead, when a goal is being
+   * funded from investments rather than cash — "₹2L of the house fund is sitting
+   * in my flexi-cap". Earmarks part of that holding's current value the same way
+   * an account contribution earmarks part of a balance, so the same rupee is
+   * never counted as both invested-and-free and saved-for-a-goal.
+   *
+   * At most one of account_id / investment_id is set.
+   */
+  investment_id: ID | null;
   date: number;
   note: string;
 }

@@ -6,19 +6,23 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Icon } from '../components/ui/Icon';
-import { formatINR, groupIndianDigits } from '../lib/calculations';
+import { AmountField } from '../components/ui/AmountField';
+import { ColorPicker } from '../components/ui/ColorPicker';
+import { formatINR } from '../lib/calculations';
 import { useCategories } from '../hooks/useData';
 import { useSubmit } from '../hooks/useSubmit';
 import { createCategory, updateCategory, restoreDefaultCategories, reorderCategories } from '../lib/repo';
 import { CategoryReorderSheet } from '../components/finance/CategoryReorderSheet';
-import { CATEGORY_PALETTE } from '../lib/categories';
+import { CATEGORY_PALETTE, SUGGESTED_CATEGORIES } from '../lib/categories';
 import type { Category } from '../types';
 import { cn } from '../lib/cn';
 
 const ICON_CHOICES = [
-  'utensils', 'shopping-basket', 'bus', 'receipt', 'shopping-bag', 'heart-pulse',
-  'clapperboard', 'plane', 'repeat', 'gift', 'home', 'coffee', 'dumbbell',
-  'graduation-cap', 'baby', 'paw-print', 'circle-dashed',
+  'utensils', 'shopping-basket', 'bus', 'fuel', 'receipt', 'shopping-bag', 'heart-pulse', 'sparkles',
+  'dumbbell', 'clapperboard', 'repeat', 'plane', 'graduation-cap', 'shield', 'hand-coins', 'users',
+  'gift', 'home', 'coffee', 'baby', 'paw-print', 'shirt', 'laptop', 'book-open',
+  'party-popper', 'heart', 'landmark', 'car', 'circle-parking', 'wine', 'scissors', 'sofa',
+  'smartphone', 'zap', 'wrench', 'hand-heart', 'piggy-bank', 'stethoscope', 'banknote', 'circle-dashed',
 ];
 
 /** Manage categories: rename, recolour, set monthly budgets, restore defaults. */
@@ -77,6 +81,8 @@ export function CategoriesPage() {
         ))}
       </Card>
 
+      <SuggestedCategories existing={categories} />
+
       <Button variant="ghost" onClick={() => restoreDefaultCategories()} className="mt-4 text-ink-500">
         <RotateCcw size={16} /> Restore default categories
       </Button>
@@ -92,6 +98,60 @@ export function CategoriesPage() {
   );
 }
 
+/**
+ * The wider category library, as one-tap adds.
+ *
+ * Everyone's spending has a different long tail — pets, domestic help, festivals,
+ * tolls — and seeding all of it would leave every user scrolling past buckets
+ * they never use in the add-expense grid. So the common set ships by default and
+ * the rest waits here, already named, coloured and iconed. Anything already in
+ * the list drops out of the tray, so it empties as you use it.
+ */
+function SuggestedCategories({ existing }: { existing: Category[] }) {
+  const [added, setAdded] = useState<string[]>([]);
+  const have = new Set(existing.map((c) => c.name));
+  const offer = SUGGESTED_CATEGORIES.filter((c) => !have.has(c.name));
+
+  if (offer.length === 0) return null;
+
+  return (
+    <>
+      <SectionHeader title="Add another" />
+      <p className="-mt-1 mb-2.5 px-0.5 text-[12.5px] text-ink-500">
+        Tap any of these to add it. You can rename, recolour, or budget it afterwards.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {offer.map((c) => {
+          const busy = added.includes(c.name);
+          return (
+            <button
+              key={c.name}
+              disabled={busy}
+              onClick={() => {
+                setAdded((prev) => [...prev, c.name]);
+                void createCategory(c);
+              }}
+              className={cn(
+                'flex items-center gap-2 rounded-full border border-parchment-300 bg-parchment-50 py-1.5 pl-2 pr-3 text-[13px] font-medium text-ink-700 transition-colors',
+                busy ? 'opacity-50' : 'hover:border-teal-400'
+              )}
+            >
+              <span
+                className="grid h-6 w-6 shrink-0 place-items-center rounded-full"
+                style={{ backgroundColor: `${c.color}22`, color: c.color }}
+              >
+                <Icon name={c.icon} size={13} />
+              </span>
+              {c.name}
+              <Plus size={13} className="text-ink-250" />
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 function CategoryModal({ target, onClose }: { target: Category | null | 'new'; onClose: () => void }) {
   const open = target !== null;
   const existing = target !== 'new' && target !== null ? target : null;
@@ -99,7 +159,7 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('circle-dashed');
   const [color, setColor] = useState(CATEGORY_PALETTE.grey);
-  const [budget, setBudget] = useState('');
+  const [budget, setBudget] = useState(0);
   const { pending, submit } = useSubmit();
 
   useEffect(() => {
@@ -108,12 +168,12 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
       setName(existing.name);
       setIcon(existing.icon);
       setColor(existing.color);
-      setBudget(existing.monthly_budget ? String(Math.round(existing.monthly_budget / 100)) : '');
+      setBudget(existing.monthly_budget ?? 0);
     } else {
       setName('');
       setIcon('circle-dashed');
       setColor(CATEGORY_PALETTE.grey);
-      setBudget('');
+      setBudget(0);
     }
   }, [open, existing]);
 
@@ -121,7 +181,7 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
 
   async function save() {
     if (!canSave) return;
-    const monthly_budget = budget ? Math.round(Number(budget) * 100) : null;
+    const monthly_budget = budget > 0 ? budget : null;
     if (existing) await updateCategory(existing.id, { name: name.trim(), icon, color, monthly_budget });
     else await createCategory({ name: name.trim(), icon, color, monthly_budget });
     onClose();
@@ -131,42 +191,35 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
     <Modal open={open} onClose={onClose} title={existing ? 'Edit category' : 'New category'}>
       <div className="space-y-4 px-5 py-4">
         <Input label="Name" placeholder="Food & dining" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input
+        <AmountField
           label="Monthly budget"
-          inputMode="numeric"
-          placeholder="Optional"
-          value={groupIndianDigits(budget)}
-          onChange={(e) => setBudget(e.target.value.replace(/[^0-9]/g, ''))}
-          hint="Leave blank to leave this category untracked."
+          title="Budget for this category"
+          value={budget}
+          onChange={setBudget}
+          placeholder="No budget"
+          hint="Leave at zero to leave this category untracked."
+        />
+
+        <ColorPicker
+          colors={Object.values(CATEGORY_PALETTE)}
+          value={color}
+          onChange={setColor}
         />
 
         <div>
-          <div className="mb-1.5 text-sm font-semibold text-ink-700">Colour</div>
-          <div className="flex flex-wrap gap-2">
-            {Object.values(CATEGORY_PALETTE).map((c) => (
-              <button
-                key={c}
-                onClick={() => setColor(c)}
-                className={cn('h-8 w-8 rounded-full', color === c && 'ring-2 ring-offset-2 ring-offset-parchment-100')}
-                style={{ backgroundColor: c, boxShadow: color === c ? `0 0 0 2px ${c}` : undefined }}
-                aria-label={`Colour ${c}`}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-1.5 text-sm font-semibold text-ink-700">Icon</div>
-          <div className="grid grid-cols-8 gap-1.5">
+          <div className="mb-2 text-sm font-semibold text-ink-700">Icon</div>
+          <div className="grid grid-cols-8 justify-items-center gap-x-1.5 gap-y-2">
             {ICON_CHOICES.map((ic) => (
               <button
                 key={ic}
+                type="button"
                 onClick={() => setIcon(ic)}
                 className={cn(
-                  'grid h-9 place-items-center rounded-card border',
+                  'grid h-9 w-9 place-items-center rounded-card border',
                   icon === ic ? 'border-teal-400 bg-teal-50 text-teal-600' : 'border-parchment-300 text-ink-500'
                 )}
                 aria-label={ic}
+                aria-pressed={icon === ic}
               >
                 <Icon name={ic} size={16} />
               </button>

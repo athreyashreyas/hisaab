@@ -1,13 +1,14 @@
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Icon } from '../ui/Icon';
-import { navItems, settingsItem } from './navItems';
+import { navItems, settingsItem, isNavItemActive, type NavItem } from './navItems';
 import { useUIStore } from '../../stores/uiStore';
 import { cn } from '../../lib/cn';
 
 /** Side rail at md+, mirroring the bottom nav's destinations with the add action on top. */
 export function SideNav() {
   const openAdd = useUIStore((s) => s.openAdd);
+  const { pathname } = useLocation();
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-parchment-200 bg-parchment-50 pb-safe pl-[max(0.75rem,var(--safe-left))] pr-3 pt-safe md:flex">
@@ -32,31 +33,29 @@ export function SideNav() {
         {navItems
           .filter((item) => item.to !== settingsItem.to)
           .map((item) => (
-            <RailLink key={item.to} {...item} />
+            <RailLink key={item.to} item={item} active={isNavItemActive(item, pathname)} />
           ))}
       </nav>
 
       <div className="mt-auto pb-4">
-        <RailLink {...settingsItem} />
+        <RailLink item={settingsItem} active={isNavItemActive(settingsItem, pathname)} />
       </div>
     </aside>
   );
 }
 
-function RailLink({ to, label, icon }: { to: string; label: string; icon: string }) {
+function RailLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
-    <NavLink
-      to={to}
-      end={to === '/'}
-      className={({ isActive }) =>
-        cn(
-          'flex items-center gap-3 rounded-card px-3 py-2.5 text-[15px] font-semibold transition-colors',
-          isActive ? 'bg-teal-50 text-teal-700' : 'text-ink-500 hover:bg-parchment-200 hover:text-ink-900'
-        )
-      }
+    <Link
+      to={item.to}
+      aria-current={active ? 'page' : undefined}
+      className={cn(
+        'flex items-center gap-3 rounded-card px-3 py-2.5 text-[15px] font-semibold transition-colors',
+        active ? 'bg-teal-50 text-teal-700' : 'text-ink-500 hover:bg-parchment-200 hover:text-ink-900'
+      )}
     >
-      <Icon name={icon} size={20} />
-      {label}
-    </NavLink>
+      <Icon name={item.icon} size={20} />
+      {item.label}
+    </Link>
   );
 }

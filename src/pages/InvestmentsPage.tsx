@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Plus, ArrowUpRight, ArrowDownRight, Repeat } from 'lucide-react';
+import { Plus, ArrowUpRight, ArrowDownRight, Target } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card, SectionHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -9,9 +9,17 @@ import { Modal } from '../components/ui/Modal';
 import { Money } from '../components/ui/Money';
 import { DateInput } from '../components/ui/DateInput';
 import { Icon } from '../components/ui/Icon';
+import { AmountField } from '../components/ui/AmountField';
+import { ColorPicker } from '../components/ui/ColorPicker';
+import { ToggleCard } from '../components/ui/ToggleCard';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Segmented, AccountPicker, CadencePicker } from '../components/add/Pickers';
-import { useInvestments, useAccounts, portfolioSummary } from '../hooks/useData';
+import {
+  useInvestments,
+  useAccounts,
+  useInvestmentEarmarks,
+  portfolioSummary,
+} from '../hooks/useData';
 import { useSubmit } from '../hooks/useSubmit';
 import {
   createInvestment,
@@ -20,7 +28,7 @@ import {
   createRecurringRule,
   midnight,
 } from '../lib/repo';
-import { rollForward, groupIndianDigits, sanitiseDecimalInput } from '../lib/calculations';
+import { rollForward, sanitiseDecimalInput } from '../lib/calculations';
 import { ACCENT_PALETTE } from '../lib/categories';
 import type { Cadence, Investment, InvestmentKind } from '../types';
 import { cn } from '../lib/cn';
@@ -43,10 +51,13 @@ function pctLabel(fraction: number): string {
 /** The portfolio: stocks, mutual funds, FDs, and anything else, with returns. */
 export function InvestmentsPage() {
   const holdings = useInvestments();
+  const earmarks = useInvestmentEarmarks();
   const [editing, setEditing] = useState<Investment | null | 'new'>(null);
 
   const sum = portfolioSummary(holdings);
   const up = sum.gain >= 0;
+  let earmarked = 0;
+  for (const amount of earmarks.values()) earmarked += amount;
 
   const grouped = KIND_ORDER.map((kind) => ({
     kind,
@@ -95,6 +106,15 @@ export function InvestmentsPage() {
                 </span>
               </div>
             </div>
+
+            {earmarked > 0 && (
+              <div className="mt-3 flex items-center gap-2 border-t border-white/15 pt-3 text-[12px] tabular-nums opacity-90">
+                <Target size={13} />
+                <span>
+                  <Money paise={earmarked} className="font-semibold" /> of this is set aside for goals
+                </span>
+              </div>
+            )}
           </Card>
 
           {grouped.map(({ kind, items }) => (
@@ -102,7 +122,12 @@ export function InvestmentsPage() {
               <SectionHeader title={KIND_META[kind].plural} />
               <div className="space-y-2">
                 {items.map((h) => (
-                  <HoldingRow key={h.id} holding={h} onClick={() => setEditing(h)} />
+                  <HoldingRow
+                    key={h.id}
+                    holding={h}
+                    earmarked={earmarks.get(h.id) ?? 0}
+                    onClick={() => setEditing(h)}
+                  />
                 ))}
               </div>
             </div>
@@ -115,7 +140,16 @@ export function InvestmentsPage() {
   );
 }
 
-function HoldingRow({ holding, onClick }: { holding: Investment; onClick: () => void }) {
+function HoldingRow({
+  holding,
+  earmarked,
+  onClick,
+}: {
+  holding: Investment;
+  /** How much of this holding's value a goal has already claimed. */
+  earmarked: number;
+  onClick: () => void;
+}) {
   const gain = holding.current_value - holding.invested;
   const pct = holding.invested > 0 ? gain / holding.invested : 0;
   const up = gain >= 0;
@@ -149,6 +183,12 @@ function HoldingRow({ holding, onClick }: { holding: Investment; onClick: () => 
           <Money paise={holding.current_value} />
           {sub && <span className="text-ink-300"> · {sub}</span>}
         </div>
+        {earmarked > 0 && (
+          <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-parchment-200 px-1.5 py-0.5 text-[10.5px] font-medium text-ink-500">
+            <Target size={10} />
+            <Money paise={earmarked} /> saved toward a goal
+          </div>
+        )}
       </div>
       <div className="shrink-0 text-right">
         <Money
@@ -177,8 +217,8 @@ function InvestmentModal({
 
   const [name, setName] = useState('');
   const [kind, setKind] = useState<InvestmentKind>('stock');
-  const [invested, setInvested] = useState('');
-  const [current, setCurrent] = useState('');
+  const [invested, setInvested] = useState(0);
+  const [current, setCurrent] = useState(0);
   const [rate, setRate] = useState('');
   const [hasMaturity, setHasMaturity] = useState(false);
   const [maturity, setMaturity] = useState(() => midnight());
@@ -202,8 +242,8 @@ function InvestmentModal({
     if (existing) {
       setName(existing.name);
       setKind(existing.kind);
-      setInvested(String(Math.round(existing.invested / 100)));
-      setCurrent(String(Math.round(existing.current_value / 100)));
+      setInvested(existing.invested);
+      setCurrent(existing.current_value);
       setRate(existing.interest_rate != null ? String(existing.interest_rate) : '');
       setHasMaturity(existing.maturity_date != null);
       setMaturity(existing.maturity_date ?? midnight());
@@ -213,8 +253,8 @@ function InvestmentModal({
     } else {
       setName('');
       setKind('stock');
-      setInvested('');
-      setCurrent('');
+      setInvested(0);
+      setCurrent(0);
       setRate('');
       setHasMaturity(false);
       setMaturity(midnight());
@@ -224,9 +264,9 @@ function InvestmentModal({
     }
   }, [open, existing]);
 
-  const investedPaise = Math.round(Number(invested || '0') * 100);
+  const investedPaise = invested;
   // Current value defaults to the invested amount when left blank (a fresh buy).
-  const currentPaise = current.trim() ? Math.round(Number(current) * 100) : investedPaise;
+  const currentPaise = current > 0 ? current : investedPaise;
   const canSave = name.trim().length > 0 && investedPaise > 0;
   // A SIP is only offered on a fresh holding, and needs a funding account so the
   // recurring contribution has somewhere to draw from and count against.
@@ -292,20 +332,20 @@ function InvestmentModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Input
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <AmountField
             label="Amount invested"
-            inputMode="numeric"
-            placeholder="50,000"
-            value={groupIndianDigits(invested)}
-            onChange={(e) => setInvested(e.target.value.replace(/[^0-9]/g, ''))}
+            title="How much did you put in?"
+            value={invested}
+            onChange={setInvested}
+            placeholder="Tap to enter"
           />
-          <Input
+          <AmountField
             label="Current value"
-            inputMode="numeric"
+            title="What's it worth now?"
+            value={current}
+            onChange={setCurrent}
             placeholder="Same as invested"
-            value={groupIndianDigits(current)}
-            onChange={(e) => setCurrent(e.target.value.replace(/[^0-9]/g, ''))}
             hint="Update this over time."
           />
         </div>
@@ -351,76 +391,33 @@ function InvestmentModal({
         )}
 
         {canSip && (
-          <div className="rounded-card border border-parchment-300 bg-parchment-50/60 p-3">
-            <button
-              type="button"
-              onClick={() => setSip((v) => !v)}
-              className="flex w-full items-center gap-2.5 text-left"
-              aria-pressed={sip}
-            >
-              <span
-                className={cn(
-                  'grid h-8 w-8 shrink-0 place-items-center rounded-[9px]',
-                  sip ? 'bg-teal-500 text-white' : 'bg-parchment-200 text-ink-500'
-                )}
-              >
-                <Repeat size={16} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-ink-900">Invest on a schedule (SIP)</span>
-                <span className="block text-[12px] text-ink-500">
-                  {sip ? 'Repeats as a recurring investment' : 'Repeat this contribution automatically'}
-                </span>
-              </span>
-              <span
-                className={cn(
-                  'relative h-6 w-10 shrink-0 rounded-full transition-colors',
-                  sip ? 'bg-teal-500' : 'bg-parchment-300'
-                )}
-              >
-                <span
-                  className={cn(
-                    'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all',
-                    sip ? 'left-[1.125rem]' : 'left-0.5'
-                  )}
-                />
-              </span>
-            </button>
-            {sip && (
-              <div className="mt-3 space-y-3">
-                <CadencePicker
-                  cadence={sipCadence}
-                  interval={sipInterval}
-                  onCadence={setSipCadence}
-                  onInterval={setSipInterval}
-                />
-                <DateInput label="Next investment" value={sipNext} onChange={setSipNext} />
-                {!accountId && (
-                  <p className="text-[12px] text-amber-600">
-                    Pick a funding account above to schedule the SIP.
-                  </p>
-                )}
-              </div>
+          <ToggleCard
+            icon="repeat"
+            title="Invest on a schedule (SIP)"
+            description={
+              sip ? 'Repeats as a recurring investment' : 'Repeat this contribution automatically'
+            }
+            on={sip}
+            onToggle={setSip}
+          >
+            <CadencePicker
+              cadence={sipCadence}
+              interval={sipInterval}
+              onCadence={setSipCadence}
+              onInterval={setSipInterval}
+            />
+            <DateInput label="Next investment" value={sipNext} onChange={setSipNext} />
+            {!accountId && (
+              <p className="text-[12px] text-amber-600">
+                Pick a funding account above to schedule the SIP.
+              </p>
             )}
-          </div>
+          </ToggleCard>
         )}
 
         <Input label="Note" placeholder="Optional" value={note} onChange={(e) => setNote(e.target.value)} />
 
-        <div>
-          <div className="mb-1.5 text-sm font-semibold text-ink-700">Colour</div>
-          <div className="flex gap-2">
-            {ACCENT_PALETTE.map((c) => (
-              <button
-                key={c}
-                onClick={() => setColor(c)}
-                className={cn('h-8 w-8 rounded-full', color === c && 'ring-2 ring-offset-2 ring-offset-parchment-100')}
-                style={{ backgroundColor: c, boxShadow: color === c ? `0 0 0 2px ${c}` : undefined }}
-                aria-label={`Colour ${c}`}
-              />
-            ))}
-          </div>
-        </div>
+        <ColorPicker colors={ACCENT_PALETTE} value={color} onChange={setColor} />
 
         <div className="flex gap-2 pt-1">
           {existing && (

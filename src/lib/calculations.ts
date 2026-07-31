@@ -3,7 +3,7 @@
  * instantly and offline. Every amount is integer paise until formatINR().
  */
 
-import type { Transaction, Goal, RecurringRule, Cadence } from '../types';
+import type { Transaction, RecurringRule, Cadence } from '../types';
 
 // --- money formatting (India) ---------------------------------------------
 
@@ -20,10 +20,24 @@ const inrPaise = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 2,
 });
 
-/** ₹1,23,456 — Indian digit grouping (lakh/crore). Pass showPaise for ₹.99 cases. */
-export function formatINR(paise: number, showPaise = false): string {
+/**
+ * ₹1,23,456 — Indian digit grouping (lakh/crore).
+ *
+ * Paise are shown automatically whenever the amount actually has any: ₹1,240.50
+ * reads in full, while ₹1,240 stays clean. Rounding a real ₹1,240.50 balance
+ * down to "₹1,241" was quietly lying about the number, and there is no amount in
+ * the app that is safe to round — an opening balance, a split, or a ₹99.50 spend
+ * all have to add up. Pass `true`/`false` to force the decision either way.
+ */
+export function formatINR(paise: number, showPaise: boolean | 'auto' = 'auto'): string {
   const rupees = paise / 100;
-  return showPaise ? inrPaise.format(rupees) : inr.format(rupees);
+  const withPaise = showPaise === 'auto' ? hasPaise(paise) : showPaise;
+  return withPaise ? inrPaise.format(rupees) : inr.format(rupees);
+}
+
+/** True when an amount carries paise, i.e. it isn't a whole number of rupees. */
+export function hasPaise(paise: number): boolean {
+  return Math.round(paise) % 100 !== 0;
 }
 
 const inrGroup = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
@@ -302,50 +316,8 @@ export function categoryPace(
   return { categoryId, budget, spent, used, monthElapsed, status };
 }
 
-// --- goal projection ------------------------------------------------------
-
-export interface GoalProjection {
-  progress: number; // 0..1
-  remaining: number; // paise
-  /** Recent contribution run-rate, paise per month. */
-  ratePerMonth: number;
-  /** Months to completion at current rate, or null if rate is 0. */
-  monthsToGo: number | null;
-  /** Projected completion date, or null. */
-  etaDate: number | null;
-  /** If the goal has a target_date: are we on track to hit it? */
-  onTrack: boolean | null;
-  /** Contribution/month needed to hit target_date, if one is set. */
-  neededPerMonth: number | null;
-}
-
-export function goalProjection(
-  goal: Goal,
-  ratePerMonth: number,
-  ref = new Date()
-): GoalProjection {
-  const remaining = Math.max(0, goal.target - goal.saved);
-  const progress = goal.target > 0 ? Math.min(1, goal.saved / goal.target) : 0;
-
-  const monthsToGo = ratePerMonth > 0 ? remaining / ratePerMonth : null;
-  const etaDate =
-    monthsToGo !== null
-      ? new Date(ref.getFullYear(), ref.getMonth() + Math.ceil(monthsToGo), ref.getDate()).getTime()
-      : null;
-
-  let onTrack: boolean | null = null;
-  let neededPerMonth: number | null = null;
-  if (goal.target_date) {
-    const monthsLeft = Math.max(
-      0.1,
-      (goal.target_date - ref.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
-    );
-    neededPerMonth = Math.ceil(remaining / monthsLeft);
-    onTrack = ratePerMonth >= neededPerMonth || remaining === 0;
-  }
-
-  return { progress, remaining, ratePerMonth, monthsToGo, etaDate, onTrack, neededPerMonth };
-}
+// Goal pacing (progress, "how much this month", behind/on-track/ahead) lives in
+// lib/goals — it grew its own schedule arithmetic and deserved the room.
 
 // --- recurring detection --------------------------------------------------
 

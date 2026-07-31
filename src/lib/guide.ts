@@ -13,12 +13,15 @@
 export type GuideArtKind =
   | 'logo'
   | 'clarity'
+  | 'nav'
   | 'safeToSpend'
   | 'adding'
   | 'denominations'
   | 'ledger'
   | 'accounts'
+  | 'money'
   | 'goals'
+  | 'goalPlan'
   | 'investments'
   | 'insights'
   | 'recurring'
@@ -47,6 +50,22 @@ export const GUIDE: GuideSection[] = [
     art: 'logo',
   },
   {
+    id: 'finding-your-way',
+    title: 'Finding your way',
+    body: [
+      'There are five places to go, along the bottom. Home is the day-to-day answer: what is safe to spend and where the month has gone. Ledger is every entry you have made. Money is everything you own. Insights is the longer view. Settings holds the rest, including this guide.',
+      'Money is the one worth knowing about. Your accounts, your goals and your investments all live there, on one screen, because they are the same subject: what you have, and how much of it is already promised. Tap through from there to any of the three.',
+      'The teal + at the bottom right adds an entry from anywhere. It is an action, not a place, which is why it floats instead of sitting in the bar.',
+    ],
+    steps: [
+      'Tap Money to see what you hold, what goals have claimed, and what is free.',
+      'From Money, tap All goals, Portfolio, or Manage to open each in full.',
+      'Every amount you type anywhere uses Hisaab\'s own keypad, never the phone keyboard.',
+    ],
+    icon: 'wallet',
+    art: 'nav',
+  },
+  {
     id: 'safe-to-spend',
     title: 'Safe to spend',
     body: [
@@ -71,6 +90,7 @@ export const GUIDE: GuideSection[] = [
       'Tap + at the bottom right, type the amount, pick the type and account, then Save.',
       'Swipe the sheet down, or tap outside it, to put it away without saving.',
       'Enter a merchant like "Third Wave Coffee" and the category is guessed for you.',
+      'Paise are welcome anywhere. The keypad works in paise, so ₹123.45 is just those digits, and amounts that carry paise are shown in full rather than rounded.',
       'Turn on "Repeat this" to schedule the same entry on a cadence; see Recurring below.',
     ],
     icon: 'plus',
@@ -101,34 +121,38 @@ export const GUIDE: GuideSection[] = [
     art: 'ledger',
   },
   {
-    id: 'accounts',
-    title: 'Accounts',
+    id: 'money',
+    title: 'Money, in one picture',
     body: [
-      'Keep cash, banks, cards, and wallets as separate accounts. Each carries its own running balance from an opening amount, with a cash-versus-digital split across them all.',
-      'Money saved toward goals is kept separate, never folded into the corpus. The Accounts card shows what is in your accounts, what is set aside for goals, and the free corpus left over once goals are taken out. Transfers move money between two accounts without counting as spending.',
+      'The Money tab is the whole balance sheet on one screen. At the top: what you hold, split between what is in your accounts and what is in your investments. Under it, what your goals have already claimed, and what is left genuinely free.',
+      'Below that, the three things it is made of. Your accounts with their running balances. Your goals and what each wants this month. Your portfolio and how it is doing. Tap any of them to open it in full.',
+      'Keep cash, banks, cards and wallets as separate accounts, each with its own opening balance. Transfers move money between two of your own accounts without counting as spending. Goal money is never quietly counted as spendable: it is subtracted once, at the top, wherever it happens to be sitting.',
     ],
     steps: [
-      'Open Settings → Accounts to add or edit an account.',
-      'Read the top card for your free corpus: in accounts, minus what is set aside for goals.',
+      'Tap Money in the bottom bar for what you hold, minus goals, equals free.',
+      'Tap Manage on the Accounts section to add or edit an account.',
       'Use the Transfer type when moving money between your own accounts.',
     ],
-    icon: 'landmark',
-    art: 'accounts',
+    icon: 'wallet',
+    art: 'money',
   },
   {
     id: 'goals',
-    title: 'Goals',
+    title: 'Goals, and what they need',
     body: [
-      'Set something worth saving for, like a trip, a gift, or a rainy-day fund. Each goal shows a progress ring and an honest guess of when you will get there at your recent pace.',
-      'Give a goal a target date and Hisaab tells you whether you are on track and how much a month it needs if you are behind.',
+      'Set something worth saving for: a trip, a gift, a rainy-day fund. Tell Hisaab what it costs, and it tracks the rest with a progress ring and a plain verdict on how you are doing.',
+      'Say where the money comes from. A goal can be funded out of an account or out of a holding, so "the trip fund is in my savings" and "the house fund is in my flexi-cap" are both sayable. Whichever you pick, that money is held out of your free figure, and the goal shows a Funded from breakdown once more than one source has chipped in.',
+      'Set a schedule and the question becomes answerable. Choose an amount and how often you will put it in, weekly, monthly, every two weeks, whatever the real rhythm is, and the goal screen leads with a single figure: how much to add this month. Next month is shown beside it.',
+      'Miss one and nothing is lost. A skipped payment shows as being behind by that many payments, and the catch-up is folded into what this month asks for rather than quietly forgotten. Put in more than asked and it says you are ahead, and stops asking until the plan catches up with you.',
     ],
     steps: [
-      'Open Goals → New to create one, then Add money as you save.',
-      'Choose which account each contribution comes from; two accounts can fund one goal.',
-      'This month\'s contributions feed the "goals set aside" in safe-to-spend.',
+      'Open Money → All goals → New. Set the target, pick where the money comes from, and turn on "Save on a schedule".',
+      'With a target date set, the plan offers the exact amount that lands it on time. Tap it to use it.',
+      'Tap Add money as you save, and tap any history entry to fix its amount, date, or source.',
+      'This month\'s contributions feed the "goals set aside" figure in safe-to-spend.',
     ],
     icon: 'target',
-    art: 'goals',
+    art: 'goalPlan',
   },
   {
     id: 'investments',
@@ -138,8 +162,9 @@ export const GUIDE: GuideSection[] = [
       'Hisaab makes no outbound calls, so there is no live price feed. You update a value whenever you like, and it stays sealed like the rest of your data. Fixed deposits can carry an interest rate and maturity date.',
     ],
     steps: [
-      'Tap Invest → Add to log a holding and pick its type.',
+      'Open Money → Portfolio → Add to log a holding and pick its type.',
       'Open any holding to update its current value as it moves.',
+      'A holding that is backing a goal says so, with the amount that is spoken for.',
     ],
     icon: 'trending-up',
     art: 'investments',
@@ -152,7 +177,8 @@ export const GUIDE: GuideSection[] = [
       'Pacing reads spent-against-time, not just spent-against-total, so 90% of a budget on the 18th shows as "ahead of pace", a nudge rather than an alarm.',
     ],
     steps: [
-      'Set a monthly budget on a category in Settings → Categories to see its pacing.',
+      'Set a monthly budget on a category in Settings → Categories & budgets to see its pacing.',
+      'That screen also carries a tray of extra categories, from pets to tolls to domestic help, that you can add with one tap when you need them.',
       'Hisaab spots regular bills and offers them as recurring rules to confirm.',
     ],
     icon: 'pie-chart',

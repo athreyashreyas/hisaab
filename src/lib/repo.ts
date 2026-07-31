@@ -172,15 +172,28 @@ export async function deleteTransaction(id: ID): Promise<void> {
 
 // --- goals ----------------------------------------------------------------
 
+export type GoalPlanFields = Pick<
+  Goal,
+  'funding_account_id' | 'funding_investment_id' | 'plan_amount' | 'plan_cadence' | 'plan_interval' | 'plan_start'
+>;
+
 export async function createGoal(
   input: Pick<Goal, 'name' | 'target' | 'color' | 'icon'> &
-    Partial<Pick<Goal, 'target_date' | 'saved'>>
+    Partial<Pick<Goal, 'target_date' | 'saved'> & GoalPlanFields>
 ): Promise<Goal> {
   const goal: Goal = {
     id: newId(),
     saved: 0,
     target_date: null,
     archived: false,
+    // Goals created before funding sources and schedules existed simply have
+    // these unset; the defaults keep new rows explicit rather than undefined.
+    funding_account_id: null,
+    funding_investment_id: null,
+    plan_amount: null,
+    plan_cadence: null,
+    plan_interval: 1,
+    plan_start: null,
     ...input,
     ...freshMeta(),
   };
@@ -216,42 +229,80 @@ export async function deleteGoal(id: ID): Promise<void> {
   });
 }
 
+export interface NewContribution {
+  goal_id: ID;
+  /** Positive to set money aside, negative to take it back out. */
+  amount: number;
+  /** The account it comes out of… */
+  account_id?: ID | null;
+  /** …or the holding it's earmarked from. At most one of the two. */
+  investment_id?: ID | null;
+  note?: string;
+  date?: number;
+}
+
 /**
  * Record a contribution (or withdrawal, if negative) against a goal and keep the
  * goal's cached `saved` total in step — both in one transaction so they never
- * drift. `accountId` earmarks the money out of that account's balance (or returns
- * it, on a withdrawal); pass null to leave balances untouched.
+ * drift. The source earmarks the money out of that account's balance or that
+ * holding's value (or returns it, on a withdrawal); leave both unset to record
+ * money whose origin isn't tracked, which moves no balance.
  */
-export async function addContribution(
-  goalId: ID,
-  amount: number,
-  accountId: ID | null = null,
-  note = '',
-  date = midnight()
-): Promise<GoalContribution> {
+export async function addContribution(input: NewContribution): Promise<GoalContribution> {
   const contribution: GoalContribution = {
     id: newId(),
-    goal_id: goalId,
-    amount,
-    account_id: accountId,
-    note,
-    date,
+    account_id: null,
+    investment_id: null,
+    note: '',
+    date: midnight(),
+    ...input,
     ...freshMeta(),
   };
   await db.transaction('rw', db.goals, db.goal_contributions, db.sync_queue, async () => {
     await db.goal_contributions.put(contribution);
-    const goal = await db.goals.get(goalId);
+    const goal = await db.goals.get(contribution.goal_id);
     if (goal) {
-      await db.goals.update(goalId, {
-        saved: Math.max(0, goal.saved + amount),
+      await db.goals.update(contribution.goal_id, {
+        saved: Math.max(0, goal.saved + contribution.amount),
         updated_at: now(),
         synced_at: null,
       });
     }
     await enqueue('goal_contributions', 'upsert', contribution.id);
-    await enqueue('goals', 'upsert', goalId);
+    await enqueue('goals', 'upsert', contribution.goal_id);
   });
   return contribution;
+}
+
+/**
+ * Correct an existing contribution: a typo'd amount, the wrong source account,
+ * or a date that should have been last Tuesday. The goal's cached `saved` moves
+ * by the difference only, in the same transaction, so an edit can never leave the
+ * total out of step with the entries that make it up.
+ */
+export async function updateContribution(
+  id: ID,
+  patch: Partial<Pick<GoalContribution, 'amount' | 'account_id' | 'investment_id' | 'note' | 'date'>>
+): Promise<void> {
+  await db.transaction('rw', db.goals, db.goal_contributions, db.sync_queue, async () => {
+    const current = await db.goal_contributions.get(id);
+    if (!current || current.deleted_at) return;
+
+    await db.goal_contributions.update(id, { ...patch, updated_at: now(), synced_at: null });
+    await enqueue('goal_contributions', 'upsert', id);
+
+    const delta = (patch.amount ?? current.amount) - current.amount;
+    if (delta === 0) return;
+    const goal = await db.goals.get(current.goal_id);
+    if (goal && !goal.deleted_at) {
+      await db.goals.update(goal.id, {
+        saved: Math.max(0, goal.saved + delta),
+        updated_at: now(),
+        synced_at: null,
+      });
+      await enqueue('goals', 'upsert', goal.id);
+    }
+  });
 }
 
 /** Remove a single contribution and unwind its effect on the goal's saved total. */

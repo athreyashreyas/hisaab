@@ -237,6 +237,127 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
       );
 
     // Cash and digital, each with its own balance.
+    // The bottom bar itself, with Money lit — the section that explains where
+    // the five destinations are should show them.
+    case 'nav':
+      return (
+        <div className="w-full max-w-[250px] rounded-card bg-parchment-50 px-1.5 py-2 shadow-sm">
+          <div className="flex items-stretch justify-around">
+            {[
+              ['Home', 'M3 9.5 10 4l7 5.5V16a1 1 0 0 1-1 1h-3v-5H8v5H5a1 1 0 0 1-1-1z'],
+              ['Ledger', 'M4 5h12M4 10h12M4 15h12'],
+              ['Money', 'M3 6h11a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H3zM13 10h2'],
+              ['Insights', 'M10 3a7 7 0 1 0 7 7h-7z'],
+              ['More', 'M5 10h.01M10 10h.01M15 10h.01'],
+            ].map(([label, d], i) => {
+              const on = i === 2;
+              return (
+                <div key={label} className="flex flex-1 flex-col items-center gap-1">
+                  <svg viewBox="0 0 20 20" className="h-[18px] w-[18px]" aria-hidden="true">
+                    <path
+                      d={d}
+                      fill="none"
+                      stroke={on ? TEAL : '#B9B4A8'}
+                      strokeWidth={on ? 1.8 : 1.4}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span
+                    className="text-[8px] font-semibold"
+                    style={{ color: on ? TEAL : '#B9B4A8' }}
+                  >
+                    {label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+
+    // The Money hero: what you hold, what goals have taken, what's left. The
+    // arithmetic is the point, so the illustration shows all three lines.
+    case 'money':
+      return (
+        <div className="w-full max-w-[240px] rounded-card p-4 text-white shadow" style={{ backgroundColor: TEAL }}>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white/60">
+            What you hold
+          </p>
+          <Rupee className="mt-1 block text-[26px] leading-none">4,32,000</Rupee>
+          <div className="mt-3 flex gap-5 text-[9px] text-white/80">
+            <span>
+              In accounts
+              <Rupee className="mt-0.5 block text-[11px] font-semibold text-white">1,80,000</Rupee>
+            </span>
+            <span>
+              In investments
+              <Rupee className="mt-0.5 block text-[11px] font-semibold text-white">2,52,000</Rupee>
+            </span>
+          </div>
+          <div className="mt-3 space-y-1.5 border-t border-white/20 pt-2.5">
+            <div className="flex items-center justify-between text-[9.5px] text-white/80">
+              <span>Set aside for goals</span>
+              <Rupee className="font-semibold">−60,000</Rupee>
+            </div>
+            <div className="flex items-center justify-between border-t border-white/20 pt-1.5">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.1em] text-white/70">
+                Free to use
+              </span>
+              <Rupee className="text-[14px] font-semibold">3,72,000</Rupee>
+            </div>
+          </div>
+        </div>
+      );
+
+    // The pace card: one figure for this month, the state that produced it, and
+    // how much of the month's ask is already in.
+    case 'goalPlan':
+      return (
+        <div className="w-full max-w-[240px] rounded-card bg-parchment-50 p-4 shadow-sm">
+          <div className="flex items-start justify-between">
+            <span
+              className="rounded-full px-2 py-0.5 text-[8.5px] font-semibold uppercase tracking-[0.05em]"
+              style={{ backgroundColor: `${AMBER}26`, color: AMBER }}
+            >
+              Behind
+            </span>
+            <span className="text-right">
+              <span className="block text-[8px] font-semibold uppercase tracking-[0.05em] text-ink-300">
+                Then April
+              </span>
+              <Rupee className="text-[11px] font-semibold text-ink-700">5,000</Rupee>
+            </span>
+          </div>
+          <p className="mt-2 text-[8.5px] font-semibold uppercase tracking-[0.06em] text-ink-300">
+            Add in March
+          </p>
+          <Rupee className="mt-0.5 block text-[24px] leading-none" style={{ color: AMBER }}>
+            10,000
+          </Rupee>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-parchment-200">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ backgroundColor: TEAL }}
+              initial={{ width: 0 }}
+              animate={{ width: '20%' }}
+              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+            />
+          </div>
+          <div className="mt-1.5 flex justify-between text-[8.5px] text-ink-300">
+            <span>
+              <Rupee className="font-semibold text-ink-700">2,500</Rupee> in so far
+            </span>
+            <span>
+              March&rsquo;s ask <Rupee>12,500</Rupee>
+            </span>
+          </div>
+          <p className="mt-2 text-[8.5px] leading-relaxed text-ink-300">
+            One payment of ₹5,000 monthly hasn&rsquo;t gone in, so this month includes the catch-up.
+          </p>
+        </div>
+      );
+
     case 'accounts':
       return (
         <div className="w-full max-w-[240px] space-y-1.5">

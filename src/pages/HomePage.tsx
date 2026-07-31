@@ -18,8 +18,9 @@ import {
   useInvestments,
   useMonthlyGoalSetAside,
   portfolioSummary,
-  monthlyRate,
+  groupContributions,
 } from '../hooks/useData';
+import { goalPace } from '../lib/goals';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Money } from '../components/ui/Money';
 import { useUIStore } from '../stores/uiStore';
@@ -61,8 +62,12 @@ export function HomePage() {
   const slices = categoryBreakdown(monthTxns, start, end);
   const spentTotal = slices.reduce((s, x) => s + x.total, 0);
 
-  const rates = monthlyRate(contributions);
+  const contributionsByGoal = groupContributions(contributions);
   const topGoals = goals.slice(0, 3);
+  const goalsDueThisMonth = goals.reduce(
+    (s, g) => s + goalPace(g, contributionsByGoal.get(g.id) ?? [], now).dueThisMonth,
+    0
+  );
   const recent = allTxns.slice(0, 5);
 
   const hasAnything = allTxns.length > 0;
@@ -108,7 +113,18 @@ export function HomePage() {
       {topGoals.length > 0 && (
         <>
           <SectionHeader
-            title="Goals"
+            title={
+              goalsDueThisMonth > 0 ? (
+                <span>
+                  Goals{' '}
+                  <span className="font-normal normal-case tracking-normal text-ink-500">
+                    · {formatINR(goalsDueThisMonth)} to add this month
+                  </span>
+                </span>
+              ) : (
+                'Goals'
+              )
+            }
             subtle
             action={
               <button onClick={() => navigate('/goals')} className="text-xs font-semibold text-teal-600">
@@ -121,7 +137,7 @@ export function HomePage() {
               <GoalRow
                 key={g.id}
                 goal={g}
-                ratePerMonth={rates.get(g.id) ?? 0}
+                pace={goalPace(g, contributionsByGoal.get(g.id) ?? [], now)}
                 onClick={() => navigate(`/goals/${g.id}`)}
               />
             ))}

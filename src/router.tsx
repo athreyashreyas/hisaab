@@ -10,6 +10,7 @@ import { RouteFallback } from './components/ui/RouteFallback';
 // no investment/insights screens) so a cold open reaches Home fast, and each
 // other screen streams in on first navigation behind a calm fallback.
 const LedgerPage = lazy(() => import('./pages/LedgerPage').then((m) => ({ default: m.LedgerPage })));
+const MoneyPage = lazy(() => import('./pages/MoneyPage').then((m) => ({ default: m.MoneyPage })));
 const GoalsPage = lazy(() => import('./pages/GoalsPage').then((m) => ({ default: m.GoalsPage })));
 const GoalDetailPage = lazy(() =>
   import('./pages/GoalDetailPage').then((m) => ({ default: m.GoalDetailPage }))
@@ -50,6 +51,9 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <HomePage /> },
           { path: 'ledger', element: L(<LedgerPage />) },
+          // Money is the hub; goals, invest and accounts keep their own routes
+          // beneath it so links and history stay stable (see navItems `owns`).
+          { path: 'money', element: L(<MoneyPage />) },
           { path: 'goals', element: L(<GoalsPage />) },
           { path: 'goals/:id', element: L(<GoalDetailPage />) },
           { path: 'invest', element: L(<InvestmentsPage />) },
