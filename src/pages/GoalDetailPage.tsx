@@ -12,7 +12,8 @@ import { AmountField } from '../components/ui/AmountField';
 import { DateInput } from '../components/ui/DateInput';
 import { ProgressRing } from '../components/ui/ProgressRing';
 import { EmptyState } from '../components/ui/EmptyState';
-import { GoalMeta, formatShort } from '../components/finance/GoalRow';
+import { GoalMeta } from '../components/finance/GoalRow';
+import { formatShort } from '../lib/money';
 import { GoalPaceCard } from '../components/finance/GoalPaceCard';
 import { GoalFormModal } from '../components/finance/GoalFormModal';
 import {
@@ -27,11 +28,11 @@ import {
   useAccounts,
   useAccountMap,
   useInvestments,
-  fundingBreakdown,
 } from '../hooks/useData';
 import { useSubmit } from '../hooks/useSubmit';
-import { addContribution, updateContribution, deleteContribution, midnight } from '../lib/repo';
-import { goalPace } from '../lib/goals';
+import { addContribution, updateContribution, deleteContribution } from '../lib/repo';
+import { midnight } from '../lib/dates';
+import { fundingBreakdown, goalPace } from '../lib/goals';
 import type { Account, GoalContribution, ID, Investment } from '../types';
 import { cn } from '../lib/cn';
 

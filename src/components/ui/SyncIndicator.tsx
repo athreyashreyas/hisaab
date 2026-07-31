@@ -72,7 +72,9 @@ const COPY: Record<SyncStatus, { heading: string; body: string }> = {
 };
 
 export function SyncIndicator({ className }: { className?: string }) {
-  const { status, pending, lastSyncedAt } = useSyncStore();
+  const status = useSyncStore((s) => s.status);
+  const pending = useSyncStore((s) => s.pending);
+  const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt);
   const [open, setOpen] = useState(false);
   const [running, setRunning] = useState(false);
   const navigate = useNavigate();

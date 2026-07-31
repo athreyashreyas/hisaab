@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -19,6 +19,8 @@ export function Modal({
   children: React.ReactNode;
   className?: string;
 }) {
+  const titleId = useId();
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -53,6 +55,7 @@ export function Modal({
           <motion.div
             role="dialog"
             aria-modal="true"
+            aria-labelledby={title != null ? titleId : undefined}
             className={cn(
               'relative z-10 w-full max-w-md overflow-y-auto scroll-ios rounded-sheet bg-parchment-100 shadow-xl',
               className
@@ -71,7 +74,9 @@ export function Modal({
           >
             {title != null && (
               <div className="sticky top-0 z-10 flex items-center justify-between border-b border-parchment-200 bg-parchment-100/95 px-5 py-3.5 backdrop-blur">
-                <h2 className="font-serif text-xl text-ink-900">{title}</h2>
+                <h2 id={titleId} className="font-serif text-xl text-ink-900">
+                  {title}
+                </h2>
                 <button
                   onClick={onClose}
                   aria-label="Close"

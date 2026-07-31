@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useDragControls } from 'framer-motion';
 import { backdropVariants, sheetVariants } from '../../lib/motion';
@@ -34,6 +34,7 @@ export function BottomSheet({
   className?: string;
 }) {
   const dragControls = useDragControls();
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -56,6 +57,7 @@ export function BottomSheet({
           <motion.div
             role="dialog"
             aria-modal="true"
+            aria-labelledby={title != null ? titleId : undefined}
             className={cn(
               'relative z-10 flex w-full max-w-md flex-col rounded-t-sheet bg-parchment-100 shadow-2xl',
               'sm:rounded-sheet',
@@ -92,7 +94,9 @@ export function BottomSheet({
               </div>
               {title != null && (
                 <div className="px-5 pb-1 pt-3">
-                  <h2 className="font-serif text-2xl text-ink-900">{title}</h2>
+                  <h2 id={titleId} className="font-serif text-2xl text-ink-900">
+                    {title}
+                  </h2>
                 </div>
               )}
             </div>

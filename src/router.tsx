@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { RootBoot } from './components/layout/RootBoot';
 import { HomePage } from './pages/HomePage';
@@ -61,6 +61,10 @@ export const router = createBrowserRouter([
           { path: 'settings', element: L(<SettingsPage />) },
           { path: 'settings/accounts', element: L(<AccountsPage />) },
           { path: 'settings/categories', element: L(<CategoriesPage />) },
+          // Anything unrecognised lands on Home rather than a blank shell. A
+          // stale bookmark, a link to a screen that has since moved, or a goal
+          // that has been deleted all end up here.
+          { path: '*', element: <Navigate to="/" replace /> },
         ],
       },
     ],

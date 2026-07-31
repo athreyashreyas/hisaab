@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight, Wallet, Shapes, KeyRound, Download, Upload, FileText,
@@ -34,11 +34,18 @@ export function SettingsPage() {
   const [recoveryPhrase, setRecoveryPhrase] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  function flash(msg: string) {
+  // The timer is held and cleared so a second message replaces the first
+  // cleanly, and so navigating away mid-toast doesn't leave one firing at a
+  // screen that has gone.
+  const flash = useCallback((msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  }
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2500);
+  }, []);
+
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   async function onImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -246,7 +253,14 @@ function ChangePasswordModal({ open, onClose, onDone }: { open: boolean; onClose
       onDone();
       onClose();
     } catch (err) {
-      setError(err instanceof Error && err.name === 'WrongPassphraseError' ? 'Current password is incorrect.' : 'Current password is incorrect.');
+      // A wrong current password and a failed server update are different
+      // problems with different fixes, and telling someone their password is
+      // wrong when the network dropped sends them hunting for the wrong thing.
+      setError(
+        err instanceof Error && err.name === 'WrongPassphraseError'
+          ? 'Current password is incorrect.'
+          : 'Your password could not be changed just now. Check your connection and try again.'
+      );
     } finally {
       setBusy(false);
     }

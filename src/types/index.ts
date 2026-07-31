@@ -7,7 +7,7 @@
  * deletion propagates instead of a row silently reappearing from another device.
  *
  * Amounts are stored as integer paise (₹1 = 100) to avoid float drift. Format
- * for display with formatINR() in lib/calculations.
+ * for display with formatINR() in lib/money.
  */
 
 export type ID = string; // uuid v4, generated client-side

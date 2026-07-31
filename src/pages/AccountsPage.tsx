@@ -9,8 +9,9 @@ import { Money } from '../components/ui/Money';
 import { AmountField } from '../components/ui/AmountField';
 import { ColorPicker } from '../components/ui/ColorPicker';
 import { Segmented } from '../components/add/Pickers';
-import { useAccountBalances, useGoalsReserved } from '../hooks/useData';
+import { useAccountBalances, useEarmarks } from '../hooks/useData';
 import { useSubmit } from '../hooks/useSubmit';
+import { resolveEditor, type EditorTarget } from '../hooks/useEditorTarget';
 import { createAccount, updateAccount, archiveAccount } from '../lib/repo';
 import { ACCENT_PALETTE } from '../lib/categories';
 import type { Account, AccountKind } from '../types';
@@ -27,9 +28,9 @@ const KIND_ICON: Record<AccountKind, typeof Wallet> = {
 export function AccountsPage() {
   // Raw money actually in each account (goal set-asides shown split out, not
   // silently subtracted). See the hero card below for the corpus breakdown.
-  const balances = useAccountBalances(false);
-  const reserved = useGoalsReserved();
-  const [editing, setEditing] = useState<Account | null | 'new'>(null);
+  const balances = useAccountBalances();
+  const reserved = useEarmarks().fromAccounts;
+  const [editing, setEditing] = useState<EditorTarget<Account>>(null);
 
   const active = balances.filter((b) => !b.account.archived);
   const archived = balances.filter((b) => b.account.archived);
@@ -137,9 +138,8 @@ export function AccountsPage() {
   );
 }
 
-function AccountModal({ target, onClose }: { target: Account | null | 'new'; onClose: () => void }) {
-  const open = target !== null;
-  const existing = target !== 'new' && target !== null ? target : null;
+function AccountModal({ target, onClose }: { target: EditorTarget<Account>; onClose: () => void }) {
+  const { open, existing } = resolveEditor(target);
 
   const [name, setName] = useState('');
   const [kind, setKind] = useState<AccountKind>('bank');

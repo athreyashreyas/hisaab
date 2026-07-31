@@ -17,27 +17,22 @@ import {
   useAllContributions,
   useInvestments,
   useMonthlyGoalSetAside,
-  portfolioSummary,
-  groupContributions,
 } from '../hooks/useData';
-import { goalPace } from '../lib/goals';
+import { goalPace, groupContributions } from '../lib/goals';
+import { portfolioSummary } from '../lib/portfolio';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Money } from '../components/ui/Money';
 import { useUIStore } from '../stores/uiStore';
-import {
-  safeToSpend,
-  categoryBreakdown,
-  monthBounds,
-  formatINR,
-  formatCompactINR,
-} from '../lib/calculations';
-import type { CategorySlice } from '../lib/calculations';
+import { safeToSpend, categoryBreakdown, type CategorySlice } from '../lib/budget';
+import { monthBounds, daysInMonth as daysInMonthOf } from '../lib/dates';
+import { formatINR, formatCompactINR } from '../lib/money';
 import type { Category, ID } from '../types';
 import { cn } from '../lib/cn';
 
 export function HomePage() {
   const navigate = useNavigate();
   const openAdd = useUIStore((s) => s.openAdd);
+  const openEdit = useUIStore((s) => s.openEdit);
 
   const now = new Date();
   const monthTxns = useMonthTransactions(now);
@@ -55,11 +50,11 @@ export function HomePage() {
 
   const sts = safeToSpend(monthTxns, recurring, goalSetAside, now);
 
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysInMonth = daysInMonthOf(now);
   const monthElapsed = now.getDate() / daysInMonth;
   const daysLeft = Math.max(1, daysInMonth - now.getDate() + 1);
 
-  const slices = categoryBreakdown(monthTxns, start, end);
+  const slices = categoryBreakdown(monthTxns, start, end, new Set(categoryMap.keys()));
   const spentTotal = slices.reduce((s, x) => s + x.total, 0);
 
   const contributionsByGoal = groupContributions(contributions);
@@ -203,7 +198,7 @@ export function HomePage() {
                 category={t.category_id ? categoryMap.get(t.category_id) : undefined}
                 account={accountMap.get(t.account_id)}
                 toAccount={t.to_account_id ? accountMap.get(t.to_account_id) : undefined}
-                onClick={() => useUIStore.getState().openEdit(t)}
+                onClick={() => openEdit(t)}
               />
             ))}
           </Card>
@@ -234,6 +229,7 @@ function WhereItWentStrip({
   const items = slices.map((s) => {
     const cat = s.categoryId ? categoryMap.get(s.categoryId) : undefined;
     return {
+      key: s.categoryId ?? 'none',
       name: cat?.name ?? 'Uncategorised',
       color: cat?.color ?? '#6B6960',
       total: s.total,
@@ -277,7 +273,7 @@ function WhereItWentStrip({
         </div>
         <div className="flex flex-col gap-1.5">
           {top.map((it) => (
-            <div key={it.name} className="flex items-center gap-2 text-[12.5px] text-ink-700">
+            <div key={it.key} className="flex items-center gap-2 text-[12.5px] text-ink-700">
               <span className="h-2.5 w-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: it.color }} />
               <span className="truncate">{it.name}</span>
               <span className="ml-auto shrink-0 font-semibold tabular-nums text-ink-900">

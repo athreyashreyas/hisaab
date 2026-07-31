@@ -1,7 +1,7 @@
 import { Icon } from '../ui/Icon';
 import { Badge } from '../ui/Badge';
-import { formatINR } from '../../lib/calculations';
-import type { CategoryPace } from '../../lib/calculations';
+import { formatINR } from '../../lib/money';
+import type { CategoryPace } from '../../lib/budget';
 import type { Category } from '../../types';
 
 /**

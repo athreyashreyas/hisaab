@@ -1,5 +1,5 @@
 import { Delete } from 'lucide-react';
-import { formatINR } from '../../lib/calculations';
+import { formatINR } from '../../lib/money';
 import { denominationFor } from '../../lib/denominations';
 import { cn } from '../../lib/cn';
 

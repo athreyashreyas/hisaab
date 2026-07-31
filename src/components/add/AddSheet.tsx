@@ -13,10 +13,10 @@ import {
   updateTransaction,
   deleteTransaction,
   createRecurringRule,
-  midnight,
 } from '../../lib/repo';
+import { midnight } from '../../lib/dates';
 import { guessCategory } from '../../lib/categories';
-import { rollForward } from '../../lib/calculations';
+import { anchorFor, rollForward, stepCadence } from '../../lib/recurrence';
 import type { Cadence, TxnType } from '../../types';
 import { ArrowRight, Check, Repeat, Trash2 } from 'lucide-react';
 
@@ -28,7 +28,9 @@ import { ArrowRight, Check, Repeat, Trash2 } from 'lucide-react';
  * open for fast multi-entry.
  */
 export function AddSheet() {
-  const { addSheetOpen, editingTxn, closeAdd } = useUIStore();
+  const addSheetOpen = useUIStore((s) => s.addSheetOpen);
+  const editingTxn = useUIStore((s) => s.editingTxn);
+  const closeAdd = useUIStore((s) => s.closeAdd);
   const accounts = useAccounts();
   const categories = useCategories();
 
@@ -143,23 +145,26 @@ export function AddSheet() {
     };
     if (editingTxn) {
       await updateTransaction(editingTxn.id, payload);
+    } else if (canRepeat && repeat) {
+      // The rule is created first so the seed entry can point back at it. That
+      // link is what tells "bills to come" this month's instance is already
+      // paid; without it the hero kept subtracting a bill that was in the
+      // ledger right in front of it.
+      const rule = await createRecurringRule({
+        merchant: merchant.trim() || (type === 'income' ? 'Income' : 'Payment'),
+        amount,
+        account_id: accountId,
+        category_id: categoryId,
+        cadence,
+        interval,
+        anchor: anchorFor(cadence, date),
+        next_due: rollForward(stepCadence(date, cadence, interval), cadence, interval),
+        confirmed: true,
+        active: true,
+      });
+      await createTransaction({ ...payload, source: 'recurring', recurring_id: rule.id });
     } else {
       await createTransaction(payload);
-      if (canRepeat && repeat) {
-        const anchor = new Date(date);
-        await createRecurringRule({
-          merchant: merchant.trim() || (type === 'income' ? 'Income' : 'Payment'),
-          amount,
-          account_id: accountId,
-          category_id: categoryId,
-          cadence,
-          interval,
-          anchor: cadence === 'weekly' ? anchor.getDay() : anchor.getDate(),
-          next_due: rollForward(date, cadence, interval),
-          confirmed: true,
-          active: true,
-        });
-      }
     }
     if (addAnother && !editingTxn) {
       reset();

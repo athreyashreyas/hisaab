@@ -11,6 +11,8 @@
  */
 import { db } from './db';
 import { DEFAULT_CATEGORIES, ACCENT_PALETTE } from './categories';
+import { midnight } from './dates';
+import { rollForward } from './recurrence';
 import type {
   Account,
   Category,
@@ -28,13 +30,6 @@ import type {
 
 export const now = (): number => Date.now();
 export const newId = (): ID => crypto.randomUUID();
-
-/** Local midnight epoch for a given date — transactions store the *day*, not the instant. */
-export function midnight(d: Date | number = new Date()): number {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x.getTime();
-}
 
 function freshMeta() {
   return { updated_at: now(), deleted_at: null, synced_at: null };
@@ -103,6 +98,21 @@ export async function createCategory(
 export async function updateCategory(id: ID, patch: Partial<Category>): Promise<void> {
   await db.categories.update(id, { ...patch, updated_at: now(), synced_at: null });
   await enqueue('categories', 'upsert', id);
+}
+
+/**
+ * Retire a category. A tombstone, like every other delete, so it disappears on
+ * your other devices too instead of coming back on the next pull.
+ *
+ * Transactions already filed under it keep their `category_id` rather than being
+ * rewritten: the screens all read a category through the map and fall back to
+ * "Uncategorised" when it isn't there, so history stays intact and restoring the
+ * category by name would pick its entries back up. Budget pacing simply drops
+ * the row, since an unbudgeted bucket has no pace to show.
+ */
+export async function deleteCategory(id: ID): Promise<void> {
+  await db.categories.update(id, { deleted_at: now(), updated_at: now(), synced_at: null });
+  await enqueue('categories', 'delete', id);
 }
 
 /**
@@ -362,10 +372,6 @@ export async function deleteInvestment(id: ID): Promise<void> {
   await enqueue('investments', 'delete', id);
 }
 
-export async function archiveInvestment(id: ID, archived = true): Promise<void> {
-  await updateInvestment(id, { archived });
-}
-
 // --- recurring rules ------------------------------------------------------
 
 export async function createRecurringRule(
@@ -396,6 +402,26 @@ export async function updateRecurringRule(id: ID, patch: Partial<RecurringRule>)
 export async function deleteRecurringRule(id: ID): Promise<void> {
   await db.recurring_rules.update(id, { deleted_at: now(), updated_at: now(), synced_at: null });
   await enqueue('recurring_rules', 'delete', id);
+}
+
+/**
+ * Advance any active rule whose due date has already gone by to its next real
+ * occurrence. Nothing else moves `next_due` after a rule is created, so a
+ * monthly rent set up in March still read "next 3 Mar" in July, and the same
+ * stale date fed "bills to come". Runs once per boot behind the vault.
+ *
+ * Only rules that actually move are written, so a boot with nothing overdue
+ * queues no sync at all.
+ */
+export async function rollOverdueRecurringRules(ref = new Date()): Promise<void> {
+  const rules = await db.recurring_rules.toArray();
+  const today = midnight(ref);
+  for (const r of rules) {
+    if (r.deleted_at || !r.active || r.next_due >= today) continue;
+    const next = rollForward(r.next_due, r.cadence, r.interval, ref, r.anchor);
+    if (next === r.next_due) continue;
+    await updateRecurringRule(r.id, { next_due: next });
+  }
 }
 
 // --- seeding --------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { Money } from '../ui/Money';
-import { formatINR } from '../../lib/calculations';
-import type { SafeToSpend } from '../../lib/calculations';
+import { formatINR } from '../../lib/money';
+import type { SafeToSpend } from '../../lib/budget';
 import { cn } from '../../lib/cn';
 
 /**

@@ -7,7 +7,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { formatCompactINR, formatINR } from '../../lib/calculations';
+import { formatCompactINR, formatINR } from '../../lib/money';
 
 export interface TrendPoint {
   label: string; // x-axis tick (e.g. "12 Jul", "Jul")

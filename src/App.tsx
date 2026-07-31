@@ -6,7 +6,7 @@ import { queryClient } from './lib/queryClient';
 import { router } from './router';
 import { useAccountStore } from './stores/accountStore';
 import { useSyncQueue } from './hooks/useSyncQueue';
-import { backfillNewDefaultCategories } from './lib/repo';
+import { backfillNewDefaultCategories, rollOverdueRecurringRules } from './lib/repo';
 
 // The account gate renders exactly one of these based on status. The common cold
 // open — a returning device auto-unlocking straight to the app — needs none of
@@ -72,10 +72,14 @@ export default function App() {
 /** Everything behind the vault: sync wiring + the routed shell. */
 function UnlockedApp() {
   useSyncQueue();
-  // Backfill defaults added in newer versions (e.g. Education & learning), once,
-  // locally — so they show up without a manual sync or "restore defaults".
+  // Once-per-boot local housekeeping: pick up defaults added in newer versions
+  // (e.g. Education & learning) without a manual "restore defaults", and move
+  // any recurring rule whose due date has passed on to its next real date. Both
+  // are plain local writes that sync like anything else, and both no-op when
+  // there is nothing to do.
   useEffect(() => {
     void backfillNewDefaultCategories();
+    void rollOverdueRecurringRules();
   }, []);
   return <RouterProvider router={router} />;
 }

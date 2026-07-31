@@ -8,10 +8,17 @@ import { Modal } from '../components/ui/Modal';
 import { Icon } from '../components/ui/Icon';
 import { AmountField } from '../components/ui/AmountField';
 import { ColorPicker } from '../components/ui/ColorPicker';
-import { formatINR } from '../lib/calculations';
+import { formatINR } from '../lib/money';
 import { useCategories } from '../hooks/useData';
 import { useSubmit } from '../hooks/useSubmit';
-import { createCategory, updateCategory, restoreDefaultCategories, reorderCategories } from '../lib/repo';
+import { resolveEditor, type EditorTarget } from '../hooks/useEditorTarget';
+import {
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  restoreDefaultCategories,
+  reorderCategories,
+} from '../lib/repo';
 import { CategoryReorderSheet } from '../components/finance/CategoryReorderSheet';
 import { CATEGORY_PALETTE, SUGGESTED_CATEGORIES } from '../lib/categories';
 import type { Category } from '../types';
@@ -25,10 +32,10 @@ const ICON_CHOICES = [
   'smartphone', 'zap', 'wrench', 'hand-heart', 'piggy-bank', 'stethoscope', 'banknote', 'circle-dashed',
 ];
 
-/** Manage categories: rename, recolour, set monthly budgets, restore defaults. */
+/** Manage categories: rename, recolour, budget, reorder, remove, restore defaults. */
 export function CategoriesPage() {
   const categories = useCategories();
-  const [editing, setEditing] = useState<Category | null | 'new'>(null);
+  const [editing, setEditing] = useState<EditorTarget<Category>>(null);
   const [reordering, setReordering] = useState(false);
 
   return (
@@ -152,18 +159,19 @@ function SuggestedCategories({ existing }: { existing: Category[] }) {
   );
 }
 
-function CategoryModal({ target, onClose }: { target: Category | null | 'new'; onClose: () => void }) {
-  const open = target !== null;
-  const existing = target !== 'new' && target !== null ? target : null;
+function CategoryModal({ target, onClose }: { target: EditorTarget<Category>; onClose: () => void }) {
+  const { open, existing } = resolveEditor(target);
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('circle-dashed');
   const [color, setColor] = useState(CATEGORY_PALETTE.grey);
   const [budget, setBudget] = useState(0);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { pending, submit } = useSubmit();
 
   useEffect(() => {
     if (!open) return;
+    setConfirmDelete(false);
     if (existing) {
       setName(existing.name);
       setIcon(existing.icon);
@@ -184,6 +192,12 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
     const monthly_budget = budget > 0 ? budget : null;
     if (existing) await updateCategory(existing.id, { name: name.trim(), icon, color, monthly_budget });
     else await createCategory({ name: name.trim(), icon, color, monthly_budget });
+    onClose();
+  }
+
+  async function remove() {
+    if (!existing) return;
+    await deleteCategory(existing.id);
     onClose();
   }
 
@@ -227,9 +241,37 @@ function CategoryModal({ target, onClose }: { target: Category | null | 'new'; o
           </div>
         </div>
 
-        <Button onClick={() => submit(save)} disabled={!canSave || pending} block className="mt-1">
-          {existing ? 'Save changes' : 'Add category'}
-        </Button>
+        {existing && (
+          <p className="text-[12px] leading-relaxed text-ink-500">
+            Removing a category leaves its past entries in place; they simply read as
+            uncategorised. Add it back by the same name and they find it again.
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          {existing &&
+            (confirmDelete ? (
+              <Button
+                variant="ghost"
+                onClick={() => submit(remove)}
+                disabled={pending}
+                className="px-3 text-rose-600"
+              >
+                Really remove?
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => setConfirmDelete(true)}
+                className="px-3 text-ink-500"
+              >
+                Remove
+              </Button>
+            ))}
+          <Button onClick={() => submit(save)} disabled={!canSave || pending} className="flex-1">
+            {existing ? 'Save changes' : 'Add category'}
+          </Button>
+        </div>
       </div>
     </Modal>
   );

@@ -24,7 +24,17 @@ function currentUser() {
   return useAccountStore.getState().user;
 }
 
-const CURSOR_KEY = 'hisaab.sync.cursor';
+/**
+ * The pull cursor: the newest `updated_at` we have already taken down.
+ *
+ * Keyed per user, and cleared outright on sign-out, because a cursor is only
+ * meaningful for the account it was built against. A single shared key meant
+ * signing into a second account on the same device started its very first pull
+ * from the first account's high-water mark, so every record older than that was
+ * skipped and never came back: a restore that looked like it worked and was
+ * quietly missing most of the ledger.
+ */
+const CURSOR_PREFIX = 'hisaab.sync.cursor';
 
 /** Tables whose plaintext rows round-trip through Dexie, keyed as in the schema. */
 const TABLES: SyncTable[] = [
@@ -48,11 +58,40 @@ function table(name: SyncTable) {
   return db.table<AnyRow>(name);
 }
 
-function getCursor(): string {
-  return localStorage.getItem(CURSOR_KEY) ?? new Date(0).toISOString();
+const EPOCH = new Date(0).toISOString();
+
+function cursorKey(userId: string): string {
+  return `${CURSOR_PREFIX}.${userId}`;
 }
-function setCursor(iso: string) {
-  localStorage.setItem(CURSOR_KEY, iso);
+
+function getCursor(userId: string): string {
+  try {
+    return localStorage.getItem(cursorKey(userId)) ?? EPOCH;
+  } catch {
+    return EPOCH;
+  }
+}
+
+function setCursor(userId: string, iso: string) {
+  try {
+    localStorage.setItem(cursorKey(userId), iso);
+  } catch {
+    // Storage unavailable: the next pull simply re-reads from where it can.
+  }
+}
+
+/**
+ * Forget every pull cursor on this device. Called on sign-out and on "use a
+ * different account", alongside clearing the local ledger, so the next account
+ * to sign in here pulls its history from the beginning.
+ */
+export function clearSyncCursors(): void {
+  try {
+    const stale = Object.keys(localStorage).filter((k) => k.startsWith(CURSOR_PREFIX));
+    for (const k of stale) localStorage.removeItem(k);
+  } catch {
+    // ignore (private mode / disabled storage)
+  }
 }
 
 function setStatus(patch: Partial<ReturnType<typeof useSyncStore.getState>>) {
@@ -162,8 +201,10 @@ interface RemoteRecord extends Envelope {
 
 async function pull(): Promise<void> {
   if (!supabase) return;
+  const user = currentUser();
+  if (!user) return;
   const dek = keyring.get();
-  const cursor = getCursor();
+  const cursor = getCursor(user.id);
 
   const { data, error } = await supabase
     .from('records')
@@ -199,7 +240,7 @@ async function pull(): Promise<void> {
     await t.put({ ...plain, synced_at: Date.now() });
   }
 
-  setCursor(rows[rows.length - 1].updated_at);
+  setCursor(user.id, rows[rows.length - 1].updated_at);
 }
 
 // --- orchestration --------------------------------------------------------

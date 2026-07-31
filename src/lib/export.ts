@@ -8,7 +8,8 @@ import { db } from './db';
 import { sealRecord, openRecord, keyring, exportVault, type Envelope, type VaultBackup } from './crypto';
 import { currentWrappedKey } from './vaultStorage';
 import { enqueue } from './repo';
-import { formatINR } from './calculations';
+import { formatINR } from './money';
+import { isoDay } from './dates';
 import type { Account, Category, Transaction } from '../types';
 
 function download(filename: string, data: string, mime: string) {
@@ -21,20 +22,6 @@ function download(filename: string, data: string, mime: string) {
   // Revoking in the same tick can cancel the download before the browser has
   // read the blob (Safari and Firefox both do this). Let the click settle first.
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
-}
-
-/**
- * Local calendar date as YYYY-MM-DD.
- *
- * Not toISOString().slice(0,10): transactions store *local* midnight, and in any
- * timezone ahead of UTC that instant is still the previous day in UTC — so an
- * IST ledger exported every row a day early.
- */
-function isoDay(d: Date | number): string {
-  const x = new Date(d);
-  const month = String(x.getMonth() + 1).padStart(2, '0');
-  const day = String(x.getDate()).padStart(2, '0');
-  return `${x.getFullYear()}-${month}-${day}`;
 }
 
 function csvCell(v: string): string {
@@ -70,7 +57,7 @@ export async function exportTransactionsCsv(): Promise<void> {
         .join(',')
     );
 
-  download(`hisaab-${today()}.csv`, [header.join(','), ...rows].join('\n'), 'text/csv');
+  download(`hisaab-${isoDay()}.csv`, [header.join(','), ...rows].join('\n'), 'text/csv');
 }
 
 const SYNC_TABLES = [
@@ -98,7 +85,7 @@ export async function exportEncryptedVault(): Promise<void> {
   }
 
   const backup = exportVault(wrapped, records);
-  download(`hisaab-vault-${today()}.json`, JSON.stringify(backup), 'application/json');
+  download(`hisaab-vault-${isoDay()}.json`, JSON.stringify(backup), 'application/json');
 }
 
 /**
@@ -130,8 +117,4 @@ export async function importEncryptedVault(file: File): Promise<number> {
     restored++;
   }
   return restored;
-}
-
-function today(): string {
-  return isoDay(new Date());
 }

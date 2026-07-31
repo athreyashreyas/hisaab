@@ -1,7 +1,7 @@
 import { Minus, Plus } from 'lucide-react';
 import { Icon } from '../ui/Icon';
 import type { Account, Category, Cadence } from '../../types';
-import { cadenceLabel } from '../../lib/calculations';
+import { cadenceLabel } from '../../lib/recurrence';
 import { cn } from '../../lib/cn';
 
 /** Segmented control (type toggle, and reused elsewhere). */

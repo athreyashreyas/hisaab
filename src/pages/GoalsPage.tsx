@@ -8,10 +8,12 @@ import { Button } from '../components/ui/Button';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ProgressRing } from '../components/ui/ProgressRing';
 import { Money } from '../components/ui/Money';
-import { GoalMeta, PaceChip, formatShort } from '../components/finance/GoalRow';
+import { GoalMeta, PaceChip } from '../components/finance/GoalRow';
+import { formatShort } from '../lib/money';
 import { GoalFormModal } from '../components/finance/GoalFormModal';
-import { useGoals, useAllContributions, groupContributions } from '../hooks/useData';
-import { goalPace } from '../lib/goals';
+import { useGoals, useAllContributions } from '../hooks/useData';
+import type { EditorTarget } from '../hooks/useEditorTarget';
+import { goalPace, groupContributions } from '../lib/goals';
 import type { Goal } from '../types';
 
 /** Grid of goal cards: progress, pace verdict, and what each one wants this month. */
@@ -20,7 +22,7 @@ export function GoalsPage() {
   const goals = useGoals();
   const contributions = useAllContributions();
   const byGoal = groupContributions(contributions);
-  const [editing, setEditing] = useState<Goal | null | 'new'>(null);
+  const [editing, setEditing] = useState<EditorTarget<Goal>>(null);
 
   const now = new Date();
   const paced = goals.map((goal) => ({ goal, pace: goalPace(goal, byGoal.get(goal.id) ?? []) }));

@@ -1,7 +1,8 @@
 import { format } from 'date-fns';
 import { ProgressRing } from '../ui/ProgressRing';
 import { Money } from '../ui/Money';
-import { formatINR, cadenceLabel } from '../../lib/calculations';
+import { formatShort } from '../../lib/money';
+import { cadenceLabel } from '../../lib/recurrence';
 import { PACE_TONE, type GoalPace } from '../../lib/goals';
 import type { Goal } from '../../types';
 import { cn } from '../../lib/cn';
@@ -142,17 +143,3 @@ export function PaceChip({ pace, className }: { pace: GoalPace; className?: stri
   );
 }
 
-/**
- * Compact money for tight spots: ₹1.2L, ₹34k. Amounts under ₹1,000 fall through
- * to the full format so their paise survive — "₹99" for a ₹99.50 top-up would be
- * the one place in the app where a figure quietly loses money.
- */
-export function formatShort(paise: number): string {
-  const sign = paise < 0 ? '-' : '';
-  const abs = Math.abs(paise);
-  const r = abs / 100;
-  if (r >= 1e7) return `${sign}₹${(r / 1e7).toFixed(2)}Cr`;
-  if (r >= 1e5) return `${sign}₹${(r / 1e5).toFixed(1)}L`;
-  if (r >= 1e3) return `${sign}₹${(r / 1e3).toFixed(0)}k`;
-  return `${sign}${formatINR(abs)}`;
-}

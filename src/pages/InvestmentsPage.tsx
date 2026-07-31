@@ -14,21 +14,19 @@ import { ColorPicker } from '../components/ui/ColorPicker';
 import { ToggleCard } from '../components/ui/ToggleCard';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Segmented, AccountPicker, CadencePicker } from '../components/add/Pickers';
-import {
-  useInvestments,
-  useAccounts,
-  useInvestmentEarmarks,
-  portfolioSummary,
-} from '../hooks/useData';
+import { useInvestments, useAccounts, useEarmarks } from '../hooks/useData';
+import { portfolioSummary } from '../lib/portfolio';
 import { useSubmit } from '../hooks/useSubmit';
+import { resolveEditor, type EditorTarget } from '../hooks/useEditorTarget';
 import {
   createInvestment,
   updateInvestment,
   deleteInvestment,
   createRecurringRule,
-  midnight,
 } from '../lib/repo';
-import { rollForward, sanitiseDecimalInput } from '../lib/calculations';
+import { midnight } from '../lib/dates';
+import { sanitiseDecimalInput } from '../lib/money';
+import { anchorFor, rollForward } from '../lib/recurrence';
 import { ACCENT_PALETTE } from '../lib/categories';
 import type { Cadence, Investment, InvestmentKind } from '../types';
 import { cn } from '../lib/cn';
@@ -51,13 +49,12 @@ function pctLabel(fraction: number): string {
 /** The portfolio: stocks, mutual funds, FDs, and anything else, with returns. */
 export function InvestmentsPage() {
   const holdings = useInvestments();
-  const earmarks = useInvestmentEarmarks();
-  const [editing, setEditing] = useState<Investment | null | 'new'>(null);
+  const earmarks = useEarmarks();
+  const [editing, setEditing] = useState<EditorTarget<Investment>>(null);
 
   const sum = portfolioSummary(holdings);
   const up = sum.gain >= 0;
-  let earmarked = 0;
-  for (const amount of earmarks.values()) earmarked += amount;
+  const earmarked = earmarks.fromInvestments;
 
   const grouped = KIND_ORDER.map((kind) => ({
     kind,
@@ -125,7 +122,7 @@ export function InvestmentsPage() {
                   <HoldingRow
                     key={h.id}
                     holding={h}
-                    earmarked={earmarks.get(h.id) ?? 0}
+                    earmarked={earmarks.byInvestment.get(h.id) ?? 0}
                     onClick={() => setEditing(h)}
                   />
                 ))}
@@ -208,12 +205,11 @@ function InvestmentModal({
   target,
   onClose,
 }: {
-  target: Investment | null | 'new';
+  target: EditorTarget<Investment>;
   onClose: () => void;
 }) {
   const accounts = useAccounts();
-  const open = target !== null;
-  const existing = target !== 'new' && target !== null ? target : null;
+  const { open, existing } = resolveEditor(target);
 
   const [name, setName] = useState('');
   const [kind, setKind] = useState<InvestmentKind>('stock');
@@ -225,6 +221,7 @@ function InvestmentModal({
   const [accountId, setAccountId] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [color, setColor] = useState(ACCENT_PALETTE[0]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { pending, submit } = useSubmit();
 
   // Optional recurring plan (SIP): repeat the same contribution on a cadence.
@@ -235,6 +232,7 @@ function InvestmentModal({
 
   useEffect(() => {
     if (!open) return;
+    setConfirmDelete(false);
     setSip(false);
     setSipCadence('monthly');
     setSipInterval(1);
@@ -290,7 +288,6 @@ function InvestmentModal({
     } else {
       await createInvestment(payload);
       if (canSip && sip && accountId) {
-        const anchor = new Date(sipNext);
         await createRecurringRule({
           merchant: `${name.trim()} SIP`,
           amount: investedPaise,
@@ -298,13 +295,19 @@ function InvestmentModal({
           category_id: null,
           cadence: sipCadence,
           interval: sipInterval,
-          anchor: sipCadence === 'weekly' ? anchor.getDay() : anchor.getDate(),
+          anchor: anchorFor(sipCadence, sipNext),
           next_due: rollForward(sipNext, sipCadence, sipInterval),
           confirmed: true,
           active: true,
         });
       }
     }
+    onClose();
+  }
+
+  async function remove() {
+    if (!existing) return;
+    await deleteInvestment(existing.id);
     onClose();
   }
 
@@ -420,18 +423,25 @@ function InvestmentModal({
         <ColorPicker colors={ACCENT_PALETTE} value={color} onChange={setColor} />
 
         <div className="flex gap-2 pt-1">
-          {existing && (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                void deleteInvestment(existing.id);
-                onClose();
-              }}
-              className="px-3 text-rose-600"
-            >
-              Delete
-            </Button>
-          )}
+          {existing &&
+            (confirmDelete ? (
+              <Button
+                variant="ghost"
+                onClick={() => submit(remove)}
+                disabled={pending}
+                className="px-3 text-rose-600"
+              >
+                Really delete?
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => setConfirmDelete(true)}
+                className="px-3 text-ink-500"
+              >
+                Delete
+              </Button>
+            ))}
           <Button
             onClick={() => submit(save)}
             disabled={!canSave || pending || (canSip && sip && !accountId)}

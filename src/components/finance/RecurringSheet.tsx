@@ -12,10 +12,10 @@ import {
   createRecurringRule,
   updateRecurringRule,
   deleteRecurringRule,
-  midnight,
 } from '../../lib/repo';
+import { midnight } from '../../lib/dates';
 import { guessCategory } from '../../lib/categories';
-import { rollForward } from '../../lib/calculations';
+import { anchorFor, rollForward } from '../../lib/recurrence';
 import type { Cadence, RecurringRule } from '../../types';
 
 /**
@@ -90,12 +90,12 @@ export function RecurringSheet({
 
   const canSave = amount > 0 && merchant.trim().length > 0 && accountId != null;
 
-  // A next-due in the past is easy to pick; roll it forward to the next real hit
-  // so "Bills to come" and the "Next …" label stay honest.
-  const anchorDate = new Date(nextDue);
-
   async function save() {
     if (!canSave || !accountId) return;
+    // A next-due in the past is easy to pick; roll it forward to the next real
+    // hit so "Bills to come" and the "Next …" label stay honest. The anchor
+    // follows the date the user chose, not the rolled one, so "the 1st" stays
+    // the 1st.
     const due = rollForward(nextDue, cadence, interval);
     const payload = {
       merchant: merchant.trim(),
@@ -104,7 +104,7 @@ export function RecurringSheet({
       category_id: categoryId,
       cadence,
       interval,
-      anchor: cadence === 'weekly' ? anchorDate.getDay() : anchorDate.getDate(),
+      anchor: anchorFor(cadence, nextDue),
       next_due: due,
     };
     if (editing) {

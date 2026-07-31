@@ -15,7 +15,7 @@ import type { Transaction } from '../types';
 /** Reverse-chronological ledger, grouped by day with sticky headers + day totals. */
 export function LedgerPage() {
   const [month, setMonth] = useState(() => new Date());
-  const [filter, setFilter] = useState<LedgerFilter>({ type: 'all', accountId: null, categoryId: null });
+  const [filter, setFilter] = useState<LedgerFilter>('all');
   const [search, setSearch] = useState('');
 
   const txns = useMonthTransactions(month);
@@ -27,13 +27,16 @@ export function LedgerPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return txns.filter((t) => {
-      if (filter.type !== 'all' && t.type !== filter.type) return false;
-      if (filter.accountId && t.account_id !== filter.accountId) return false;
-      if (filter.categoryId && t.category_id !== filter.categoryId) return false;
+      if (filter !== 'all' && t.type !== filter) return false;
       if (q && !`${t.merchant} ${t.note}`.toLowerCase().includes(q)) return false;
       return true;
     });
   }, [txns, filter, search]);
+
+  // One predicate for "the list is narrowed", so the empty state can't disagree
+  // with what is actually on screen: a search or type filter with no matches is
+  // "nothing matches", never "no entries yet" with an Add button.
+  const narrowed = filter !== 'all' || search.trim().length > 0;
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
 
@@ -69,13 +72,13 @@ export function LedgerPage() {
         <Card className="mt-4">
           <EmptyState
             icon="receipt-text"
-            title={search || filter.type !== 'all' ? 'Nothing matches' : 'No entries yet'}
+            title={narrowed ? 'Nothing matches' : 'No entries yet'}
             body={
-              search || filter.type !== 'all'
-                ? 'Try a different month or clear the filters.'
+              narrowed
+                ? 'Try a different month, or clear the search and filters.'
                 : 'Log an expense or income to begin this month’s reckoning.'
             }
-            action={!search && filter.type === 'all' ? <Button onClick={openAdd}>Add entry</Button> : undefined}
+            action={narrowed ? undefined : <Button onClick={openAdd}>Add entry</Button>}
           />
         </Card>
       ) : (

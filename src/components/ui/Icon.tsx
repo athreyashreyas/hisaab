@@ -1,5 +1,5 @@
 import {
-  Baby, Banknote, BookOpen, Bus, Car, Circle, CircleDashed, CircleParking, Clapperboard,
+  Baby, Banknote, BookOpen, Briefcase, Bus, Car, Circle, CircleDashed, CircleParking, Clapperboard,
   Cloud, CloudOff, Coffee, Coins, Dumbbell, Fuel, Gift, GraduationCap, HandCoins, HandHeart,
   Heart, HeartPulse, Home, House, Landmark, Laptop, Layers, List, NotebookPen, PartyPopper,
   PawPrint, PieChart, PiggyBank, Plane, Plus, Receipt, ReceiptText, RefreshCw, Repeat,
@@ -21,6 +21,7 @@ const REGISTRY: Record<string, LucideIcon> = {
   baby: Baby,
   banknote: Banknote,
   'book-open': BookOpen,
+  briefcase: Briefcase,
   bus: Bus,
   car: Car,
   'circle-dashed': CircleDashed,

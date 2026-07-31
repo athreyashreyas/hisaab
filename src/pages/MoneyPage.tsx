@@ -5,17 +5,17 @@ import { Card, SectionHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Money } from '../components/ui/Money';
 import { EmptyState } from '../components/ui/EmptyState';
-import { GoalRow, formatShort } from '../components/finance/GoalRow';
+import { GoalRow } from '../components/finance/GoalRow';
+import { formatShort } from '../lib/money';
 import {
   useAccountBalances,
   useGoals,
   useAllContributions,
   useInvestments,
   useNetWorth,
-  groupContributions,
-  portfolioSummary,
 } from '../hooks/useData';
-import { goalPace } from '../lib/goals';
+import { goalPace, groupContributions } from '../lib/goals';
+import { portfolioSummary } from '../lib/portfolio';
 import type { AccountKind } from '../types';
 import { cn } from '../lib/cn';
 
@@ -38,7 +38,7 @@ const KIND_ICON: Record<AccountKind, typeof Wallet> = {
  */
 export function MoneyPage() {
   const navigate = useNavigate();
-  const balances = useAccountBalances(false);
+  const balances = useAccountBalances();
   const goals = useGoals();
   const contributions = useAllContributions();
   const holdings = useInvestments();

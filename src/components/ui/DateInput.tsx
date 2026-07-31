@@ -13,7 +13,7 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { backdropVariants, modalVariants } from '../../lib/motion';
-import { midnight } from '../../lib/repo';
+import { midnight } from '../../lib/dates';
 import { cn } from '../../lib/cn';
 
 interface DateInputProps {

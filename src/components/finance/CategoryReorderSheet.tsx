@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { BottomSheet } from '../ui/BottomSheet';
 import { Icon } from '../ui/Icon';
-import { formatINR } from '../../lib/calculations';
+import { formatINR } from '../../lib/money';
 import type { Category } from '../../types';
 
 function GripIcon() {

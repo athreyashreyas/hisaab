@@ -8,7 +8,8 @@ import { useUIStore } from '../../stores/uiStore';
  * SW handler dispatches — same silent-update pattern as Attend and Harmony.
  */
 export function UpdateOverlay() {
-  const { updating, setUpdating } = useUIStore();
+  const updating = useUIStore((s) => s.updating);
+  const setUpdating = useUIStore((s) => s.setUpdating);
 
   useEffect(() => {
     const on = () => setUpdating(true);

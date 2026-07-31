@@ -22,6 +22,26 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.10.1',
+    date: '2026-07-31',
+    title: 'Numbers that stay honest',
+    notes: [
+      'Safe to spend no longer keeps subtracting a bill you have already paid. Once this month\'s rent, subscription or SIP is in your ledger, it drops out of "Bills to come" instead of sitting there for the rest of the month, whether you logged it by hand or set it up with "Repeat this".',
+      'Recurring payments show a real next date. A bill whose date has gone by now moves on to its next one, and a rule pinned to the 31st lands on the 28th in February rather than drifting into March.',
+      'Money that a goal has claimed is released properly when its source goes away. Deleting an investment that was funding a goal used to leave the goal\'s claim standing, so "free to use" quietly dropped and never came back.',
+      'Categories can be removed. Open Settings, Categories & budgets, tap one, and Remove. Past entries stay exactly where they are and simply read as uncategorised.',
+      'Signing into a different account on the same device now restores that account\'s full history. Before, the first sync could start partway through and quietly leave older entries behind.',
+      'Changing your password is all-or-nothing. If the server cannot be reached it now says so plainly, instead of reporting a wrong password and leaving this device and the cloud disagreeing about which password is current.',
+      'Accounts, goals and investments sit in alphabetical order and stay put. Editing one no longer shuffles it to the end of the list.',
+      'Smaller fixes: income entries show their briefcase again, filtering the ledger to something with no matches says so instead of offering to add your first entry, deleting an investment asks first, and an unknown link lands on Home rather than a blank screen.',
+    ],
+    howTo: [
+      'Open Home and check "Bills to come": anything already paid this month is gone from the figure.',
+      'Open Settings, Categories & budgets, tap a category, and use Remove to retire one you do not want.',
+      'Open Insights and look at Recurring: each rule now shows the next date it is genuinely due.',
+    ],
+  },
+  {
     version: '0.10.0',
     date: '2026-07-31',
     major: true,

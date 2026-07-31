@@ -228,22 +228,9 @@ export async function rewrapDek(
   };
 }
 
-/** Generate a human-friendly offline recovery key, e.g. HISB-4F2A-9K3D-... */
-export function generateRecoveryKey(): string {
-  const bytes = randomBytes(16);
-  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no ambiguous chars
-  const groups: string[] = ['HISB'];
-  for (let g = 0; g < 4; g++) {
-    let s = '';
-    for (let i = 0; i < 4; i++) s += alphabet[bytes[g * 4 + i] % alphabet.length];
-    groups.push(s);
-  }
-  return groups.join('-');
-}
-
 // NOTE: for rewrapDek/exportKey to work, createVault must import the DEK as
 // extractable. Override the earlier import for the DEK specifically:
-export async function importDekExtractable(raw: Uint8Array): Promise<CryptoKey> {
+async function importDekExtractable(raw: Uint8Array): Promise<CryptoKey> {
   return crypto.subtle.importKey('raw', raw, 'AES-GCM', true, [
     'encrypt',
     'decrypt',

@@ -1,12 +1,12 @@
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/cn';
+import type { TxnType } from '../../types';
 
-export interface LedgerFilter {
-  type: 'all' | 'expense' | 'income' | 'transfer';
-  accountId: string | null;
-  categoryId: string | null;
-}
+/** Which kinds of entry the ledger is showing. */
+export type LedgerFilter = 'all' | TxnType;
+
+const TYPES: LedgerFilter[] = ['all', 'expense', 'income', 'transfer'];
 
 /**
  * Ledger filter + month switcher + search, in the pattern of Attend's
@@ -30,7 +30,6 @@ export function ViewFilterBar({
   /** Optional summary row, shown directly under the month switcher. */
   summary?: React.ReactNode;
 }) {
-  const types: LedgerFilter['type'][] = ['all', 'expense', 'income', 'transfer'];
   const isThisMonth =
     month.getFullYear() === new Date().getFullYear() && month.getMonth() === new Date().getMonth();
 
@@ -68,13 +67,14 @@ export function ViewFilterBar({
       </div>
 
       <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
-        {types.map((t) => (
+        {TYPES.map((t) => (
           <button
             key={t}
-            onClick={() => onFilter({ ...filter, type: t })}
+            onClick={() => onFilter(t)}
+            aria-pressed={filter === t}
             className={cn(
               'shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors',
-              filter.type === t ? 'bg-teal-500 text-white' : 'bg-parchment-200 text-ink-500'
+              filter === t ? 'bg-teal-500 text-white' : 'bg-parchment-200 text-ink-500'
             )}
           >
             {t}

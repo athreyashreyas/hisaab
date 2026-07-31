@@ -38,7 +38,7 @@ import { pushVaultKeys, fetchVaultKeys } from '../lib/vaultCloud';
 import { supabase, isCloudConfigured } from '../lib/supabase';
 import { seedDefaults } from '../lib/repo';
 import { clearLocalDb } from '../lib/db';
-import { syncNow } from '../lib/sync';
+import { clearSyncCursors, syncNow } from '../lib/sync';
 
 export type AccountStatus =
   | 'checking'
@@ -246,10 +246,14 @@ export const useAccountStore = create<AccountState>((set, get) => ({
   async changePassword(current, next) {
     const wrapped = currentWrappedKey();
     if (!wrapped) throw new Error('No vault to change.');
-    const dek = await unlockVault(current, wrapped); // verifies the current password
+    const dek = await unlockVault(current, wrapped); // throws WrongPassphraseError
     const newWrapped = await rewrapDek(dek, next);
-    vaultStorage.setWrapped(newWrapped);
 
+    // Everything that can fail happens before anything is persisted locally, for
+    // the same reason regenerateRecoveryPhrase pushes first: if the auth update
+    // or the key backup fell over after we had already saved the new wrap, this
+    // device would want the new password while the cloud still wanted the old
+    // one, and signing in anywhere else would fail with no way to tell why.
     const email = get().email;
     const user = get().user;
     if (supabase && email) {
@@ -258,6 +262,8 @@ export const useAccountStore = create<AccountState>((set, get) => ({
       if (error) throw error;
     }
     if (user) await pushVaultKeys(user.id, newWrapped, currentRecoveryWrap());
+
+    vaultStorage.setWrapped(newWrapped);
     await keepUnlocked(dek); // DEK is unchanged; refresh the device copy anyway
   },
 
@@ -337,29 +343,36 @@ export const useAccountStore = create<AccountState>((set, get) => ({
   },
 
   async signOut() {
-    if (supabase) await supabase.auth.signOut();
-    keyring.clear();
-    await clearLocalDb();
+    await wipeDevice();
     vaultStorage.clear({ keepEmail: true, keepOnboarded: true });
     set({ user: null, status: 'signed-out' });
   },
 
   async useDifferentAccount() {
-    if (supabase) await supabase.auth.signOut();
-    keyring.clear();
-    await clearLocalDb();
+    await wipeDevice();
     vaultStorage.clear({ keepOnboarded: true });
     set({ user: null, email: null, status: 'signed-out' });
   },
 
   async startOver() {
-    if (supabase) await supabase.auth.signOut();
-    keyring.clear();
-    await clearLocalDb();
+    await wipeDevice();
     vaultStorage.clear();
     set({ user: null, email: null, onboardedAt: null, status: 'onboarding' });
   },
 }));
+
+/**
+ * Everything the three "leave this account" paths have in common: end the
+ * session, drop the key, empty the local ledger, and forget the pull cursors so
+ * the next account signing in here pulls its history from the beginning rather
+ * than from wherever the last one had got to.
+ */
+async function wipeDevice(): Promise<void> {
+  if (supabase) await supabase.auth.signOut();
+  keyring.clear();
+  await clearLocalDb();
+  clearSyncCursors();
+}
 
 /** Re-establish a Supabase session from a password we already hold (background). */
 async function ensureSession(email: string | null, password: string): Promise<void> {

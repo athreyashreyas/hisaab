@@ -21,10 +21,10 @@
  *
  * All amounts are integer paise; all dates are epoch ms.
  */
-import { cadenceInterval, monthBounds, monthlyEquivalent } from './calculations';
-import type { Cadence, Goal, GoalContribution } from '../types';
+import { DAY_MS, monthBounds } from './dates';
+import { cadenceInterval, monthlyEquivalent } from './recurrence';
+import type { Account, Cadence, Goal, GoalContribution, ID, Investment } from '../types';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const AVG_MONTH_MS = 30.44 * DAY_MS;
 
 // --- the schedule ---------------------------------------------------------
@@ -354,6 +354,74 @@ export function goalPace(
     driftPayments: 0,
     nextDue: null,
   };
+}
+
+// --- grouping and funding -------------------------------------------------
+
+/**
+ * Every goal's contributions, bucketed by goal id — what the list screens need
+ * to run goalPace() per row off a single live query, rather than one query per
+ * goal. Goals with no history simply aren't in the map; callers use `?? []`.
+ */
+export function groupContributions(contribs: GoalContribution[]): Map<ID, GoalContribution[]> {
+  const byGoal = new Map<ID, GoalContribution[]>();
+  for (const c of contribs) {
+    const list = byGoal.get(c.goal_id);
+    if (list) list.push(c);
+    else byGoal.set(c.goal_id, [c]);
+  }
+  return byGoal;
+}
+
+export interface FundingSlice {
+  kind: 'account' | 'investment' | 'unattributed';
+  id: ID | null;
+  name: string;
+  color: string;
+  amount: number; // paise, net of withdrawals
+}
+
+const REMOVED_SOURCE_COLOR = '#6B6E68';
+
+/**
+ * Where a single goal's money actually came from, ready to render: one row per
+ * account or holding that has funded it, largest first. Sources that net out to
+ * nothing (money put in and later taken back) drop off the list.
+ */
+export function fundingBreakdown(
+  contributions: GoalContribution[],
+  accounts: Map<ID, Account>,
+  investments: Map<ID, Investment>
+): FundingSlice[] {
+  const byKey = new Map<string, FundingSlice>();
+  for (const c of contributions) {
+    const kind: FundingSlice['kind'] = c.account_id
+      ? 'account'
+      : c.investment_id
+        ? 'investment'
+        : 'unattributed';
+    const id = c.account_id ?? c.investment_id ?? null;
+    const key = `${kind}:${id ?? 'none'}`;
+    const existing = byKey.get(key);
+    if (existing) {
+      existing.amount += c.amount;
+      continue;
+    }
+    const source =
+      kind === 'account'
+        ? accounts.get(id as ID)
+        : kind === 'investment'
+          ? investments.get(id as ID)
+          : undefined;
+    byKey.set(key, {
+      kind,
+      id,
+      name: source?.name ?? (kind === 'unattributed' ? 'Not linked to a source' : 'Removed source'),
+      color: source?.color ?? REMOVED_SOURCE_COLOR,
+      amount: c.amount,
+    });
+  }
+  return [...byKey.values()].filter((s) => s.amount > 0).sort((a, b) => b.amount - a.amount);
 }
 
 // --- presentation ---------------------------------------------------------

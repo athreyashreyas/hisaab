@@ -17,19 +17,22 @@ import {
   useAccountMap,
   useRecurringRules,
 } from '../hooks/useData';
+import { categoryBreakdown, categoryPace } from '../lib/budget';
 import {
-  categoryBreakdown,
-  categoryPace,
-  detectRecurring,
-  monthBounds,
-  monthlyEquivalent,
+  anchorFor,
   cadenceLabel,
-  formatINR,
-  formatCompactINR,
-} from '../lib/calculations';
+  detectRecurring,
+  firstDueFromToday,
+  merchantKey,
+  monthlyEquivalent,
+  rollForward,
+  type DetectedRule,
+} from '../lib/recurrence';
+import { monthBounds } from '../lib/dates';
+import { formatINR, formatCompactINR } from '../lib/money';
 import { createRecurringRule } from '../lib/repo';
 import { RecurringSheet } from '../components/finance/RecurringSheet';
-import type { Cadence, RecurringRule, Transaction } from '../types';
+import type { RecurringRule, Transaction } from '../types';
 
 type Granularity = 'day' | 'week' | 'month';
 
@@ -60,7 +63,7 @@ export function InsightsPage() {
 
   const trend = useMemo(() => buildTrend(txns, gran, now), [txns, gran]);
 
-  const slices = categoryBreakdown(txns, start, end);
+  const slices = categoryBreakdown(txns, start, end, new Set(categoryMap.keys()));
   const spentTotal = slices.reduce((s, x) => s + x.total, 0);
 
   // Answer-first figures for the hero: month total (above), its month-over-month
@@ -90,8 +93,8 @@ export function InsightsPage() {
   // Recurring: confirmed rules + fresh detections not yet a rule.
   const detected = useMemo(() => detectRecurring(txns), [txns]);
   const confirmed = rules.filter((r) => r.confirmed && r.active);
-  const knownMerchants = new Set(rules.map((r) => r.merchant.trim().toLowerCase()));
-  const suggestions = detected.filter((d) => !knownMerchants.has(d.merchant.trim().toLowerCase()));
+  const knownMerchants = new Set(rules.map((r) => merchantKey(r.merchant)));
+  const suggestions = detected.filter((d) => !knownMerchants.has(merchantKey(d.merchant)));
   const monthlyCommitted = confirmed.reduce(
     (s, r) => s + monthlyEquivalent(r.amount, r.cadence, r.interval),
     0
@@ -270,38 +273,15 @@ export function InsightsPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() =>
-                        createRecurringRule({
-                          merchant: d.merchant,
-                          amount: d.amount,
-                          category_id: d.category_id,
-                          account_id: d.account_id,
-                          cadence: d.cadence,
-                          anchor: new Date().getDate(),
-                          next_due: nextDue(d.cadence),
-                          confirmed: true,
-                        })
-                      }
-                      aria-label="Confirm"
+                      onClick={() => void saveDetected(d, true)}
+                      aria-label={`Track ${d.merchant} as recurring`}
                       className="grid h-8 w-8 place-items-center rounded-full bg-moss-100 text-moss-600"
                     >
                       <Check size={16} />
                     </button>
                     <button
-                      onClick={() =>
-                        createRecurringRule({
-                          merchant: d.merchant,
-                          amount: d.amount,
-                          category_id: d.category_id,
-                          account_id: d.account_id,
-                          cadence: d.cadence,
-                          anchor: new Date().getDate(),
-                          next_due: nextDue(d.cadence),
-                          confirmed: false,
-                          active: false,
-                        })
-                      }
-                      aria-label="Dismiss"
+                      onClick={() => void saveDetected(d, false)}
+                      aria-label={`Dismiss ${d.merchant}`}
                       className="grid h-8 w-8 place-items-center rounded-full bg-parchment-200 text-ink-500"
                     >
                       <X size={16} />
@@ -372,14 +352,25 @@ function DeltaChip({ delta }: { delta: number }) {
   );
 }
 
-function nextDue(cadence: Cadence): number {
-  const d = new Date();
-  if (cadence === 'daily') d.setDate(d.getDate() + 1);
-  else if (cadence === 'weekly') d.setDate(d.getDate() + 7);
-  else if (cadence === 'yearly') d.setFullYear(d.getFullYear() + 1);
-  else d.setMonth(d.getMonth() + 1);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
+/**
+ * Turn a detection into a rule. Accepting tracks it; dismissing still writes an
+ * inactive rule, which is what stops the same suggestion coming back on every
+ * visit. Either way the anchor has to follow the cadence: a weekly rule pins to
+ * a day of the week, everything else to a day of the month.
+ */
+function saveDetected(d: DetectedRule, confirmed: boolean) {
+  const next_due = rollForward(firstDueFromToday(d.cadence), d.cadence);
+  return createRecurringRule({
+    merchant: d.merchant,
+    amount: d.amount,
+    category_id: d.category_id,
+    account_id: d.account_id,
+    cadence: d.cadence,
+    anchor: anchorFor(d.cadence, next_due),
+    next_due,
+    confirmed,
+    active: confirmed,
+  });
 }
 
 /** Build a spend-over-time series at the chosen granularity. */

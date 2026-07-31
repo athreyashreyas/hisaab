@@ -1,4 +1,4 @@
-import { formatINR, hasPaise } from '../../lib/calculations';
+import { formatINR, hasPaise } from '../../lib/money';
 import { cn } from '../../lib/cn';
 
 /**
