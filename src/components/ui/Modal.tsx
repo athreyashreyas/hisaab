@@ -30,7 +30,20 @@ export function Modal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          // The safe-area insets have to be padding on this container, not just
+          // a max-height on the panel below: `inset-0` covers the whole window
+          // including the status bar, so a tall modal (the goal form) would grow
+          // up under the clock and the wifi/battery icons. A flat p-4 wasn't
+          // enough — the top inset on a notched iPhone is roughly three times
+          // that. The panel's max-height is a percentage of this element's
+          // content box, so padding here shrinks it to match automatically.
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{
+            paddingTop: 'max(1rem, calc(var(--safe-top) + 0.5rem))',
+            paddingBottom: 'max(1rem, calc(var(--safe-bottom) + 0.5rem))',
+            paddingLeft: 'max(1rem, var(--safe-left))',
+            paddingRight: 'max(1rem, var(--safe-right))',
+          }}
           variants={backdropVariants}
           initial="initial"
           animate="animate"
