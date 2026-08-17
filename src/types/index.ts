@@ -236,3 +236,20 @@ export interface SyncQueueItem {
   created_at: number;
   retry_count: number;
 }
+
+// --- feedback outbox ------------------------------------------------------
+
+/**
+ * A message to the creator that has not reached them yet. Its own queue rather
+ * than a sync_queue row: it belongs to no table, and unlike everything in
+ * sync_queue it travels as plain text, because a person has to read it.
+ */
+export interface FeedbackOutboxItem {
+  id?: number; // auto-increment
+  kind: 'bug' | 'idea';
+  subject: string;
+  body: string;
+  created_at: string; // ISO, so the queue drains oldest-first
+  /** Failed attempts so far, so a message that cannot land is given up on. */
+  attempts: number;
+}

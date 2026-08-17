@@ -3,7 +3,7 @@ import {
   Cloud, CloudOff, Coffee, Coins, Dumbbell, Fuel, Gift, GraduationCap, HandCoins, HandHeart,
   Heart, HeartPulse, Home, House, Landmark, Laptop, Layers, List, NotebookPen, PartyPopper,
   PawPrint, PieChart, PiggyBank, Plane, Plus, Receipt, ReceiptText, RefreshCw, Repeat,
-  Scissors, Settings, Shield, ShieldCheck, Shirt, ShoppingBag, ShoppingBasket, Smartphone,
+  Scissors, Send, Settings, Shield, ShieldCheck, Shirt, ShoppingBag, ShoppingBasket, Smartphone,
   Sofa, Sparkles, Stethoscope, Target, TrendingUp, Users, Utensils, Wallet, Wine, Wrench, Zap,
   type LucideIcon, type LucideProps,
 } from 'lucide-react';
@@ -57,6 +57,7 @@ const REGISTRY: Record<string, LucideIcon> = {
   'refresh-cw': RefreshCw,
   repeat: Repeat,
   scissors: Scissors,
+  send: Send,
   settings: Settings,
   shield: Shield,
   'shield-check': ShieldCheck,

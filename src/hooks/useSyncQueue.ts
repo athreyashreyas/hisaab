@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { db } from '../lib/db';
 import { liveQuery } from 'dexie';
 import { syncNow, refreshSyncBadge } from '../lib/sync';
+import { startFeedbackOutbox } from '../lib/feedbackOutbox';
 import { useAccountStore } from '../stores/accountStore';
 import { useNetwork } from './useNetwork';
 
@@ -13,6 +14,10 @@ import { useNetwork } from './useNetwork';
 export function useSyncQueue() {
   const online = useNetwork();
   const user = useAccountStore((s) => s.user);
+
+  // Messages written in Settings ride their own queue, on the same life cycle:
+  // it sends what is waiting on reconnect and on coming back to the app.
+  useEffect(() => startFeedbackOutbox(), []);
 
   // Flush shortly after the queue changes (batches rapid multi-entry).
   useEffect(() => {

@@ -22,6 +22,23 @@ export interface Release {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.11.0',
+    date: '2026-08-17',
+    major: true,
+    title: 'A way to make Hisaab exactly what you want',
+    notes: [
+      'If Hisaab has ever been any good, it is because of the thoughtful voices and consideration of everyone who has used it. As Hisaab grows, we want that ethos of bespoke attention to remain. Settings now has a line straight to the app\'s creator.',
+      'You can report a bug, suggest a new feature, or just send an idea. Bugs are fixed as soon as possible, and ideas are read and considered for the next version. Every single message is deeply valued and given attention to.',
+      'Nothing from your ledger travels with it. The message carries your version and the device you are holding, so you never have to describe what you were looking at, and not one figure, account or category name goes with it.',
+      'If you are offline or the message cannot get through, nothing is lost. Hisaab keeps it on your device and sends it when you are back online, so you can write it and forget it.',
+      'Replies come back to the email you signed up with, so there is nothing to go and check and nothing to miss. Answer that mail and the conversation simply carries on.',
+    ],
+    howTo: [
+      'Open Settings and scroll to "Make Hisaab Yours", then choose whether it is a bug or an idea.',
+    ],
+    art: 'message',
+  },
+  {
     version: '0.10.1',
     date: '2026-07-31',
     title: 'Numbers that stay honest',

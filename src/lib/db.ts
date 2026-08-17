@@ -9,6 +9,7 @@ import type {
   RecurringRule,
   Prefs,
   SyncQueueItem,
+  FeedbackOutboxItem,
 } from '../types';
 
 /**
@@ -27,6 +28,7 @@ class HisaabDB extends Dexie {
   recurring_rules!: EntityTable<RecurringRule, 'id'>;
   prefs!: EntityTable<Prefs, 'id'>;
   sync_queue!: EntityTable<SyncQueueItem, 'id'>;
+  feedback_outbox!: EntityTable<FeedbackOutboxItem, 'id'>;
 
   constructor() {
     super('HisaabDB');
@@ -56,6 +58,13 @@ class HisaabDB extends Dexie {
     this.version(3).stores({
       investments: 'id, kind, account_id, archived, deleted_at, synced_at',
     });
+
+    // v4 adds the feedback outbox: messages written in Settings that have not
+    // reached the creator yet. Indexed on created_at so the queue drains in the
+    // order the messages were written.
+    this.version(4).stores({
+      feedback_outbox: '++id, created_at',
+    });
   }
 }
 
@@ -75,6 +84,7 @@ export async function clearLocalDb(): Promise<void> {
       db.recurring_rules,
       db.prefs,
       db.sync_queue,
+      db.feedback_outbox,
     ],
     async () => {
       await Promise.all([
@@ -87,6 +97,9 @@ export async function clearLocalDb(): Promise<void> {
         db.recurring_rules.clear(),
         db.prefs.clear(),
         db.sync_queue.clear(),
+        // The relay stamps a message with whoever is signed in, so one left
+        // waiting here would arrive under the next person's name.
+        db.feedback_outbox.clear(),
       ]);
     }
   );

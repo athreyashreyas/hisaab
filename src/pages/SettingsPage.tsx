@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight, Wallet, Shapes, KeyRound, Download, Upload, FileText,
-  Lock, LogOut, RefreshCw, Info, BookOpen, Copy, Check,
+  Lock, LogOut, RefreshCw, Info, BookOpen, Copy, Check, Bug, Lightbulb,
 } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/ui/Card';
@@ -10,6 +10,8 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Icon } from '../components/ui/Icon';
+import { FeedbackSheet } from '../components/settings/FeedbackSheet';
+import type { FeedbackKind } from '../lib/feedback';
 import { useAccountStore } from '../stores/accountStore';
 import { isCloudConfigured } from '../lib/supabase';
 import { APP_VERSION } from '../lib/changelog';
@@ -31,6 +33,7 @@ export function SettingsPage() {
   const user = useAccountStore((s) => s.user);
 
   const [changePass, setChangePass] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackKind | null>(null);
   const [recoveryPhrase, setRecoveryPhrase] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -123,6 +126,28 @@ export function SettingsPage() {
         )}
       </SettingsGroup>
 
+      {/* A line straight to the person who makes it. The relay stamps the sender
+          from their session, so on a build with no cloud there is no way to send
+          a message or to answer one, and offering it would promise nothing. */}
+      {isCloudConfigured() && (
+        <SettingsGroup title="Make Hisaab Yours">
+          <Row
+            icon={<Bug size={18} />}
+            label="Report something broken"
+            sub="Found a bug, or something that does not work as you expect?"
+            onClick={() => setFeedback('bug')}
+            chevron
+          />
+          <Row
+            icon={<Lightbulb size={18} />}
+            label="Suggest something"
+            sub="Any and all ideas are welcome. Especially half-formed ones."
+            onClick={() => setFeedback('idea')}
+            chevron
+          />
+        </SettingsGroup>
+      )}
+
       <SettingsGroup title="About">
         <Row icon={<BookOpen size={18} />} label="How Hisaab works" onClick={() => navigate('/guide?pane=guide')} chevron />
         <Row icon={<Info size={18} />} label="What's new" sub={`v${APP_VERSION}`} onClick={() => navigate('/guide?pane=new')} chevron />
@@ -135,6 +160,7 @@ export function SettingsPage() {
 
       <ChangePasswordModal open={changePass} onClose={() => setChangePass(false)} onDone={() => flash('Password changed.')} />
       <RecoveryPhraseModal phrase={recoveryPhrase} onClose={() => setRecoveryPhrase(null)} />
+      <FeedbackSheet kind={feedback} onClose={() => setFeedback(null)} />
 
       {toast && (
         <div className="fixed inset-x-0 bottom-24 z-[60] mx-auto w-fit rounded-full bg-ink-900 px-4 py-2 text-sm font-medium text-parchment-50 shadow-lg md:bottom-8">

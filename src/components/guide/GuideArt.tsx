@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Bug, Check, Lightbulb } from 'lucide-react';
 import type { GuideArtKind } from '../../lib/guide';
 import { DENOMINATIONS } from '../../lib/denominations';
 
@@ -620,6 +621,46 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
               9f2ac41d8e73b06a5c1f4e29d7b80a3c6e15f9d2ab47c308
             </p>
           </div>
+        </div>
+      );
+
+    // A message written in Settings, and where it gets to. The line along the
+    // bottom of the card is what the app attaches for you.
+    case 'message':
+      return (
+        <div className="w-full max-w-[240px] space-y-2.5">
+          <div className="flex gap-1.5 rounded-card bg-parchment-200 p-1">
+            <span className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] bg-parchment-50 py-2 text-[11px] font-semibold text-ink-900 shadow-sm">
+              <Bug size={12} />
+              Broken
+            </span>
+            <span className="flex flex-1 items-center justify-center gap-1.5 rounded-[9px] py-2 text-[11px] font-semibold text-ink-500">
+              <Lightbulb size={12} />
+              An idea
+            </span>
+          </div>
+
+          <div className="rounded-card bg-parchment-50 p-3 shadow-sm">
+            <p className="text-xs leading-relaxed text-ink-700">
+              A transfer between two accounts left one balance where it was.
+            </p>
+            <p className="mt-2 text-[10px] text-ink-300">Hisaab 0.11.0 · iPhone</p>
+          </div>
+
+          <motion.div
+            className="flex items-center justify-center gap-2"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut', delay: 0.35 }}
+          >
+            <span
+              className="flex h-5 w-5 items-center justify-center rounded-full"
+              style={{ backgroundColor: TEAL }}
+            >
+              <Check size={12} strokeWidth={3} className="text-white" />
+            </span>
+            <span className="text-[11px] text-ink-500">That is with them now</span>
+          </motion.div>
         </div>
       );
 
