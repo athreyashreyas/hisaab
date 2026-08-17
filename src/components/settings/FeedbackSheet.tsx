@@ -109,9 +109,9 @@ export function FeedbackSheet({ kind, onClose }: FeedbackSheetProps) {
           </div>
 
           <p className="text-xs leading-relaxed text-ink-500">
-            Your message goes to the person who makes Hisaab, and nothing from your
-            ledger travels with it.
-            {account ? ` Any reply will come directly to ${account}.` : ''}
+            This reaches the person who writes Hisaab. Your ledger is not attached
+            to it and stays where it is.
+            {account ? ` Replies land at ${account}.` : ''}
           </p>
 
           {/* A line is always held here, so an error arriving never shoves the
@@ -160,34 +160,34 @@ function Delivered({
       </motion.div>
 
       <p className="text-center font-serif text-xl text-ink-900">
-        {queued ? 'Saved, and it will send itself.' : 'That is with them now.'}
+        {queued ? 'Held here, and it will go on its own.' : 'It has reached them.'}
       </p>
 
       <div className="mx-auto mt-3 max-w-sm space-y-2.5 text-center text-sm text-ink-500">
         {queued ? (
           <p>
-            It could not go just now, so it is sitting on your device. Hisaab
-            sends it the next time it gets a connection, whether or not you open
-            the app again.
+            There was no connection just now, so it is sitting on your device.
+            Hisaab sends it as soon as you are back online, even if you never
+            open the app again.
           </p>
         ) : (
           <p>
-            It arrived with your version and device attached, so they can see the
-            same screen you were looking at.
+            Your version and the kind of device you are on went with it, so they
+            can picture the screen you were looking at.
           </p>
         )}
         <p>
-          Hisaab is built and maintained by one person. They read what comes in,
-          and they write back when there is something worth saying. A fair
-          amount of what is in the app now started as somebody&apos;s message.
+          Hisaab is written and looked after by one person. They read everything
+          that arrives, and reply when there is something useful to say. A good
+          deal of the app started as a message like this one.
         </p>
         {account && (
           <p>
-            Any reply will come to{' '}
+            Replies come to{' '}
             <span className="font-medium text-ink-700">{account}</span>.
           </p>
         )}
-        <p className="text-ink-300">Thank you for taking the time.</p>
+        <p className="text-ink-300">Thank you for the time it took to write.</p>
       </div>
 
       <Button block size="lg" variant="secondary" className="mt-5" onClick={onClose}>

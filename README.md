@@ -15,7 +15,7 @@ number that already accounts for the bills still to come.
   passphrase only you know. The cloud copy is sealed before it leaves your phone;
   the server holds ciphertext and timestamps, nothing readable.
 - **Manual, and proud of it (for now).** Bank SMS/UPI auto-capture is archived
-  for a future release — a PWA can't read SMS on any OS, and bank-linked data
+  for a future release. A PWA can't read SMS on any OS, and bank-linked data
   needs the regulated Account Aggregator route. v1 makes manual entry fast and
   pleasant. Email-alert auto-capture is the planned next step.
 
@@ -34,10 +34,10 @@ npm run dev
 
 ## Building it
 
-- `hisaab-build-spec.md` — the full spec (architecture, E2E design, data model,
+- `hisaab-build-spec.md`: the full spec (architecture, E2E design, data model,
   screens, milestones).
-- `claude-code-kickoff.md` — the prompt to hand the build to Claude Code.
-- `mockups/dashboard.html` — the visual reference for the Home screen.
+- `claude-code-kickoff.md`: the prompt to hand the build to Claude Code.
+- `mockups/dashboard.html`: the visual reference for the Home screen.
 
 The design language is shared with Attend and Harmony: DM Serif Display + Plus
 Jakarta Sans on warm parchment. Hisaab's signature is a deep ledger teal, with

@@ -109,6 +109,28 @@ export function SettingsPage() {
         <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={onImport} />
       </SettingsGroup>
 
+      {/* A line straight to the person who makes it. The relay stamps the sender
+          from their session, so on a build with no cloud there is no way to send
+          a message or to answer one, and offering it would promise nothing. */}
+      {isCloudConfigured() && (
+        <SettingsGroup title="Make Hisaab Yours">
+          <Row
+            icon={<Bug size={18} />}
+            label="Report something broken"
+            sub="Something not adding up, or not behaving the way you expect?"
+            onClick={() => setFeedback('bug')}
+            chevron
+          />
+          <Row
+            icon={<Lightbulb size={18} />}
+            label="Suggest something"
+            sub="Rough thoughts count. Plenty of them have turned into features."
+            onClick={() => setFeedback('idea')}
+            chevron
+          />
+        </SettingsGroup>
+      )}
+
       <SettingsGroup title="Account">
         <Row
           icon={<Icon name={isCloudConfigured() ? 'cloud' : 'cloud-off'} size={18} />}
@@ -125,28 +147,6 @@ export function SettingsPage() {
           <Row icon={<LogOut size={18} />} label="Sign out" onClick={() => void signOut()} />
         )}
       </SettingsGroup>
-
-      {/* A line straight to the person who makes it. The relay stamps the sender
-          from their session, so on a build with no cloud there is no way to send
-          a message or to answer one, and offering it would promise nothing. */}
-      {isCloudConfigured() && (
-        <SettingsGroup title="Make Hisaab Yours">
-          <Row
-            icon={<Bug size={18} />}
-            label="Report something broken"
-            sub="Found a bug, or something that does not work as you expect?"
-            onClick={() => setFeedback('bug')}
-            chevron
-          />
-          <Row
-            icon={<Lightbulb size={18} />}
-            label="Suggest something"
-            sub="Any and all ideas are welcome. Especially half-formed ones."
-            onClick={() => setFeedback('idea')}
-            chevron
-          />
-        </SettingsGroup>
-      )}
 
       <SettingsGroup title="About">
         <Row icon={<BookOpen size={18} />} label="How Hisaab works" onClick={() => navigate('/guide?pane=guide')} chevron />

@@ -659,7 +659,7 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
             >
               <Check size={12} strokeWidth={3} className="text-white" />
             </span>
-            <span className="text-[11px] text-ink-500">That is with them now</span>
+            <span className="text-[11px] text-ink-500">It has reached them</span>
           </motion.div>
         </div>
       );

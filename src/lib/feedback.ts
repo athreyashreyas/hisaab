@@ -40,16 +40,16 @@ export const FEEDBACK_KINDS: Record<FeedbackKind, KindCopy> = {
     label: 'Something is broken',
     subject: 'Bug report',
     prompt:
-      'What went wrong, and what were you doing just before it did? The more detail you give, the easier it is to fix.',
+      'Tell them what happened, and what you were doing just before it did. The small specifics are usually what make a bug easy to find.',
     placeholder:
-      'I logged a transfer between two accounts and the balance on one of them did not move...',
+      'I moved money between two accounts and one of the balances stayed put...',
   },
   idea: {
     label: 'An idea',
     subject: 'Feature idea',
     prompt:
-      'What would you like Hisaab to do? It does not have to be a finished idea. A fair amount of what is here now started as somebody asking for it.',
-    placeholder: 'It would help if I could...',
+      'What should Hisaab be able to do that it cannot yet? Nothing needs to be worked out. Plenty of what is here began as a line somebody sent in.',
+    placeholder: 'I keep wishing I could...',
   },
 };
 
