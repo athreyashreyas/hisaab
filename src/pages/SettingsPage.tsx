@@ -250,7 +250,7 @@ function Row({
       <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-teal-50 text-teal-600">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[14.5px] font-medium text-ink-900">{label}</span>
-        {sub && <span className="block truncate text-[12px] text-ink-500">{sub}</span>}
+        {sub && <span className="mt-0.5 block text-[12px] leading-snug text-ink-500">{sub}</span>}
       </span>
       {chevron && <ChevronRight size={17} className="shrink-0 text-ink-250" />}
     </Tag>
