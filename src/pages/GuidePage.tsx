@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronDown } from 'lucide-react';
 import { APP_VERSION, CHANGELOG } from '../lib/changelog';
-import { GUIDE, type GuideSection } from '../lib/guide';
+import {
+  GUIDE_ESSENTIALS,
+  GUIDE_MORE,
+  type GuideSection,
+} from '../lib/guide';
 import { ReleaseRow } from '../components/guide/ReleaseRow';
 import { GuideArt } from '../components/guide/GuideArt';
 import { Icon } from '../components/ui/Icon';
@@ -111,10 +115,27 @@ export function GuidePage() {
               )}
             </div>
           ) : (
-            <div className="mt-8 space-y-8">
-              {GUIDE.map((section) => (
-                <Section key={section.id} section={section} />
-              ))}
+            <div className="mt-8">
+              <div className="space-y-8">
+                {GUIDE_ESSENTIALS.map((section) => (
+                  <Section key={section.id} section={section} />
+                ))}
+              </div>
+
+              {/* The rest of Hisaab, a line each. Folded so the read above stays
+                  the whole of what anyone has to take in on the day they start,
+                  however many features end up down here. */}
+              <div className="mt-10 border-t border-parchment-200 pt-7">
+                <h2 className="font-serif text-2xl text-ink-900">The rest of it</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-500">
+                  Open whichever you want, now or the day it comes up.
+                </p>
+                <div className="mt-4 space-y-2">
+                  {GUIDE_MORE.map((section) => (
+                    <FoldedSection key={section.id} section={section} />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -139,9 +160,68 @@ function Section({ section }: { section: GuideSection }) {
         </span>
         <h2 className="font-serif text-2xl text-ink-900">{section.title}</h2>
       </div>
+      <SectionBody section={section} />
+    </section>
+  );
+}
 
+/** One folded section: its icon, title and one line, until somebody wants it. */
+function FoldedSection({ section }: { section: GuideSection }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="overflow-hidden rounded-card bg-parchment-50 shadow-sm">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 p-4 text-left"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-card bg-teal-50 text-teal-600">
+          <Icon name={section.icon} size={18} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-ink-900">
+            {section.title}
+          </span>
+          {section.summary && (
+            <span className="mt-0.5 block text-xs leading-relaxed text-ink-500">
+              {section.summary}
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          size={18}
+          className={cn('shrink-0 text-ink-300 transition-transform', open && 'rotate-180')}
+        />
+      </button>
+      {open && (
+        <div className="px-4 pb-4">
+          <SectionBody section={section} inset />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The parts every section shares. `inset` is for a section inside a folded
+ * card, where the illustration sits within the card rather than on the page.
+ */
+function SectionBody({
+  section,
+  inset = false,
+}: {
+  section: GuideSection;
+  inset?: boolean;
+}) {
+  return (
+    <>
       {/* The illustration leads, so you see the surface before reading about it. */}
-      <div className="mt-5 flex justify-center rounded-card bg-parchment-200/50 px-4 py-6">
+      <div
+        className={cn(
+          'mt-5 flex justify-center rounded-card px-4 py-6',
+          inset ? 'bg-parchment-100' : 'bg-parchment-200/50'
+        )}
+      >
         <GuideArt kind={section.art} />
       </div>
 
@@ -162,6 +242,6 @@ function Section({ section }: { section: GuideSection }) {
           ))}
         </ul>
       )}
-    </section>
+    </>
   );
 }
